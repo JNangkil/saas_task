@@ -1,0 +1,42 @@
+<div class="dashboard-home">
+  <section class="dashboard-home__hero">
+    <div class="dashboard-home__intro">
+      <h1>
+        Welcome back,
+        {{ (user$ | async)?.displayName || 'TaskFlow team' }}
+      </h1>
+      <p>It is {{ today() | date: 'fullDate' }}. Here is what needs your attention.</p>
+    </div>
+
+    <div class="dashboard-home__pulse">
+      <span class="dashboard-home__pulse-label">Workspace pulse</span>
+      <strong>72%</strong>
+      <p>of tasks are on track this week</p>
+    </div>
+  </section>
+
+  <section class="dashboard-home__grid">
+    <div class="dashboard-home__main">
+      <app-task-summary [summary]="taskSummary()" heading="Task health"></app-task-summary>
+      <app-project-overview [projects]="projectCards()" heading="Projects at a glance"></app-project-overview>
+    </div>
+
+    <aside class="dashboard-home__sidebar">
+      <app-activity-feed [items]="activityItems()" heading="Latest activity"></app-activity-feed>
+
+      <section class="dashboard-home__focus">
+        <header class="dashboard-home__focus-header">
+          <h2>This week's focus</h2>
+          <span>{{ focusItems().length }} priority areas</span>
+        </header>
+        <ul>
+          <li *ngFor="let item of focusItems()">
+            <h3>{{ item.title }}</h3>
+            <p>{{ item.description }}</p>
+            <button type="button">{{ item.cta }}</button>
+          </li>
+        </ul>
+      </section>
+    </aside>
+  </section>
+</div>

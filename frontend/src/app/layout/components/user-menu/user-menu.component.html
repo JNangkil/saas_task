@@ -1,0 +1,36 @@
+<div
+  class="user-menu"
+  [class.user-menu--open]="menuOpen()"
+  tfClickOutside
+  (tfClickOutside)="closeMenu()"
+>
+  <button type="button" class="user-menu__trigger" (click)="toggleMenu()">
+    <ng-container *ngIf="user$ | async as user; else anonymousUser">
+      <tf-avatar class="user-menu__avatar" [name]="user.displayName || user.email"></tf-avatar>
+      <div class="user-menu__details">
+        <span class="user-menu__name">{{ user.displayName || user.email }}</span>
+        <span class="user-menu__role">{{ user.roles[0] || 'Member' }}</span>
+      </div>
+    </ng-container>
+    <ng-template #anonymousUser>
+      <tf-avatar class="user-menu__avatar" name="Guest"></tf-avatar>
+      <div class="user-menu__details">
+        <span class="user-menu__name">Guest</span>
+        <span class="user-menu__role">Member</span>
+      </div>
+    </ng-template>
+    <span class="user-menu__chevron" aria-hidden="true">v</span>
+  </button>
+
+  <div class="user-menu__dropdown" *ngIf="menuOpen()">
+    <div class="user-menu__summary" *ngIf="user$ | async as user">
+      <strong>{{ user.displayName || user.email }}</strong>
+      <span>{{ user.email || 'member@taskflow.app' }}</span>
+    </div>
+    <button type="button" class="user-menu__dropdown-item">View profile</button>
+    <button type="button" class="user-menu__dropdown-item">Workspace settings</button>
+    <button type="button" class="user-menu__dropdown-item user-menu__dropdown-item--danger" (click)="logout()">
+      Sign out
+    </button>
+  </div>
+</div>

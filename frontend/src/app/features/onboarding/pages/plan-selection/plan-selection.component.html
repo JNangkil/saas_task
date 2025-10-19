@@ -1,0 +1,55 @@
+<section class="plan-card card">
+  <header>
+    <p class="eyebrow">Step 4 of 4</p>
+    <h2>Select the plan that fits</h2>
+    <p>Plans can be changed at any time. We’ll start you on a trial automatically.</p>
+  </header>
+
+  <div class="plan-grid" role="list">
+    <button
+      type="button"
+      class="plan-option"
+      role="listitem"
+      *ngFor="let plan of plans"
+      [class.active]="isSelected(plan.id)"
+      (click)="choosePlan(plan.id)"
+    >
+      <div class="plan-header">
+        <h3>{{ plan.name }}</h3>
+        <p class="plan-price">
+          <span class="amount">{{ plan.price }}</span>
+          <span class="detail">{{ plan.priceDetail }}</span>
+        </p>
+      </div>
+      <p class="plan-description">{{ plan.description }}</p>
+      <ul>
+        <li *ngFor="let feature of plan.features">{{ feature }}</li>
+      </ul>
+    </button>
+  </div>
+
+  <p class="field-error" *ngIf="hasTriedSubmit() && !selectedPlan()">Choose a plan to continue.</p>
+
+  <aside class="summary">
+    <div>
+      <h4>Company</h4>
+      <p>{{ state.companyDetails().companyName }}</p>
+    </div>
+    <div>
+      <h4>Invites</h4>
+      <p *ngIf="state.invites().length; else noInvites">
+        {{ state.invites().length }} teammate{{ state.invites().length === 1 ? '' : 's' }} will receive an invite.
+      </p>
+      <ng-template #noInvites>
+        <p>No invites yet. You can add teammates from the workspace later.</p>
+      </ng-template>
+    </div>
+  </aside>
+
+  <footer class="actions">
+    <button type="button" class="link" (click)="back()">Back</button>
+    <button type="button" class="primary" (click)="complete()" [disabled]="isSubmitting()">
+      {{ isSubmitting() ? 'Finishing...' : 'Finish onboarding' }}
+    </button>
+  </footer>
+</section>

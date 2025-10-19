@@ -1,0 +1,114 @@
+@use 'variables' as vars;
+
+.app-shell {
+  display: grid;
+  gap: 2rem;
+  padding: clamp(2rem, 4vw, 4rem);
+}
+
+.app-header {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: flex-end;
+  gap: 1.5rem;
+
+  .eyebrow {
+    text-transform: uppercase;
+    letter-spacing: 0.18em;
+    font-size: 0.75rem;
+    color: vars.$color-text-muted;
+    margin: 0 0 0.5rem;
+  }
+
+  h1 {
+    margin: 0;
+    font-size: clamp(2rem, 3vw, 3rem);
+  }
+
+  .tagline {
+    margin: 0.75rem 0 0;
+    color: vars.$color-text-muted;
+    max-width: 32rem;
+  }
+
+  nav {
+    display: flex;
+    gap: 1rem;
+
+    a {
+      font-weight: 500;
+      color: vars.$color-text;
+      padding: 0.5rem 0;
+      border-bottom: 2px solid transparent;
+
+      &:hover,
+      &:focus-visible {
+        border-color: vars.$color-primary;
+        color: vars.$color-primary;
+      }
+    }
+  }
+}
+
+.app-main {
+  display: grid;
+  gap: 2rem;
+  grid-template-columns: repeat(auto-fit, minmax(18rem, 1fr));
+
+  .card {
+    h2 {
+      margin-top: 0;
+    }
+
+    ul,
+    ol {
+      margin: 1.5rem 0 0;
+      padding: 0;
+      list-style: none;
+      display: grid;
+      gap: 1rem;
+    }
+
+    li {
+      display: grid;
+      gap: 0.25rem;
+    }
+
+    .phase {
+      font-weight: 600;
+      color: vars.$color-primary;
+    }
+
+    .timeline {
+      font-size: 0.875rem;
+      color: vars.$color-text-muted;
+    }
+  }
+}
+
+.app-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1.5rem 2rem;
+  border-radius: vars.$border-radius-lg;
+  background: linear-gradient(135deg, rgba(88, 101, 242, 0.08), rgba(14, 165, 233, 0.08));
+  color: vars.$color-text;
+
+  span {
+    font-weight: 500;
+  }
+
+  a {
+    font-weight: 600;
+    color: vars.$color-primary;
+  }
+}
+
+@media (max-width: 768px) {
+  .app-footer {
+    flex-direction: column;
+    gap: 1rem;
+  }
+}

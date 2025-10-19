@@ -1,0 +1,107 @@
+@use 'variables' as vars;
+
+.activity {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  padding: 1.5rem;
+  background: vars.$color-surface;
+  border-radius: vars.$border-radius-lg;
+  border: 1px solid rgba(15, 23, 42, 0.08);
+  box-shadow: vars.$shadow-elevation-1;
+  height: 100%;
+}
+
+.activity__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+
+  h2 {
+    margin: 0;
+    font-size: 1.15rem;
+  }
+}
+
+.activity__view-all {
+  border: none;
+  background: transparent;
+  color: vars.$color-primary;
+  font-weight: 600;
+  cursor: pointer;
+  font-size: 0.9rem;
+
+  &:hover {
+    text-decoration: underline;
+  }
+}
+
+.activity__list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.activity__item {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.85rem;
+}
+
+.activity__avatar {
+  width: 2.5rem;
+  height: 2.5rem;
+  flex-shrink: 0;
+}
+
+.activity__details {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.activity__meta {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.85rem;
+  color: vars.$color-text-muted;
+}
+
+.activity__actor {
+  color: vars.$color-text;
+  font-weight: 600;
+}
+
+.activity__time {
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.activity__description {
+  margin: 0;
+  font-size: 0.95rem;
+  line-height: 1.35;
+  color: vars.$color-text;
+}
+
+.activity__target {
+  display: inline-block;
+  margin-left: 0.35rem;
+  color: vars.$color-text-muted;
+}
+
+.activity__status {
+  align-self: flex-start;
+}
+
+@media (max-width: 720px) {
+  .activity {
+    padding: 1.25rem;
+  }
+}

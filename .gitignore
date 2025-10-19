@@ -1,1 +1,4 @@
-frontend/
+# Root-level ignore rules
+.env
+.DS_Store
+Thumbs.db

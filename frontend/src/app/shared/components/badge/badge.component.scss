@@ -1,0 +1,33 @@
+@use 'variables' as vars;
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.25rem 0.5rem;
+  border-radius: vars.$border-radius-sm;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+
+  &.neutral {
+    background: rgba(15, 23, 42, 0.08);
+    color: vars.$color-text;
+  }
+
+  &.success {
+    background: rgba(34, 197, 94, 0.16);
+    color: vars.$color-success;
+  }
+
+  &.warning {
+    background: rgba(245, 158, 11, 0.16);
+    color: vars.$color-warning;
+  }
+
+  &.danger {
+    background: rgba(239, 68, 68, 0.16);
+    color: vars.$color-danger;
+  }
+}

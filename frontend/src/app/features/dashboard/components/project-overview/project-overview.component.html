@@ -1,0 +1,48 @@
+<section class="projects">
+  <header class="projects__header">
+    <h2>{{ heading }}</h2>
+    <button type="button" class="projects__view-all">All projects</button>
+  </header>
+
+  <div class="projects__grid">
+    <article *ngFor="let project of projects" class="projects__card">
+      <div class="projects__card-header">
+        <div>
+          <h3>{{ project.name }}</h3>
+          <p class="projects__lead">Owner: {{ project.owner }}</p>
+        </div>
+        <tf-badge [tone]="project.statusTone" [label]="project.status"></tf-badge>
+      </div>
+
+      <div class="projects__metrics">
+        <div class="projects__metric">
+          <span class="projects__metric-value">{{ project.completedTasks }}</span>
+          <span class="projects__metric-label">Completed</span>
+        </div>
+        <div class="projects__metric">
+          <span class="projects__metric-value">{{ project.openTasks }}</span>
+          <span class="projects__metric-label">Open</span>
+        </div>
+        <div class="projects__metric">
+          <span class="projects__metric-value">{{ completionRatio(project) }}%</span>
+          <span class="projects__metric-label">Done</span>
+        </div>
+        <div class="projects__metric">
+          <span class="projects__metric-value">{{ dueIn(project) }}</span>
+          <span class="projects__metric-label">Timeline</span>
+        </div>
+      </div>
+
+      <div class="projects__progress">
+        <div class="projects__progress-track">
+          <div
+            class="projects__progress-bar"
+            [style.width.%]="project.progress"
+            [attr.aria-valuenow]="project.progress"
+          ></div>
+        </div>
+        <span class="projects__progress-label">{{ project.progress }}% toward milestones</span>
+      </div>
+    </article>
+  </div>
+</section>

@@ -1,0 +1,60 @@
+<section class="company-card card">
+  <header>
+    <p class="eyebrow">Step 2 of 4</p>
+    <h2>Tell us about your company</h2>
+    <p>We use this to personalize sample data and invite emails.</p>
+  </header>
+
+  <form [formGroup]="form" (ngSubmit)="continue()" novalidate>
+    <div class="form-field">
+      <label for="companyName">Company name</label>
+      <input
+        id="companyName"
+        type="text"
+        formControlName="companyName"
+        autocomplete="organization"
+        [class.invalid]="form.get('companyName')?.invalid && form.get('companyName')?.touched"
+      />
+      <p class="field-error" *ngIf="form.get('companyName')?.hasError('required') && form.get('companyName')?.touched">
+        Company name is required.
+      </p>
+      <p class="field-error" *ngIf="form.get('companyName')?.hasError('maxlength') && form.get('companyName')?.touched">
+        Keep it under 120 characters.
+      </p>
+    </div>
+
+    <div class="grid">
+      <div class="form-field">
+        <label for="teamSize">Team size</label>
+        <select
+          id="teamSize"
+          formControlName="teamSize"
+          [class.invalid]="form.get('teamSize')?.invalid && form.get('teamSize')?.touched"
+        >
+          <option *ngFor="let option of teamSizeOptions" [ngValue]="option.value">{{ option.label }}</option>
+        </select>
+        <p class="field-error" *ngIf="form.get('teamSize')?.invalid && form.get('teamSize')?.touched">
+          Select the option closest to your team.
+        </p>
+      </div>
+
+      <div class="form-field">
+        <label>Work style</label>
+        <div class="segmented">
+          <label *ngFor="let option of workStyleOptions" [class.active]="form.get('workStyle')?.value === option.value">
+            <input type="radio" formControlName="workStyle" [value]="option.value" />
+            <span>{{ option.label }}</span>
+          </label>
+        </div>
+        <p class="field-error" *ngIf="form.get('workStyle')?.invalid && form.get('workStyle')?.touched">
+          Choose the option that best fits your team.
+        </p>
+      </div>
+    </div>
+
+    <footer class="actions">
+      <button type="button" class="link" (click)="back()">Back</button>
+      <button type="submit">Continue</button>
+    </footer>
+  </form>
+</section>

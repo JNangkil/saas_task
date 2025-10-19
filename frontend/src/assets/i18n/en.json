@@ -1,0 +1,23 @@
+{
+  "app": {
+    "title": "TaskFlow",
+    "tagline": "Plan, track, and deliver work with your team"
+  },
+  "navigation": {
+    "dashboard": "Dashboard",
+    "projects": "Projects",
+    "tasks": "Tasks",
+    "teams": "Teams",
+    "reports": "Reports",
+    "workspace": "Workspace",
+    "settings": "Settings"
+  },
+  "actions": {
+    "create": "Create",
+    "save": "Save",
+    "cancel": "Cancel",
+    "invite": "Invite",
+    "filter": "Filter",
+    "export": "Export"
+  }
+}
