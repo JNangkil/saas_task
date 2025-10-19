@@ -1,9 +1,53 @@
 <nav class="sidebar">
-  <div class="sidebar__brand">
-    <div class="sidebar__brand-mark">TF</div>
-    <div class="sidebar__brand-copy">
-      <span class="sidebar__brand-name">TaskFlow</span>
-      <span class="sidebar__brand-plan">Growth Workspace</span>
+  <div class="sidebar__brand-wrapper" [class.sidebar__brand-wrapper--open]="isBrandMenuOpen()">
+    <button
+      #brandTrigger
+      class="sidebar__brand"
+      type="button"
+      [class.sidebar__brand--empty]="!activeWorkspace()"
+      (click)="toggleWorkspaceMenu()"
+      [attr.aria-expanded]="isBrandMenuOpen()"
+      aria-haspopup="true"
+    >
+      <div class="sidebar__brand-mark">
+        {{ workspaceInitials(activeWorkspace()?.name || 'TaskFlow') }}
+      </div>
+      <div class="sidebar__brand-copy">
+        <span class="sidebar__brand-name">
+          {{ activeWorkspace()?.name || 'TaskFlow' }}
+        </span>
+        <span class="sidebar__brand-plan">
+          {{ activeWorkspace() ? 'Workspace' : 'Select a workspace' }}
+        </span>
+      </div>
+      <span class="sidebar__brand-caret" aria-hidden="true"></span>
+    </button>
+
+    <div
+      #brandMenu
+      class="sidebar__brand-menu"
+      *ngIf="isBrandMenuOpen()"
+      role="menu"
+      (keydown)="handleWorkspaceMenuKeydown($event)"
+    >
+      <p class="sidebar__brand-menu-title">Workspace controls</p>
+      <ul class="sidebar__brand-menu-list">
+        <li *ngFor="let action of workspaceActions">
+          <button
+            type="button"
+            class="sidebar__brand-menu-item"
+            [class.is-active]="action.section === activeWorkspaceSection()"
+            (click)="navigateWorkspaceSection(action.section)"
+            role="menuitem"
+          >
+            <span class="sidebar__brand-menu-icon">{{ action.icon }}</span>
+            <span class="sidebar__brand-menu-text">
+              <span class="sidebar__brand-menu-label">{{ action.label }}</span>
+              <span class="sidebar__brand-menu-description">{{ action.description }}</span>
+            </span>
+          </button>
+        </li>
+      </ul>
     </div>
   </div>
 
@@ -15,21 +59,31 @@
     </div>
   </div>
 
-  <section *ngFor="let group of navGroups()" class="sidebar__section">
-    <h2 class="sidebar__section-title">{{ group.label }}</h2>
+  <section class="sidebar__section sidebar__section--workspaces" *ngIf="workspaces().length; else emptyState">
+    <h2 class="sidebar__section-title">Workspaces</h2>
 
-    <ul class="sidebar__nav">
-      <li *ngFor="let item of group.items">
+    <ul class="sidebar__nav sidebar__nav--workspaces">
+      <li *ngFor="let workspace of workspaces(); trackBy: trackByWorkspaceId">
         <a
-          [routerLink]="item.route"
-          routerLinkActive="is-active"
           class="sidebar__nav-link"
+          [routerLink]="['/workspace', workspace.id]"
+          [class.is-active]="workspace.id === activeWorkspaceId()"
+          (click)="selectWorkspace(workspace)"
         >
-          <span class="sidebar__nav-icon" aria-hidden="true">{{ item.icon }}</span>
-          <span class="sidebar__nav-label">{{ item.label }}</span>
-          <tf-badge *ngIf="item.badge" tone="warning" [label]="item.badge"></tf-badge>
+          <span class="sidebar__nav-icon" aria-hidden="true">
+            {{ workspaceInitials(workspace.name) }}
+          </span>
+          <span class="sidebar__nav-label">{{ workspace.name }}</span>
         </a>
       </li>
     </ul>
   </section>
+  <ng-template #emptyState>
+    <section class="sidebar__section sidebar__section--empty">
+      <h2 class="sidebar__section-title">Workspaces</h2>
+      <p class="sidebar__empty-copy">
+        No workspaces yet. Create one to get started.
+      </p>
+    </section>
+  </ng-template>
 </nav>

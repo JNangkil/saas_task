@@ -79,6 +79,9 @@ Small teams lack an efficient yet lightweight tool to organize projects, assign 
 - Invite/remove members; assign roles (Owner, Admin, Member).
 - Configure workspace settings (name, logo, default views).
 - Billing page summarizing plan, usage, invoices (static data for MVP).
+- Sidebar provides a ClickUp-style workspace switcher that lists every workspace available to the user and enables one-click context switching.
+- Workspace switcher brand menu offers management shortcuts (Teams, Projects, Reports, Billing, Settings) that stay scoped to the active workspace.
+- Global header utility bar mirrors those management links so admins can jump to high-signal areas without losing context.
 
 ### 7.3 Dashboard (Feature: Dashboard)
 - Landing page shows aggregated widgets:

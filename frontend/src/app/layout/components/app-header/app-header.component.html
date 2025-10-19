@@ -21,12 +21,26 @@
   </div>
 
   <div class="header__actions">
+    <nav class="header__utility" *ngIf="systemLinks().length">
+      <a
+        *ngFor="let link of systemLinks()"
+        class="header__utility-link"
+        [routerLink]="link.route"
+        [class.is-active]="isLinkActive(link.section)"
+      >
+        <span class="header__utility-icon">{{ link.short }}</span>
+        <span class="header__utility-label">{{ link.label }}</span>
+      </a>
+    </nav>
+
+    <div class="header__quick">
     <ng-container *ngFor="let action of quickActions">
       <button type="button" class="header__action-button">
         <span class="header__action-icon">{{ action.icon }}</span>
         <span class="header__action-label">{{ action.label }}</span>
       </button>
     </ng-container>
+    </div>
 
     <app-user-menu></app-user-menu>
   </div>

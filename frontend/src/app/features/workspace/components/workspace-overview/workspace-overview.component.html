@@ -1,0 +1,93 @@
+<section class="workspace-overview">
+  <header class="workspace-overview__header">
+    <h1 class="workspace-overview__title">
+      {{ sectionConfig().title }}
+    </h1>
+    <p class="workspace-overview__subtitle">
+      {{ sectionConfig().description }}
+    </p>
+  </header>
+
+  <ng-container *ngIf="activeWorkspace(); else selectWorkspace">
+    <div class="workspace-overview__body" [ngSwitch]="workspaceSection()">
+      <div class="workspace-overview__panel" *ngSwitchCase="'overview'">
+        <p>
+          You're viewing <strong>{{ activeWorkspace()?.name }}</strong>. {{ sectionConfig().action }}
+        </p>
+      </div>
+
+      <div class="workspace-overview__panel" *ngSwitchCase="'teams'">
+        <p class="workspace-overview__lead">
+          Keep <strong>{{ activeWorkspace()?.name }}</strong> aligned by curating who has access.
+        </p>
+        <ul class="workspace-overview__list">
+          <li>Invite teammates quickly and tailor roles to their responsibilities.</li>
+          <li>Group people into squads or departments to mirror how you collaborate.</li>
+          <li>Review pending invitations and remove access when members roll off.</li>
+        </ul>
+      </div>
+
+      <div class="workspace-overview__panel" *ngSwitchCase="'projects'">
+        <p class="workspace-overview__lead">
+          Map work in <strong>{{ activeWorkspace()?.name }}</strong> to projects that reflect your delivery rhythm.
+        </p>
+        <ul class="workspace-overview__list">
+          <li>Structure folders, lists, or sprint boards to match how teams execute.</li>
+          <li>Standardize naming to keep search and reporting consistent.</li>
+          <li>Favor lightweight templates for repeatable initiatives.</li>
+        </ul>
+      </div>
+
+      <div class="workspace-overview__panel" *ngSwitchCase="'reports'">
+        <p class="workspace-overview__lead">
+          Surface the signals that matter across <strong>{{ activeWorkspace()?.name }}</strong>.
+        </p>
+        <ul class="workspace-overview__list">
+          <li>Track workload, burndown, and cycle time to spot risks early.</li>
+          <li>Pin saved views and dashboards your leads rely on every week.</li>
+          <li>Share curated reports with stakeholders for transparency.</li>
+        </ul>
+      </div>
+
+      <div class="workspace-overview__panel" *ngSwitchCase="'billing'">
+        <p class="workspace-overview__lead">
+          Keep the plan for <strong>{{ activeWorkspace()?.name }}</strong> healthy and up to date.
+        </p>
+        <ul class="workspace-overview__list">
+          <li>Update payment methods and confirm renewal dates before they lapse.</li>
+          <li>Review invoices and usage so upgrades never surprise finance.</li>
+          <li>Right-size seats and add-ons based on how teams adopt the product.</li>
+        </ul>
+      </div>
+
+      <div class="workspace-overview__panel" *ngSwitchCase="'settings'">
+        <p class="workspace-overview__lead">
+          Tune <strong>{{ activeWorkspace()?.name }}</strong> so tools and standards stay in sync.
+        </p>
+        <ul class="workspace-overview__list">
+          <li>Enable the integrations your teams depend on without hopping between tabs.</li>
+          <li>Adjust default statuses, priorities, and automation to reduce manual busywork.</li>
+          <li>Review security and access controls on a regular cadence.</li>
+        </ul>
+      </div>
+
+      <div class="workspace-overview__panel" *ngSwitchDefault>
+        <p>
+          {{ sectionConfig().action }}
+        </p>
+      </div>
+    </div>
+  </ng-container>
+
+  <ng-template #selectWorkspace>
+    <div class="workspace-overview__empty" *ngIf="workspaces().length; else emptyList">
+      <p>{{ sectionConfig().emptyState }}</p>
+    </div>
+  </ng-template>
+
+  <ng-template #emptyList>
+    <div class="workspace-overview__empty">
+      <p>No workspaces yet. Create one to start organizing your team.</p>
+    </div>
+  </ng-template>
+</section>
