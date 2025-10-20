@@ -71,7 +71,7 @@
       <li *ngFor="let workspace of workspaces(); trackBy: trackByWorkspaceId">
         <a
           class="sidebar__nav-link"
-          [routerLink]="['/workspace', workspace.id]"
+          [routerLink]="['/workspace', workspace.id, 'overview']"
           [class.is-active]="workspace.id === activeWorkspaceId()"
           (click)="selectWorkspace(workspace)"
         >
