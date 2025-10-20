@@ -102,7 +102,13 @@ export class AppSidebarComponent {
 
   protected openWorkspaceCreation(): void {
     this.closeWorkspaceMenu();
-    void this.router.navigate(['/workspace'], { queryParams: { create: '1' } });
+    const activeId = this.activeWorkspaceId();
+    const commands = activeId ? ['/workspace', activeId, 'overview'] : ['/workspace'];
+
+    void this.router.navigate(commands, {
+      queryParams: { create: '1' },
+      queryParamsHandling: 'merge'
+    });
   }
 
   protected workspaceInitials(name: string): string {
