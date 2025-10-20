@@ -118,11 +118,15 @@
 }
 
 .workspace-hub__grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-  gap: 1.75rem;
-  align-items: start;
-}
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 1.5rem;
+  }
+
+  .workspace-hub__projects,
+  .workspace-hub__tasks {
+    grid-column: span 1;
+  }
 
 .workspace-hub__card {
   background: #ffffff;

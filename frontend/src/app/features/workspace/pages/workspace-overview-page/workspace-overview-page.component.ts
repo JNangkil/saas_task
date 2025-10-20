@@ -13,6 +13,9 @@ import {
   WorkspaceBillingSummary,
   WorkspaceBillingSummaryComponent
 } from '../../components/billing-summary/workspace-billing-summary.component';
+import { Project, ProjectListComponent } from '../../components/project-list/project-list.component';
+import { Task, TaskListComponent } from '../../components/task-list/task-list.component';
+import { PROJECTS, TASKS } from '../../mock-data';
 import { WorkspaceApiService } from '../../services/workspace-api.service';
 import { WorkspaceStoreService } from '../../services/workspace-store.service';
 
@@ -24,7 +27,9 @@ import { WorkspaceStoreService } from '../../services/workspace-store.service';
   imports: [
     CommonModule,
     WorkspaceBillingSummaryComponent,
-    WorkspaceSettingsFormComponent
+    WorkspaceSettingsFormComponent,
+    ProjectListComponent,
+    TaskListComponent
   ],
   changeDetection: ChangeDetectionStrategy.OnPush
 })
@@ -60,6 +65,16 @@ export class WorkspaceOverviewPageComponent {
   });
   protected readonly primaryWorkspaceId = computed(() => this.primaryWorkspace()?.id ?? null);
   protected readonly hasMultipleWorkspaces = computed(() => this.workspaces().length > 1);
+  protected readonly projects = signal(PROJECTS);
+  protected readonly selectedProject = signal<Project | null>(null);
+  protected readonly tasks = computed<Task[]>(() => {
+    const selected = this.selectedProject();
+    if (!selected) {
+      return [];
+    }
+    return TASKS[selected.id as keyof typeof TASKS] || [];
+  });
+
   protected readonly billingSummary = computed<WorkspaceBillingSummary>(() => {
     const workspace = this.activeWorkspace();
 
@@ -173,6 +188,10 @@ export class WorkspaceOverviewPageComponent {
     this.statusMessage.set(null);
 
     void this.router.navigate(['/workspace', workspaceId, 'overview']);
+  }
+
+  protected handleProjectSelected(project: Project): void {
+    this.selectedProject.set(project);
   }
 
   protected goToSettings(): void {
