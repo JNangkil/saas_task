@@ -1,108 +1,110 @@
 <div class="structure-tree" *ngIf="structure() as tree">
-  <div class="structure-tree__workspace" role="treeitem" aria-expanded="true">
-    <div class="structure-tree__node" data-node="workspace">
-      <div class="structure-tree__node-main">
-        <span class="structure-tree__badge">Workspace</span>
-        <span class="structure-tree__name">{{ tree.workspaceName }}</span>
-      </div>
-      <button type="button" class="structure-tree__add structure-tree__add--space" (click)="handleAddSpace()">
-        + Space
-      </button>
-    </div>
-  </div>
-
-  <p class="structure-tree__empty" *ngIf="!hasSpaces()">
-    Map out spaces, folders, lists, and tasks. Everything here stays in sync with this workspace.
-  </p>
-
-  <ul class="structure-tree__group structure-tree__group--spaces" role="group" *ngIf="hasSpaces()">
-    <li
-      class="structure-tree__space"
-      *ngFor="let space of tree.spaces; trackBy: trackBySpaceId"
-      role="treeitem"
-      [attr.aria-expanded]="!isSpaceCollapsed(space.id)"
-    >
-      <div class="structure-tree__node" data-node="space">
-        <button
-          type="button"
-          class="structure-tree__toggle"
-          [class.is-collapsed]="isSpaceCollapsed(space.id)"
-          (click)="toggleSpace(space)"
-          aria-label="Toggle {{ space.name }}"
-        ></button>
+  <ul class="structure-tree__root" role="tree">
+    <li class="structure-tree__workspace" role="treeitem" aria-expanded="true">
+      <div class="structure-tree__node" data-node="workspace">
         <div class="structure-tree__node-main">
-          <span class="structure-tree__badge">Space</span>
-          <span class="structure-tree__name">{{ space.name }}</span>
+          <span class="structure-tree__badge">Workshop</span>
+          <span class="structure-tree__name">{{ tree.workspaceName }}</span>
         </div>
-        <button type="button" class="structure-tree__add" (click)="handleAddFolder(space)">
-          + Folder
+        <button type="button" class="structure-tree__add structure-tree__add--space" (click)="handleAddSpace()">
+          + Space
         </button>
       </div>
-      <p class="structure-tree__description">{{ space.description }}</p>
 
-      <ul class="structure-tree__group" role="group" *ngIf="!isSpaceCollapsed(space.id)">
+      <p class="structure-tree__empty" *ngIf="!hasSpaces()">
+        Map out spaces, folders, lists, and tasks. Everything here stays in sync with this workspace.
+      </p>
+
+      <ul class="structure-tree__group structure-tree__group--spaces" role="group" *ngIf="hasSpaces()">
         <li
-          class="structure-tree__folder"
-          *ngFor="let folder of space.folders; trackBy: trackByFolderId"
+          class="structure-tree__space"
+          *ngFor="let space of tree.spaces; trackBy: trackBySpaceId"
           role="treeitem"
-          [attr.aria-expanded]="!isFolderCollapsed(folder.id)"
+          [attr.aria-expanded]="!isSpaceCollapsed(space.id)"
         >
-          <div class="structure-tree__node" data-node="folder">
+          <div class="structure-tree__node" data-node="space">
             <button
               type="button"
               class="structure-tree__toggle"
-              [class.is-collapsed]="isFolderCollapsed(folder.id)"
-              (click)="toggleFolder(folder)"
-              aria-label="Toggle {{ folder.name }}"
+              [class.is-collapsed]="isSpaceCollapsed(space.id)"
+              (click)="toggleSpace(space)"
+              aria-label="Toggle {{ space.name }}"
             ></button>
             <div class="structure-tree__node-main">
-              <span class="structure-tree__badge">Folder</span>
-              <span class="structure-tree__name">{{ folder.name }}</span>
+              <span class="structure-tree__badge">Space</span>
+              <span class="structure-tree__name">{{ space.name }}</span>
             </div>
-            <button type="button" class="structure-tree__add" (click)="handleAddList(space, folder)">
-              + List
+            <button type="button" class="structure-tree__add" (click)="handleAddFolder(space)">
+              + Folder
             </button>
           </div>
-          <p class="structure-tree__description">{{ folder.description }}</p>
+          <p class="structure-tree__description">{{ space.description }}</p>
 
-          <ul class="structure-tree__group" role="group" *ngIf="!isFolderCollapsed(folder.id)">
+          <ul class="structure-tree__group" role="group" *ngIf="!isSpaceCollapsed(space.id)">
             <li
-              class="structure-tree__list"
-              *ngFor="let list of folder.lists; trackBy: trackByListId"
+              class="structure-tree__folder"
+              *ngFor="let folder of space.folders; trackBy: trackByFolderId"
               role="treeitem"
-              [attr.aria-expanded]="!isListCollapsed(list.id)"
+              [attr.aria-expanded]="!isFolderCollapsed(folder.id)"
             >
-              <div class="structure-tree__node" data-node="list">
+              <div class="structure-tree__node" data-node="folder">
                 <button
                   type="button"
                   class="structure-tree__toggle"
-                  [class.is-collapsed]="isListCollapsed(list.id)"
-                  (click)="toggleList(list)"
-                  aria-label="Toggle {{ list.name }}"
+                  [class.is-collapsed]="isFolderCollapsed(folder.id)"
+                  (click)="toggleFolder(folder)"
+                  aria-label="Toggle {{ folder.name }}"
                 ></button>
                 <div class="structure-tree__node-main">
-                  <span class="structure-tree__badge">List</span>
-                  <span class="structure-tree__name">{{ list.name }}</span>
+                  <span class="structure-tree__badge">Folder</span>
+                  <span class="structure-tree__name">{{ folder.name }}</span>
                 </div>
-                <button type="button" class="structure-tree__add" (click)="handleAddTask(space, folder, list)">
-                  + Task
+                <button type="button" class="structure-tree__add" (click)="handleAddList(space, folder)">
+                  + List
                 </button>
               </div>
-              <p class="structure-tree__description">{{ list.description }}</p>
+              <p class="structure-tree__description">{{ folder.description }}</p>
 
-              <ul class="structure-tree__tasks" role="group" *ngIf="!isListCollapsed(list.id)">
-                <li class="structure-tree__task" *ngFor="let task of list.tasks; trackBy: trackByTaskId" role="treeitem">
-                  <div class="structure-tree__node structure-tree__node--task" data-node="task">
-                    <div class="structure-tree__task-header">
-                      <span class="structure-tree__badge">Task</span>
-                      <span class="structure-tree__name">{{ task.title }}</span>
+              <ul class="structure-tree__group" role="group" *ngIf="!isFolderCollapsed(folder.id)">
+                <li
+                  class="structure-tree__list"
+                  *ngFor="let list of folder.lists; trackBy: trackByListId"
+                  role="treeitem"
+                  [attr.aria-expanded]="!isListCollapsed(list.id)"
+                >
+                  <div class="structure-tree__node" data-node="list">
+                    <button
+                      type="button"
+                      class="structure-tree__toggle"
+                      [class.is-collapsed]="isListCollapsed(list.id)"
+                      (click)="toggleList(list)"
+                      aria-label="Toggle {{ list.name }}"
+                    ></button>
+                    <div class="structure-tree__node-main">
+                      <span class="structure-tree__badge">List</span>
+                      <span class="structure-tree__name">{{ list.name }}</span>
                     </div>
-                    <div class="structure-tree__task-meta">
-                      <span class="structure-tree__status" [attr.data-status]="task.status">{{ task.status }}</span>
-                      <span class="structure-tree__assignee">{{ task.assignee }}</span>
-                      <span class="structure-tree__due">{{ task.due }}</span>
-                    </div>
+                    <button type="button" class="structure-tree__add" (click)="handleAddTask(space, folder, list)">
+                      + Task
+                    </button>
                   </div>
+                  <p class="structure-tree__description">{{ list.description }}</p>
+
+                  <ul class="structure-tree__tasks" role="group" *ngIf="!isListCollapsed(list.id)">
+                    <li class="structure-tree__task" *ngFor="let task of list.tasks; trackBy: trackByTaskId" role="treeitem">
+                      <div class="structure-tree__node structure-tree__node--task" data-node="task">
+                        <div class="structure-tree__task-header">
+                          <span class="structure-tree__badge">Task</span>
+                          <span class="structure-tree__name">{{ task.title }}</span>
+                        </div>
+                        <div class="structure-tree__task-meta">
+                          <span class="structure-tree__status" [attr.data-status]="task.status">{{ task.status }}</span>
+                          <span class="structure-tree__assignee">{{ task.assignee }}</span>
+                          <span class="structure-tree__due">{{ task.due }}</span>
+                        </div>
+                      </div>
+                    </li>
+                  </ul>
                 </li>
               </ul>
             </li>
