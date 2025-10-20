@@ -1,0 +1,78 @@
+<div class="hierarchy-map">
+  <ul class="hierarchy-map__tree" role="tree">
+    <li class="hierarchy-map__workspace" role="treeitem" aria-expanded="true">
+      <div class="hierarchy-map__node" data-node="workspace">
+        <span class="hierarchy-map__badge">Workspace</span>
+        <span class="hierarchy-map__name">{{ hierarchy.workspaceName }}</span>
+        <p class="hierarchy-map__description">
+          The top-level container for your company account. Members, billing, and settings live here.
+        </p>
+      </div>
+
+      <ul class="hierarchy-map__group" role="group">
+        <li
+          class="hierarchy-map__space"
+          role="treeitem"
+          aria-expanded="true"
+          *ngFor="let space of hierarchy.spaces; trackBy: trackByIndex"
+        >
+          <div class="hierarchy-map__node" data-node="space">
+            <span class="hierarchy-map__badge">Space</span>
+            <span class="hierarchy-map__name">{{ space.name }}</span>
+            <p class="hierarchy-map__description">{{ space.description }}</p>
+          </div>
+
+          <ul class="hierarchy-map__group" role="group">
+            <li
+              class="hierarchy-map__folder"
+              role="treeitem"
+              aria-expanded="true"
+              *ngFor="let folder of space.folders; trackBy: trackByIndex"
+            >
+              <div class="hierarchy-map__node" data-node="folder">
+                <span class="hierarchy-map__badge">Folder</span>
+                <span class="hierarchy-map__name">{{ folder.name }}</span>
+                <p class="hierarchy-map__description">{{ folder.description }}</p>
+              </div>
+
+              <ul class="hierarchy-map__group" role="group">
+                <li
+                  class="hierarchy-map__list"
+                  role="treeitem"
+                  aria-expanded="true"
+                  *ngFor="let list of folder.lists; trackBy: trackByIndex"
+                >
+                  <div class="hierarchy-map__node" data-node="list">
+                    <span class="hierarchy-map__badge">List</span>
+                    <span class="hierarchy-map__name">{{ list.name }}</span>
+                    <p class="hierarchy-map__description">{{ list.description }}</p>
+                  </div>
+
+                  <ul class="hierarchy-map__group hierarchy-map__group--tasks" role="group">
+                    <li
+                      class="hierarchy-map__task"
+                      role="treeitem"
+                      *ngFor="let task of list.tasks; trackBy: trackByIndex"
+                    >
+                      <div class="hierarchy-map__node hierarchy-map__node--task" data-node="task">
+                        <div class="hierarchy-map__task-header">
+                          <span class="hierarchy-map__badge">Task</span>
+                          <span class="hierarchy-map__name">{{ task.title }}</span>
+                        </div>
+                        <div class="hierarchy-map__task-meta">
+                          <span class="hierarchy-map__status" [attr.data-status]="task.status">{{ task.status }}</span>
+                          <span class="hierarchy-map__assignee">{{ task.assignee }}</span>
+                          <span class="hierarchy-map__due">{{ task.due }}</span>
+                        </div>
+                      </div>
+                    </li>
+                  </ul>
+                </li>
+              </ul>
+            </li>
+          </ul>
+        </li>
+      </ul>
+    </li>
+  </ul>
+</div>

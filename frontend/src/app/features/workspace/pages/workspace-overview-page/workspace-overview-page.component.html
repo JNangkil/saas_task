@@ -50,6 +50,28 @@
 
   <div class="workspace-overview__grid">
     <section class="workspace-overview__column workspace-overview__column--primary">
+      <article
+        class="workspace-overview__card workspace-overview__card--hierarchy"
+        *ngIf="workspaceHierarchy() as hierarchy"
+      >
+        <header class="workspace-overview__card-header">
+          <div>
+            <h2 class="workspace-overview__card-title">Workspace structure map</h2>
+            <p class="workspace-overview__card-subtitle">
+              Visualize how ClickUp scopes work from workspace to the tasks your team ships every day.
+            </p>
+          </div>
+        </header>
+
+        <tf-workspace-hierarchy-map [hierarchy]="hierarchy"></tf-workspace-hierarchy-map>
+
+        <p class="workspace-overview__hierarchy-note">
+          Start at the workspace to manage people and billing, drop into spaces for each department, then drive execution
+          through folders, lists, and tasks. Every level narrows the focus so teams stay organized without losing the big
+          picture.
+        </p>
+      </article>
+
       <article class="workspace-overview__card workspace-overview__card--checklist">
         <header class="workspace-overview__card-header">
           <div>
