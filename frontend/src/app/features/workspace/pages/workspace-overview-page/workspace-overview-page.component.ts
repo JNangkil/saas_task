@@ -2,20 +2,14 @@ import { CommonModule } from '@angular/common';
 import { HttpErrorResponse } from '@angular/common/http';
 import { ChangeDetectionStrategy, Component, computed, DestroyRef, inject, signal } from '@angular/core';
 import { takeUntilDestroyed, toSignal } from '@angular/core/rxjs-interop';
-import { ActivatedRoute, Router } from '@angular/router';
+import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { finalize } from 'rxjs/operators';
 
 import {
   WorkspaceFormValue,
   WorkspaceSettingsFormComponent
 } from '../../components/workspace-settings-form/workspace-settings-form.component';
-import {
-  WorkspaceBillingSummary,
-  WorkspaceBillingSummaryComponent
-} from '../../components/billing-summary/workspace-billing-summary.component';
-import { Project, ProjectListComponent } from '../../components/project-list/project-list.component';
-import { Task, TaskListComponent } from '../../components/task-list/task-list.component';
-import { PROJECTS, TASKS } from '../../mock-data';
+import { WorkspaceBillingSummary } from '../../components/billing-summary/workspace-billing-summary.component';
 import { WorkspaceApiService } from '../../services/workspace-api.service';
 import { WorkspaceStoreService } from '../../services/workspace-store.service';
 
@@ -24,13 +18,7 @@ import { WorkspaceStoreService } from '../../services/workspace-store.service';
   templateUrl: './workspace-overview-page.component.html',
   styleUrls: ['./workspace-overview-page.component.scss'],
   standalone: true,
-  imports: [
-    CommonModule,
-    WorkspaceBillingSummaryComponent,
-    WorkspaceSettingsFormComponent,
-    ProjectListComponent,
-    TaskListComponent
-  ],
+  imports: [CommonModule, RouterModule, WorkspaceSettingsFormComponent],
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class WorkspaceOverviewPageComponent {
@@ -54,6 +42,7 @@ export class WorkspaceOverviewPageComponent {
     null
   );
   protected readonly hasAnyWorkspace = computed(() => this.workspaces().length > 0);
+  protected readonly activeWorkspaceId = computed(() => this.activeWorkspace()?.id ?? null);
   protected readonly primaryWorkspace = computed(() => {
     const active = this.activeWorkspace();
     if (active) {
@@ -65,15 +54,89 @@ export class WorkspaceOverviewPageComponent {
   });
   protected readonly primaryWorkspaceId = computed(() => this.primaryWorkspace()?.id ?? null);
   protected readonly hasMultipleWorkspaces = computed(() => this.workspaces().length > 1);
-  protected readonly projects = signal(PROJECTS);
-  protected readonly selectedProject = signal<Project | null>(null);
-  protected readonly tasks = computed<Task[]>(() => {
-    const selected = this.selectedProject();
-    if (!selected) {
-      return [];
+  protected readonly workspaceMetrics = signal([
+    { label: 'Active spaces', value: 6, delta: '+2 vs last week' },
+    { label: 'Tasks due soon', value: 18, delta: '5 due today' },
+    { label: 'Docs created', value: 42, delta: '3 new this week' },
+    { label: 'Members engaged', value: '87%', delta: '↑ 12% from last week' }
+  ]);
+  protected readonly quickStartItems = signal([
+    {
+      label: 'Invite your teammates',
+      description: 'Bring collaborators into this workspace to assign tasks and share docs.',
+      action: () => this.goToMembers(),
+      done: false
+    },
+    {
+      label: 'Create your first space',
+      description: 'Organize projects by creating a space for each major initiative.',
+      action: () => this.goToSettings(),
+      done: false
+    },
+    {
+      label: 'Publish a kickoff doc',
+      description: 'Align the team with a shared plan, agenda, or brief.',
+      action: undefined,
+      done: true
     }
-    return TASKS[selected.id as keyof typeof TASKS] || [];
+  ]);
+  protected readonly activityFeed = signal([
+    {
+      actor: 'Taylor Swift',
+      action: 'completed “Build workspace overview wireframes” in Launch Plan',
+      time: '8 minutes ago'
+    },
+    {
+      actor: 'Jordan Blake',
+      action: 'commented on “Product roadmap Q3” doc',
+      time: '35 minutes ago'
+    },
+    {
+      actor: 'Morgan Lee',
+      action: 'created the space “Growth Experiments”',
+      time: '1 hour ago'
+    },
+    {
+      actor: 'Avery Chen',
+      action: 'assigned you 3 tasks in “Customer journey revamp”',
+      time: 'Yesterday'
+    }
+  ]);
+  protected readonly workspaceMembers = signal([
+    { name: 'Taylor Swift', role: 'Owner', status: 'Online', initials: 'TS' },
+    { name: 'Jordan Blake', role: 'Admin', status: 'Offline', initials: 'JB' },
+    { name: 'Morgan Lee', role: 'Member', status: 'Online', initials: 'ML' },
+    { name: 'Avery Chen', role: 'Member', status: 'Invited', initials: 'AC' }
+  ]);
+  protected readonly workspaceShortcuts = computed(() => {
+    const activeId = this.primaryWorkspaceId();
+
+    return [
+      {
+        name: 'Launch Plan board',
+        description: 'Kanban view tracking upcoming launch tasks.',
+        icon: '🗂️',
+        link: activeId ? ['/workspace', activeId, 'overview'] : ['/workspace']
+      },
+      {
+        name: 'Team Wiki',
+        description: 'Pinned docs and policies to keep everyone aligned.',
+        icon: '📘',
+        link: ['/docs']
+      },
+      {
+        name: 'Weekly sync doc',
+        description: 'Agenda for Monday stand-up with action items.',
+        icon: '📝',
+        link: ['/docs', 'weekly-sync']
+      }
+    ];
   });
+  protected readonly recentDocs = signal([
+    { title: 'Launch checklist', type: 'Doc', updated: '2h ago' },
+    { title: 'Sprint 18 retro', type: 'Doc', updated: 'Yesterday' },
+    { title: 'Roadmap Q3', type: 'Doc', updated: 'Mon' }
+  ]);
 
   protected readonly billingSummary = computed<WorkspaceBillingSummary>(() => {
     const workspace = this.activeWorkspace();
@@ -190,10 +253,6 @@ export class WorkspaceOverviewPageComponent {
     void this.router.navigate(['/workspace', workspaceId, 'overview']);
   }
 
-  protected handleProjectSelected(project: Project): void {
-    this.selectedProject.set(project);
-  }
-
   protected goToSettings(): void {
     const workspace = this.activeWorkspace();
 
@@ -243,6 +302,10 @@ export class WorkspaceOverviewPageComponent {
 
   protected trackByWorkspaceId(_index: number, workspace: { id: string }): string {
     return workspace.id;
+  }
+
+  protected trackByIndex(index: number): number {
+    return index;
   }
 
   private extractErrorMessage(error: unknown, fallback: string): string {

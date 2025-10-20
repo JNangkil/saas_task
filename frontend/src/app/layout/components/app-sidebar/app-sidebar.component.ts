@@ -93,7 +93,7 @@ export class AppSidebarComponent {
     this.closeWorkspaceMenu();
 
     if (section === 'overview') {
-      void this.router.navigate(['/workspace', activeId]);
+      void this.router.navigate(['/workspace', activeId, 'overview']);
       return;
     }
 
