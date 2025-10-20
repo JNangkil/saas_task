@@ -67,29 +67,31 @@
       </button>
     </div>
 
-    <ul class="sidebar__nav sidebar__nav--workspaces">
-      <li *ngFor="let workspace of workspaces(); trackBy: trackByWorkspaceId">
-        <a
-          class="sidebar__nav-link"
+    <ul class="sidebar__workspace-list">
+      <li
+        *ngFor="let workspace of workspaces(); trackBy: trackByWorkspaceId"
+        class="sidebar__workspace-item"
+        [class.is-active]="workspace.id === activeWorkspaceId()"
+      >
+        <button
+          type="button"
+          class="sidebar__workspace-button"
           [routerLink]="['/workspace', workspace.id, 'overview']"
           [class.is-active]="workspace.id === activeWorkspaceId()"
           (click)="selectWorkspace(workspace)"
         >
-          <span class="sidebar__nav-icon" aria-hidden="true">
+          <span class="sidebar__workspace-icon" aria-hidden="true">
             {{ workspaceInitials(workspace.name) }}
           </span>
-          <span class="sidebar__nav-label">{{ workspace.name }}</span>
-        </a>
+          <span class="sidebar__workspace-name">{{ workspace.name }}</span>
+          <span class="sidebar__workspace-caret" aria-hidden="true"></span>
+        </button>
+
+        <div class="sidebar__workspace-structure" *ngIf="workspace.id === activeWorkspaceId()">
+          <tf-workspace-structure-tree></tf-workspace-structure-tree>
+        </div>
       </li>
     </ul>
-  </section>
-
-  <section class="sidebar__section sidebar__section--structure" *ngIf="activeWorkspace()">
-    <div class="sidebar__section-header">
-      <h2 class="sidebar__section-title">Structure</h2>
-    </div>
-
-    <tf-workspace-structure-tree></tf-workspace-structure-tree>
   </section>
   <ng-template #emptyState>
     <section class="sidebar__section sidebar__section--empty">
