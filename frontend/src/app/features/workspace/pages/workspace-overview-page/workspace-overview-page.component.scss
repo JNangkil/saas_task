@@ -183,6 +183,10 @@
   gap: 1.35rem;
 }
 
+.workspace-overview__card--hierarchy {
+  gap: 1.5rem;
+}
+
 .workspace-overview__card-header {
   display: flex;
   align-items: flex-start;
@@ -202,6 +206,17 @@
   font-size: 0.95rem;
   color: rgba(15, 23, 42, 0.6);
   max-width: 40ch;
+}
+
+
+.workspace-overview__hierarchy-note {
+  margin: 0;
+  padding: 1rem 1.25rem;
+  border-radius: 1rem;
+  background: rgba(15, 23, 42, 0.05);
+  border: 1px dashed rgba(37, 99, 235, 0.3);
+  font-size: 0.95rem;
+  color: rgba(15, 23, 42, 0.75);
 }
 
 .workspace-overview__checklist,
@@ -592,6 +607,10 @@
 
   .workspace-overview__metrics {
     grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  }
+
+  .workspace-overview__hierarchy-note {
+    font-size: 0.9rem;
   }
 }
 
