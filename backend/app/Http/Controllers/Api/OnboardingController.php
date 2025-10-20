@@ -25,6 +25,14 @@ class OnboardingController extends Controller
             'onboarding_completed' => true,
         ])->save();
 
+        $primaryWorkspace = $user->ownedWorkspaces()->oldest('created_at')->first();
+
+        if ($primaryWorkspace) {
+            $primaryWorkspace->forceFill([
+                'name' => $payload['company_name'],
+            ])->save();
+        }
+
         if (! empty($payload['invites'])) {
             Log::info('Onboarding invites requested', [
                 'user_id' => $user->id,

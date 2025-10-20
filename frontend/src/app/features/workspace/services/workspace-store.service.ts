@@ -10,20 +10,21 @@ export class WorkspaceStoreService {
   private readonly activeWorkspaceId$ = new BehaviorSubject<string | null>(null);
 
   setWorkspaces(workspaces: Organization[]): void {
-    this.workspaces$.next(workspaces);
+    const sorted = [...workspaces].sort((a, b) => a.name.localeCompare(b.name));
+    this.workspaces$.next(sorted);
 
     const currentActiveId = this.activeWorkspaceId$.value;
     const containsActive = currentActiveId
-      ? workspaces.some(workspace => workspace.id === currentActiveId)
+      ? sorted.some(workspace => workspace.id === currentActiveId)
       : false;
 
-    if (workspaces.length === 0) {
+    if (sorted.length === 0) {
       this.activeWorkspaceId$.next(null);
       return;
     }
 
     if (!containsActive) {
-      this.activeWorkspaceId$.next(workspaces[0].id);
+      this.activeWorkspaceId$.next(sorted[0].id);
     }
   }
 
@@ -33,6 +34,47 @@ export class WorkspaceStoreService {
     }
 
     this.activeWorkspaceId$.next(workspaceId);
+  }
+
+  addWorkspace(workspace: Organization): void {
+    const updated = [...this.workspaces$.value, workspace].sort((a, b) =>
+      a.name.localeCompare(b.name)
+    );
+
+    this.workspaces$.next(updated);
+    this.activeWorkspaceId$.next(workspace.id);
+  }
+
+  updateWorkspace(workspace: Organization): void {
+    const updated = this.workspaces$.value.map(existing =>
+      existing.id === workspace.id ? workspace : existing
+    );
+
+    const sorted = [...updated].sort((a, b) => a.name.localeCompare(b.name));
+    this.workspaces$.next(sorted);
+
+    if (!this.activeWorkspaceId$.value && sorted.length) {
+      this.activeWorkspaceId$.next(sorted[0].id);
+    }
+  }
+
+  removeWorkspace(workspaceId: string): void {
+    const remaining = this.workspaces$.value.filter(workspace => workspace.id !== workspaceId);
+    this.workspaces$.next(remaining);
+
+    if (remaining.length === 0) {
+      this.activeWorkspaceId$.next(null);
+      return;
+    }
+
+    if (this.activeWorkspaceId$.value === workspaceId) {
+      this.activeWorkspaceId$.next(remaining[0].id);
+    }
+  }
+
+  reset(): void {
+    this.workspaces$.next([]);
+    this.activeWorkspaceId$.next(null);
   }
 
   observeWorkspaces(): Observable<Organization[]> {
@@ -47,5 +89,13 @@ export class WorkspaceStoreService {
     return combineLatest([this.workspaces$, this.activeWorkspaceId$]).pipe(
       map(([workspaces, activeId]) => workspaces.find(workspace => workspace.id === activeId) ?? null)
     );
+  }
+
+  getActiveWorkspaceId(): string | null {
+    return this.activeWorkspaceId$.value;
+  }
+
+  getWorkspacesSnapshot(): Organization[] {
+    return this.workspaces$.value;
   }
 }

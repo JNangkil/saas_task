@@ -1,0 +1,42 @@
+<section class="workspace-switcher">
+  <header class="workspace-switcher__header">
+    <h3 class="workspace-switcher__title">Workspaces</h3>
+    <button
+      type="button"
+      class="workspace-switcher__create"
+      (click)="handleCreateRequested()"
+    >
+      New
+    </button>
+  </header>
+
+  <ul class="workspace-switcher__list">
+    <li
+      *ngFor="let workspace of workspaces; trackBy: trackByWorkspace"
+      class="workspace-switcher__item"
+    >
+      <button
+        type="button"
+        class="workspace-switcher__button"
+        [class.workspace-switcher__button--active]="workspace.id === activeWorkspaceId"
+        (click)="handleSelect(workspace.id)"
+      >
+        <span class="workspace-switcher__initials">
+          {{ workspace.name.slice(0, 2).toUpperCase() }}
+        </span>
+        <span class="workspace-switcher__details">
+          <span class="workspace-switcher__name">{{ workspace.name }}</span>
+          <span class="workspace-switcher__meta">
+            {{ workspace.membershipRole }}
+          </span>
+        </span>
+      </button>
+    </li>
+  </ul>
+
+  <ng-container *ngIf="!workspaces.length">
+    <p class="workspace-switcher__empty">
+      No workspaces yet. Create one to get started.
+    </p>
+  </ng-container>
+</section>

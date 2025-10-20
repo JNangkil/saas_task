@@ -81,6 +81,98 @@
   gap: 1.5rem;
 }
 
+.dashboard-home__workspace-cta {
+  display: grid;
+  grid-template-columns: minmax(0, 2fr) minmax(220px, 240px);
+  gap: 1.5rem;
+  padding: 1.75rem;
+  border-radius: vars.$border-radius-lg;
+  background: linear-gradient(135deg, rgba(59, 130, 246, 0.15) 0%, rgba(94, 234, 212, 0.08) 100%);
+  border: 1px solid rgba(59, 130, 246, 0.25);
+  box-shadow: vars.$shadow-elevation-1;
+}
+
+.dashboard-home__workspace-cta-copy {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+
+  h2 {
+    margin: 0;
+    font-size: clamp(1.3rem, 2vw, 1.6rem);
+  }
+
+  p {
+    margin: 0;
+    color: vars.$color-text-muted;
+    line-height: 1.5;
+    max-width: 52ch;
+  }
+
+  ul {
+    margin: 0;
+    padding-left: 1.25rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+
+    li {
+      color: vars.$color-text-muted;
+      line-height: 1.4;
+    }
+  }
+}
+
+.dashboard-home__workspace-cta-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  align-items: flex-start;
+  justify-content: center;
+
+  button {
+    padding: 0.65rem 1.15rem;
+    border-radius: vars.$border-radius-md;
+    border: 1px solid rgba(88, 101, 242, 0.6);
+    background: linear-gradient(135deg, rgba(88, 101, 242, 0.9) 0%, rgba(14, 165, 233, 0.85) 100%);
+    color: #ffffff;
+    font-weight: 600;
+    font-size: 0.95rem;
+    cursor: pointer;
+    transition: transform 160ms ease, box-shadow 160ms ease;
+    box-shadow: 0 10px 25px rgba(88, 101, 242, 0.25);
+
+    &:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 14px 32px rgba(88, 101, 242, 0.28);
+    }
+  }
+
+  a {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: rgba(30, 64, 175, 0.95);
+    text-decoration: none;
+    position: relative;
+    padding-bottom: 0.15rem;
+
+    &::after {
+      content: '';
+      position: absolute;
+      inset-inline: 0;
+      bottom: 0;
+      height: 2px;
+      background: currentColor;
+      opacity: 0.35;
+      transition: opacity 160ms ease;
+    }
+
+    &:hover::after {
+      opacity: 0.75;
+    }
+  }
+}
+
 .dashboard-home__sidebar {
   display: flex;
   flex-direction: column;
@@ -177,5 +269,18 @@
   .dashboard-home__pulse {
     width: 100%;
     max-width: none;
+  }
+
+  .dashboard-home__workspace-cta {
+    grid-template-columns: 1fr;
+    padding: 1.5rem;
+  }
+
+  .dashboard-home__workspace-cta-actions {
+    align-items: stretch;
+
+    button {
+      width: 100%;
+    }
   }
 }

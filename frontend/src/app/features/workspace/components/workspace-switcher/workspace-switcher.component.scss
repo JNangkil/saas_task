@@ -1,0 +1,102 @@
+.workspace-switcher {
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  border-radius: 0.75rem;
+  padding: 1.5rem;
+  background-color: #fff;
+}
+
+.workspace-switcher__header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+
+.workspace-switcher__title {
+  margin: 0;
+  font-size: 1.125rem;
+  font-weight: 600;
+}
+
+.workspace-switcher__create {
+  border: none;
+  border-radius: 9999px;
+  background: rgba(59, 130, 246, 0.15);
+  color: rgba(37, 99, 235, 1);
+  padding: 0.4rem 0.875rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.workspace-switcher__create:hover {
+  background: rgba(59, 130, 246, 0.25);
+}
+
+.workspace-switcher__list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.workspace-switcher__item {
+  margin: 0;
+}
+
+.workspace-switcher__button {
+  width: 100%;
+  border: 1px solid rgba(148, 163, 184, 0.3);
+  background-color: #f8fafc;
+  border-radius: 0.75rem;
+  padding: 0.75rem 1rem;
+  display: flex;
+  gap: 0.75rem;
+  align-items: center;
+  text-align: left;
+  cursor: pointer;
+}
+
+.workspace-switcher__button:hover {
+  border-color: rgba(59, 130, 246, 0.5);
+}
+
+.workspace-switcher__button--active {
+  border-color: rgba(37, 99, 235, 1);
+  background: rgba(37, 99, 235, 0.08);
+}
+
+.workspace-switcher__initials {
+  width: 2.25rem;
+  height: 2.25rem;
+  border-radius: 9999px;
+  background: rgba(59, 130, 246, 0.15);
+  color: rgba(37, 99, 235, 1);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+}
+
+.workspace-switcher__details {
+  display: flex;
+  flex-direction: column;
+}
+
+.workspace-switcher__name {
+  font-weight: 600;
+}
+
+.workspace-switcher__meta {
+  font-size: 0.75rem;
+  color: rgba(15, 23, 42, 0.6);
+}
+
+.workspace-switcher__empty {
+  margin: 1rem 0 0;
+  font-size: 0.875rem;
+  color: rgba(15, 23, 42, 0.7);
+}

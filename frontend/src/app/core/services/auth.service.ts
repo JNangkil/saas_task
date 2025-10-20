@@ -9,6 +9,7 @@ import {
   OnboardingApiService
 } from './onboarding-api.service';
 import { TokenStorageService } from './token-storage.service';
+import { WorkspaceStoreService } from '../../features/workspace/services/workspace-store.service';
 
 const ANONYMOUS_USER: User = {
   id: '',
@@ -29,7 +30,8 @@ export class AuthService {
   constructor(
     private readonly authApi: AuthApiService,
     private readonly tokenStorage: TokenStorageService,
-    private readonly onboardingApi: OnboardingApiService
+    private readonly onboardingApi: OnboardingApiService,
+    private readonly workspaceStore: WorkspaceStoreService
   ) {}
 
   ensureSession(): Observable<User> {
@@ -101,6 +103,7 @@ export class AuthService {
 
     if (!token) {
       this.user$.next(ANONYMOUS_USER);
+      this.workspaceStore.reset();
       return of(ANONYMOUS_USER);
     }
 
@@ -120,6 +123,7 @@ export class AuthService {
   }
 
   private persistSession(response: AuthResponse): void {
+    this.workspaceStore.reset();
     this.tokenStorage.setAccessToken(response.token);
     this.user$.next(response.user);
     this.hasBootstrapped = true;
@@ -128,6 +132,7 @@ export class AuthService {
   private clearSession(): void {
     this.tokenStorage.clear();
     this.user$.next(ANONYMOUS_USER);
+    this.workspaceStore.reset();
     this.hasBootstrapped = true;
   }
 }

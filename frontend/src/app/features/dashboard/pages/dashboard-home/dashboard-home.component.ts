@@ -1,9 +1,12 @@
-import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
+import { toSignal } from '@angular/core/rxjs-interop';
+import { Router } from '@angular/router';
 
 import { AuthService } from '../../../../core/services/auth.service';
 import { DashboardActivityItem } from '../../components/activity-feed/activity-feed.component';
 import { DashboardProjectOverview } from '../../components/project-overview/project-overview.component';
 import { DashboardTaskSummary } from '../../components/task-summary/task-summary.component';
+import { WorkspaceStoreService } from '../../../workspace/services/workspace-store.service';
 
 interface DashboardFocusItem {
   title: string;
@@ -20,9 +23,16 @@ interface DashboardFocusItem {
 })
 export class DashboardHomeComponent {
   private readonly auth = inject(AuthService);
+  private readonly workspaceStore = inject(WorkspaceStoreService);
+  private readonly router = inject(Router);
 
   protected readonly user$ = this.auth.currentUser();
   protected readonly today = signal(new Date());
+
+  protected readonly workspaces = toSignal(this.workspaceStore.observeWorkspaces(), {
+    initialValue: []
+  });
+  protected readonly hasAnyWorkspace = computed(() => this.workspaces().length > 0);
 
   protected readonly taskSummary = signal<DashboardTaskSummary>({
     overdue: 6,
@@ -125,4 +135,8 @@ export class DashboardHomeComponent {
       cta: 'Open workload view'
     }
   ]);
+
+  protected goToWorkspaceSetup(): void {
+    void this.router.navigate(['/workspace'], { queryParams: { create: '1', from: 'dashboard' } });
+  }
 }

@@ -1,0 +1,75 @@
+<form class="workspace-settings" [formGroup]="form" (ngSubmit)="submit()" novalidate>
+  <div class="workspace-settings__field">
+    <label class="workspace-settings__label" for="workspace-name">Workspace name</label>
+    <input
+      id="workspace-name"
+      type="text"
+      class="workspace-settings__input"
+      formControlName="name"
+      [disabled]="disableSubmit"
+      autocomplete="organization"
+    />
+    <p class="workspace-settings__support">
+      This name appears in the sidebar and billing statements.
+    </p>
+    <p
+      class="workspace-settings__validation"
+      *ngIf="controls.name.invalid && controls.name.touched"
+    >
+      Workspace name is required and must be 120 characters or fewer.
+    </p>
+  </div>
+
+  <div class="workspace-settings__field">
+    <label class="workspace-settings__label" for="workspace-locale">Default locale</label>
+    <select
+      id="workspace-locale"
+      class="workspace-settings__select"
+      formControlName="defaultLocale"
+      [disabled]="disableSubmit"
+    >
+      <option *ngFor="let option of localeOptions" [value]="option.value">
+        {{ option.label }}
+      </option>
+    </select>
+    <p class="workspace-settings__support">
+      Determines date formats and translated copy for members.
+    </p>
+  </div>
+
+  <div class="workspace-settings__field">
+    <label class="workspace-settings__label" for="workspace-logo">Logo URL</label>
+    <input
+      id="workspace-logo"
+      type="url"
+      class="workspace-settings__input"
+      formControlName="logoUrl"
+      [disabled]="disableSubmit"
+      placeholder="https://example.com/logo.png"
+      autocomplete="url"
+    />
+    <p class="workspace-settings__support">
+      Optional. Use a square image for best results (PNG or SVG).
+    </p>
+  </div>
+
+  <p class="workspace-settings__error" *ngIf="error">
+    {{ error }}
+  </p>
+
+  <div class="workspace-settings__actions">
+    <button type="submit" class="workspace-settings__primary" [disabled]="disableSubmit">
+      {{ submitLabel }}
+    </button>
+
+    <button
+      type="button"
+      class="workspace-settings__danger"
+      *ngIf="mode === 'edit'"
+      (click)="handleDelete()"
+      [disabled]="disableDelete"
+    >
+      {{ deleting ? 'Deleting workspace...' : 'Delete workspace' }}
+    </button>
+  </div>
+</form>

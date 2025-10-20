@@ -100,6 +100,11 @@ export class AppSidebarComponent {
     void this.router.navigate(['/workspace', activeId, section]);
   }
 
+  protected openWorkspaceCreation(): void {
+    this.closeWorkspaceMenu();
+    void this.router.navigate(['/workspace'], { queryParams: { create: '1' } });
+  }
+
   protected workspaceInitials(name: string): string {
     const words = name.trim().split(/\s+/).filter(Boolean);
 

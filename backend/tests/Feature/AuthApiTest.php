@@ -31,6 +31,17 @@ class AuthApiTest extends TestCase
             'email' => 'jane@example.com',
             'company_name' => 'Acme Inc',
         ]);
+
+        $this->assertDatabaseHas('workspaces', [
+            'name' => 'Acme Inc',
+        ]);
+
+        $userId = User::where('email', 'jane@example.com')->value('id');
+
+        $this->assertDatabaseHas('workspace_user', [
+            'user_id' => $userId,
+            'role' => 'Owner',
+        ]);
     }
 
     public function test_user_can_login_and_receive_token(): void

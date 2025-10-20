@@ -17,6 +17,33 @@
 
   <section class="dashboard-home__grid">
     <div class="dashboard-home__main">
+      <section
+        *ngIf="!hasAnyWorkspace()"
+        class="dashboard-home__workspace-cta"
+        aria-labelledby="dashboard-workspace-cta-title"
+      >
+        <div class="dashboard-home__workspace-cta-copy">
+          <h2 id="dashboard-workspace-cta-title">Set up your first workspace</h2>
+          <p>
+            Workspaces keep projects, teammates, and billing organized. Create one now to unlock the
+            rest of your dashboard insights.
+          </p>
+          <ul>
+            <li>Invite teammates and assign roles with clarity.</li>
+            <li>Scope projects and reports to the teams that own them.</li>
+            <li>Keep billing, settings, and automations contained per workspace.</li>
+          </ul>
+        </div>
+        <div class="dashboard-home__workspace-cta-actions">
+          <button type="button" (click)="goToWorkspaceSetup()">
+            Create workspace
+          </button>
+          <a routerLink="/workspace" [queryParams]="{ create: '1' }">
+            Preview setup flow
+          </a>
+        </div>
+      </section>
+
       <app-task-summary [summary]="taskSummary()" heading="Task health"></app-task-summary>
       <app-project-overview [projects]="projectCards()" heading="Projects at a glance"></app-project-overview>
     </div>

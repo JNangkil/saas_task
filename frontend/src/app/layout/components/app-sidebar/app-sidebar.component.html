@@ -60,7 +60,12 @@
   </div>
 
   <section class="sidebar__section sidebar__section--workspaces" *ngIf="workspaces().length; else emptyState">
-    <h2 class="sidebar__section-title">Workspaces</h2>
+    <div class="sidebar__section-header">
+      <h2 class="sidebar__section-title">Workspaces</h2>
+      <button type="button" class="sidebar__section-action" (click)="openWorkspaceCreation()">
+        New
+      </button>
+    </div>
 
     <ul class="sidebar__nav sidebar__nav--workspaces">
       <li *ngFor="let workspace of workspaces(); trackBy: trackByWorkspaceId">
@@ -80,10 +85,18 @@
   </section>
   <ng-template #emptyState>
     <section class="sidebar__section sidebar__section--empty">
-      <h2 class="sidebar__section-title">Workspaces</h2>
+      <div class="sidebar__section-header">
+        <h2 class="sidebar__section-title">Workspaces</h2>
+        <button type="button" class="sidebar__section-action" (click)="openWorkspaceCreation()">
+          New
+        </button>
+      </div>
       <p class="sidebar__empty-copy">
         No workspaces yet. Create one to get started.
       </p>
+      <button type="button" class="sidebar__primary-button" (click)="openWorkspaceCreation()">
+        Create workspace
+      </button>
     </section>
   </ng-template>
 </nav>
