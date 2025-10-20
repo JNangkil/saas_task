@@ -226,6 +226,15 @@
   gap: 0.5rem;
 }
 
+.sidebar__section--structure {
+  flex: 1 1 auto;
+  min-height: 0;
+}
+
+.sidebar__section--structure tf-workspace-structure-tree {
+  display: block;
+}
+
 .sidebar__section-header {
   display: flex;
   align-items: center;
@@ -351,6 +360,10 @@
 :host-context(.shell--collapsed) .sidebar__section-title,
 :host-context(.shell--collapsed) .sidebar__nav-label,
 :host-context(.shell--collapsed) .sidebar__nav tf-badge {
+  display: none;
+}
+
+:host-context(.shell--collapsed) .sidebar__section--structure {
   display: none;
 }
 

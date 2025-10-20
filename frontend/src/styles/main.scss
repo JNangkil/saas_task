@@ -2,6 +2,7 @@
 @use './mixins' as mixins;
 @use './theme/light-theme';
 @use './theme/dark-theme';
+@use './workspace-overview';
 
 :root {
   font-family: $font-family-base;

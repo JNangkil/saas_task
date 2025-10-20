@@ -10,8 +10,6 @@ import {
   WorkspaceSettingsFormComponent
 } from '../../components/workspace-settings-form/workspace-settings-form.component';
 import { WorkspaceBillingSummary } from '../../components/billing-summary/workspace-billing-summary.component';
-import { WorkspaceHierarchyMapComponent } from '../../components/hierarchy-map/workspace-hierarchy-map.component';
-import { WorkspaceHierarchy } from '../../models/workspace-hierarchy.model';
 import { WorkspaceApiService } from '../../services/workspace-api.service';
 import { WorkspaceStoreService } from '../../services/workspace-store.service';
 
@@ -20,7 +18,7 @@ import { WorkspaceStoreService } from '../../services/workspace-store.service';
   templateUrl: './workspace-overview-page.component.html',
   styleUrls: ['./workspace-overview-page.component.scss'],
   standalone: true,
-  imports: [CommonModule, RouterModule, WorkspaceSettingsFormComponent, WorkspaceHierarchyMapComponent],
+  imports: [CommonModule, RouterModule, WorkspaceSettingsFormComponent],
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class WorkspaceOverviewPageComponent {
@@ -139,112 +137,6 @@ export class WorkspaceOverviewPageComponent {
     { title: 'Sprint 18 retro', type: 'Doc', updated: 'Yesterday' },
     { title: 'Roadmap Q3', type: 'Doc', updated: 'Mon' }
   ]);
-
-  protected readonly workspaceHierarchy = computed<WorkspaceHierarchy>(() => {
-    const workspaceName = this.primaryWorkspace()?.name ?? 'Workspace';
-
-    return {
-      workspaceName,
-      spaces: [
-        {
-          name: 'Client Work',
-          description:
-            'Spaces mirror departments or client programs. Everything inside stays scoped to that team.',
-          folders: [
-            {
-              name: 'Website Redesign',
-              description:
-                'Folders collect related projects. This one keeps every website deliverable together.',
-              lists: [
-                {
-                  name: 'Homepage Project',
-                  description:
-                    'Lists behave like projects or sprints. They hold all tasks for this initiative.',
-                  tasks: [
-                    {
-                      title: 'Design wireframe',
-                      status: 'Active',
-                      assignee: 'Morgan Lee',
-                      due: 'Due today'
-                    },
-                    {
-                      title: 'Write homepage copy',
-                      status: 'Review',
-                      assignee: 'Jordan Blake',
-                      due: 'Due tomorrow'
-                    },
-                    {
-                      title: 'Develop hero section',
-                      status: 'Backlog',
-                      assignee: 'Taylor Swift',
-                      due: 'Due Friday'
-                    }
-                  ]
-                },
-                {
-                  name: 'Launch Campaign',
-                  description:
-                    'Another list in the same folder can track supporting assets for launch.',
-                  tasks: [
-                    {
-                      title: 'Draft announcement email',
-                      status: 'Active',
-                      assignee: 'Avery Chen',
-                      due: 'Due next week'
-                    },
-                    {
-                      title: 'QA landing page',
-                      status: 'Review',
-                      assignee: 'Morgan Lee',
-                      due: 'Due next week'
-                    }
-                  ]
-                }
-              ]
-            }
-          ]
-        },
-        {
-          name: 'Internal Ops',
-          description:
-            'Spaces can also power internal programs so cross-functional teams stay aligned.',
-          folders: [
-            {
-              name: 'Team Rituals',
-              description:
-                'Use folders to separate recurring work like meetings or retrospectives.',
-              lists: [
-                {
-                  name: 'Weekly Sync Agenda',
-                  description: 'Lists keep the running log of agendas and follow-ups.',
-                  tasks: [
-                    {
-                      title: 'Prep talking points',
-                      status: 'Backlog',
-                      assignee: 'Jordan Blake',
-                      due: 'Due Monday'
-                    },
-                    {
-                      title: 'Collect metrics snapshot',
-                      status: 'Active',
-                      assignee: 'Taylor Swift',
-                      due: 'Due Monday'
-                    },
-                    {
-                      title: 'Share meeting recording',
-                      status: 'Complete',
-                      assignee: 'Morgan Lee',
-                      due: 'Completed yesterday'
-                    }
-                  ]
-                }
-              ]
-            }
-          ]
-        }
-      ]
-    };
-  });
 
   protected readonly billingSummary = computed<WorkspaceBillingSummary>(() => {
     const workspace = this.activeWorkspace();

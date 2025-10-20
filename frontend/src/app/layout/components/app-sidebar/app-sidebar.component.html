@@ -83,6 +83,14 @@
       </li>
     </ul>
   </section>
+
+  <section class="sidebar__section sidebar__section--structure" *ngIf="activeWorkspace()">
+    <div class="sidebar__section-header">
+      <h2 class="sidebar__section-title">Structure</h2>
+    </div>
+
+    <tf-workspace-structure-tree></tf-workspace-structure-tree>
+  </section>
   <ng-template #emptyState>
     <section class="sidebar__section sidebar__section--empty">
       <div class="sidebar__section-header">

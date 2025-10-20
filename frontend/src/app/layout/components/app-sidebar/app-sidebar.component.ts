@@ -4,6 +4,7 @@ import {
   ElementRef,
   HostListener,
   ViewChild,
+  effect,
   inject,
   signal
 } from '@angular/core';
@@ -14,6 +15,7 @@ import { filter, take } from 'rxjs/operators';
 import { AuthService } from '../../../core/services/auth.service';
 import { WorkspaceApiService } from '../../../features/workspace/services/workspace-api.service';
 import { WorkspaceStoreService } from '../../../features/workspace/services/workspace-store.service';
+import { WorkspaceStructureService } from '../../../features/workspace/services/workspace-structure.service';
 import { Organization } from '../../../shared/models/organization.model';
 
 @Component({
@@ -27,6 +29,7 @@ export class AppSidebarComponent {
   private readonly auth = inject(AuthService);
   private readonly workspaceApi = inject(WorkspaceApiService);
   private readonly workspaceStore = inject(WorkspaceStoreService);
+  private readonly workspaceStructure = inject(WorkspaceStructureService);
   private readonly router = inject(Router);
   @ViewChild('brandTrigger', { static: false }) private brandTrigger?: ElementRef<HTMLButtonElement>;
   @ViewChild('brandMenu', { static: false }) private brandMenu?: ElementRef<HTMLDivElement>;
@@ -70,6 +73,14 @@ export class AppSidebarComponent {
       .subscribe(event => {
         this.setActiveSectionFromUrl((event as NavigationEnd).urlAfterRedirects);
       });
+
+    effect(
+      () => {
+        const workspace = this.activeWorkspace();
+        this.workspaceStructure.setWorkspaceName(workspace?.name ?? 'Workspace');
+      },
+      { allowSignalWrites: true }
+    );
   }
 
   protected selectWorkspace(workspace: Organization): void {
