@@ -104,9 +104,10 @@ export class AppSidebarComponent {
     this.closeWorkspaceMenu();
     const activeId = this.activeWorkspaceId();
     const commands = activeId ? ['/workspace', activeId, 'overview'] : ['/workspace'];
+    const createToken = this.generateCreationToken();
 
     void this.router.navigate(commands, {
-      queryParams: { create: '1' },
+      queryParams: { create: createToken },
       queryParamsHandling: 'merge'
     });
   }
@@ -149,6 +150,12 @@ export class AppSidebarComponent {
     const sectionMatch = url.match(/\/workspace\/[^/]+\/([^/?]+)/);
     const section = sectionMatch ? sectionMatch[1] : 'overview';
     this.activeWorkspaceSection.set(section);
+  }
+
+  private generateCreationToken(): string {
+    const timestamp = Date.now().toString(36);
+    const random = Math.random().toString(36).slice(2, 8);
+    return `${timestamp}-${random}`;
   }
 
   @HostListener('document:click', ['$event'])

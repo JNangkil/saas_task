@@ -191,7 +191,8 @@ export class WorkspaceOverviewPageComponent {
         void this.router.navigate([], {
           relativeTo: this.route,
           queryParams: { create: null },
-          queryParamsHandling: 'merge'
+          queryParamsHandling: 'merge',
+          replaceUrl: true
         });
       });
   }
