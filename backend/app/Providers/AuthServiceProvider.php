@@ -1,0 +1,117 @@
+<?php
+
+namespace App\Providers;
+
+use App\Models\Tenant;
+use App\Models\User;
+use App\Models\Workspace;
+use App\Policies\TenantPolicy;
+use App\Policies\WorkspacePolicy;
+use Illuminate\Foundation\Support\Providers\AuthServiceProvider as ServiceProvider;
+use Illuminate\Support\Facades\Gate;
+
+class AuthServiceProvider extends ServiceProvider
+{
+    /**
+     * The model to policy mappings for the application.
+     *
+     * @var array<class-string, class-string>
+     */
+    protected $policies = [
+        Tenant::class => TenantPolicy::class,
+        Workspace::class => WorkspacePolicy::class,
+    ];
+
+    /**
+     * Register any authentication / authorization services.
+     */
+    public function boot(): void
+    {
+        $this->registerPolicies();
+
+        // Register gates for additional authorization checks
+        $this->registerGates();
+    }
+
+    /**
+     * Register additional gates.
+     */
+    protected function registerGates(): void
+    {
+        // Super admin gate - can bypass tenant restrictions
+        Gate::define('super-admin', function (User $user) {
+            // Implement your super admin logic here
+            // For example: return $user->email === 'admin@example.com';
+            return false; // Default to false until implemented
+        });
+
+        // Tenant member gate - can access tenant-scoped routes
+        Gate::define('tenant-member', function (User $user, ?Tenant $tenant = null) {
+            if (!$tenant) {
+                $tenant = tenant();
+            }
+            
+            return $tenant && $tenant->users()->where('users.id', $user->id)->exists();
+        });
+
+        // Workspace member gate - can access workspace-scoped routes
+        Gate::define('workspace-member', function (User $user, ?Workspace $workspace = null) {
+            if (!$workspace) {
+                // Check if user belongs to any workspace in current tenant
+                $tenant = tenant();
+                return $tenant && $user->workspaces()
+                    ->whereHas('tenant', fn($query) => $query->where('id', $tenant->id))
+                    ->exists();
+            }
+            
+            return $workspace->users()->where('users.id', $user->id)->exists();
+        });
+
+        // Tenant management gate - can manage tenant settings
+        Gate::define('manage-tenant', function (User $user, ?Tenant $tenant = null) {
+            if (!$tenant) {
+                $tenant = tenant();
+            }
+            
+            return $tenant && $tenant->canUserManage($user);
+        });
+
+        // Workspace management gate - can manage workspace settings
+        Gate::define('manage-workspace', function (User $user, ?Workspace $workspace = null) {
+            if (!$workspace) {
+                // Check if user can manage any workspace in current tenant
+                $tenant = tenant();
+                if (!$tenant) return false;
+                
+                return $user->workspaces()
+                    ->whereHas('tenant', fn($query) => $query->where('id', $tenant->id))
+                    ->wherePivot('role', 'admin')
+                    ->exists();
+            }
+            
+            return $workspace->canUserManage($user);
+        });
+
+        // Create workspace gate - can create workspaces in tenant
+        Gate::define('create-workspaces', function (User $user) {
+            $tenant = tenant();
+            return $tenant && $tenant->canUserManage($user);
+        });
+
+        // Create boards gate - can create boards in workspace
+        Gate::define('create-boards', function (User $user, ?Workspace $workspace = null) {
+            if (!$workspace) {
+                // Check if user can create boards in any workspace in current tenant
+                $tenant = tenant();
+                if (!$tenant) return false;
+                
+                return $user->workspaces()
+                    ->whereHas('tenant', fn($query) => $query->where('id', $tenant->id))
+                    ->whereIn('workspace_user.role', ['admin', 'member'])
+                    ->exists();
+            }
+            
+            return $workspace->canUserCreateBoardsInWorkspace($user);
+        });
+    }
+}
