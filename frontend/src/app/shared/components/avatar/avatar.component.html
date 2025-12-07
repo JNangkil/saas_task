@@ -1,4 +1,0 @@
-<div class="avatar" [attr.aria-label]="name">
-  <img *ngIf="src; else initialsTemplate" [src]="src" [alt]="name || 'User avatar'" />
-  <ng-template #initialsTemplate>{{ initials }}</ng-template>
-</div>
