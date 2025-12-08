@@ -1,0 +1,590 @@
+/* ============================================
+   PAST DUE BANNER COMPONENT - Professional Styles
+   ============================================ */
+
+/* Base Banner Styles */
+.past-due-banner {
+    position: relative;
+    width: 100%;
+    background: linear-gradient(135deg, #dc2626 0%, #991b1b 100%);
+    color: white;
+    overflow: hidden;
+    transition: all 0.3s ease;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+/* Urgency State Variations */
+.past-due-banner.past-due-normal {
+    background: linear-gradient(135deg, #dc2626 0%, #991b1b 100%);
+}
+
+.past-due-banner.past-due-urgent {
+    background: linear-gradient(135deg, #b91c1c 0%, #7f1d1d 100%);
+    animation: urgentPulse 2s ease-in-out infinite;
+}
+
+.past-due-banner.past-due-critical {
+    background: linear-gradient(135deg, #7f1d1d 0%, #450a0a 100%);
+    animation: criticalPulse 1s ease-in-out infinite;
+    border-bottom: 2px solid #ef4444;
+}
+
+/* Banner Container */
+.past-due-banner-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 16px 24px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    position: relative;
+    z-index: 2;
+}
+
+/* Banner Content */
+.past-due-banner-content {
+    display: flex;
+    align-items: center;
+    gap: 24px;
+    flex: 1;
+}
+
+/* Header Section */
+.past-due-banner-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex: 1;
+}
+
+.past-due-banner-icon {
+    font-size: 24px;
+    line-height: 1;
+    animation: iconShake 3s ease-in-out infinite;
+}
+
+.past-due-banner-title-section {
+    flex: 1;
+}
+
+.past-due-banner-title {
+    font-size: 18px;
+    font-weight: 700;
+    margin: 0 0 4px 0;
+    line-height: 1.2;
+    letter-spacing: -0.02em;
+}
+
+.past-due-banner-message {
+    font-size: 14px;
+    margin: 0 0 4px 0;
+    font-weight: 600;
+    line-height: 1.4;
+}
+
+.past-due-banner-description {
+    font-size: 13px;
+    margin: 0;
+    opacity: 0.9;
+    line-height: 1.4;
+    font-weight: 500;
+}
+
+/* Time Display */
+.past-due-banner-time {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    min-width: 140px;
+}
+
+.time-display {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+    cursor: help;
+    text-align: center;
+}
+
+.time-label {
+    font-size: 11px;
+    opacity: 0.8;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-bottom: 2px;
+}
+
+.time-value {
+    font-size: 18px;
+    font-weight: 800;
+    line-height: 1;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+}
+
+/* Grace Period Progress */
+.grace-period-progress {
+    width: 100%;
+    max-width: 120px;
+}
+
+.progress-bar {
+    width: 100%;
+    height: 6px;
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 3px;
+    overflow: hidden;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.progress-fill {
+    height: 100%;
+    background: rgba(255, 255, 255, 0.8);
+    border-radius: 3px;
+    transition: all 0.3s ease;
+}
+
+.progress-fill.progress-urgent {
+    background: #fbbf24;
+    animation: progressWarning 2s ease-in-out infinite;
+}
+
+.progress-fill.progress-critical {
+    background: #ef4444;
+    animation: progressCritical 1s ease-in-out infinite;
+}
+
+/* Actions */
+.past-due-banner-actions {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.update-payment-btn {
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    color: white;
+    padding: 12px 20px;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    backdrop-filter: blur(10px);
+}
+
+.update-payment-btn.btn-normal {
+    background: rgba(255, 255, 255, 0.2);
+}
+
+.update-payment-btn.btn-urgent {
+    background: rgba(251, 191, 36, 0.3);
+    border-color: rgba(251, 191, 36, 0.5);
+}
+
+.update-payment-btn.btn-critical {
+    background: rgba(239, 68, 68, 0.3);
+    border-color: rgba(239, 68, 68, 0.5);
+    animation: buttonPulse 1s ease-in-out infinite;
+}
+
+.update-payment-btn:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+.update-payment-btn.btn-normal:hover {
+    background: rgba(255, 255, 255, 0.3);
+    border-color: rgba(255, 255, 255, 0.5);
+}
+
+.update-payment-btn.btn-urgent:hover {
+    background: rgba(251, 191, 36, 0.4);
+    border-color: rgba(251, 191, 36, 0.6);
+}
+
+.update-payment-btn.btn-critical:hover {
+    background: rgba(239, 68, 68, 0.4);
+    border-color: rgba(239, 68, 68, 0.6);
+}
+
+.update-payment-btn:active {
+    transform: translateY(0);
+}
+
+.btn-icon {
+    font-size: 16px;
+}
+
+.btn-text {
+    font-weight: 600;
+}
+
+.dismiss-btn {
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    color: white;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    font-size: 18px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    line-height: 1;
+}
+
+.dismiss-btn:hover {
+    background: rgba(255, 255, 255, 0.2);
+    border-color: rgba(255, 255, 255, 0.3);
+    transform: scale(1.1);
+}
+
+.dismiss-icon {
+    display: block;
+    line-height: 1;
+}
+
+/* Urgency Indicator */
+.urgency-indicator {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    background: rgba(255, 255, 255, 0.2);
+    padding: 4px 8px;
+    border-radius: 12px;
+    font-size: 12px;
+    font-weight: 600;
+    backdrop-filter: blur(10px);
+    z-index: 3;
+}
+
+.pulse-dot {
+    width: 8px;
+    height: 8px;
+    background: #ef4444;
+    border-radius: 50%;
+    animation: pulse 1.5s ease-in-out infinite;
+}
+
+.pulse-dot.pulse-critical {
+    background: #dc2626;
+    animation: pulseCritical 0.8s ease-in-out infinite;
+}
+
+.urgency-text {
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+/* Background Effects */
+.past-due-banner-background {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 1;
+    pointer-events: none;
+}
+
+.urgency-gradient {
+    position: absolute;
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    background: radial-gradient(circle, rgba(239, 68, 68, 0.1) 0%, transparent 70%);
+    animation: rotate 10s linear infinite;
+}
+
+/* Warning Pattern Overlay */
+.warning-pattern {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-image: repeating-linear-gradient(45deg,
+            transparent,
+            transparent 10px,
+            rgba(255, 255, 255, 0.03) 10px,
+            rgba(255, 255, 255, 0.03) 20px);
+    z-index: 1;
+    pointer-events: none;
+    animation: warningShift 20s linear infinite;
+}
+
+/* Animations */
+@keyframes urgentPulse {
+
+    0%,
+    100% {
+        opacity: 1;
+    }
+
+    50% {
+        opacity: 0.9;
+    }
+}
+
+@keyframes criticalPulse {
+
+    0%,
+    100% {
+        opacity: 1;
+        transform: scale(1);
+    }
+
+    50% {
+        opacity: 0.95;
+        transform: scale(1.01);
+    }
+}
+
+@keyframes iconShake {
+
+    0%,
+    100% {
+        transform: translateX(0);
+    }
+
+    10%,
+    30%,
+    50%,
+    70%,
+    90% {
+        transform: translateX(-2px);
+    }
+
+    20%,
+    40%,
+    60%,
+    80% {
+        transform: translateX(2px);
+    }
+}
+
+@keyframes pulse {
+
+    0%,
+    100% {
+        opacity: 1;
+        transform: scale(1);
+    }
+
+    50% {
+        opacity: 0.5;
+        transform: scale(1.2);
+    }
+}
+
+@keyframes pulseCritical {
+
+    0%,
+    100% {
+        opacity: 1;
+        transform: scale(1);
+        background: #dc2626;
+    }
+
+    50% {
+        opacity: 0.3;
+        transform: scale(1.3);
+        background: #ef4444;
+    }
+}
+
+@keyframes rotate {
+    from {
+        transform: rotate(0deg);
+    }
+
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+@keyframes progressWarning {
+
+    0%,
+    100% {
+        opacity: 0.8;
+    }
+
+    50% {
+        opacity: 1;
+    }
+}
+
+@keyframes progressCritical {
+
+    0%,
+    100% {
+        opacity: 0.8;
+        transform: scaleY(1);
+    }
+
+    50% {
+        opacity: 1;
+        transform: scaleY(1.2);
+    }
+}
+
+@keyframes buttonPulse {
+
+    0%,
+    100% {
+        box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.4);
+    }
+
+    50% {
+        box-shadow: 0 0 0 8px rgba(239, 68, 68, 0.6);
+    }
+}
+
+@keyframes warningShift {
+    0% {
+        background-position: 0 0;
+    }
+
+    100% {
+        background-position: 28px 28px;
+    }
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .past-due-banner-container {
+        padding: 12px 16px;
+        flex-direction: column;
+        gap: 16px;
+    }
+
+    .past-due-banner-content {
+        flex-direction: column;
+        gap: 16px;
+        text-align: center;
+    }
+
+    .past-due-banner-header {
+        flex-direction: column;
+        gap: 8px;
+    }
+
+    .past-due-banner-title {
+        font-size: 16px;
+    }
+
+    .past-due-banner-message {
+        font-size: 13px;
+    }
+
+    .past-due-banner-description {
+        font-size: 12px;
+    }
+
+    .past-due-banner-time {
+        min-width: auto;
+    }
+
+    .time-value {
+        font-size: 16px;
+    }
+
+    .past-due-banner-actions {
+        width: 100%;
+        justify-content: center;
+    }
+
+    .update-payment-btn {
+        flex: 1;
+        justify-content: center;
+        max-width: 200px;
+    }
+
+    .urgency-indicator {
+        position: static;
+        align-self: center;
+        margin-top: 8px;
+    }
+}
+
+@media (max-width: 480px) {
+    .past-due-banner-container {
+        padding: 10px 12px;
+    }
+
+    .past-due-banner-title {
+        font-size: 15px;
+    }
+
+    .past-due-banner-message {
+        font-size: 12px;
+    }
+
+    .past-due-banner-description {
+        font-size: 11px;
+    }
+
+    .time-value {
+        font-size: 14px;
+    }
+
+    .update-payment-btn {
+        padding: 10px 16px;
+        font-size: 13px;
+    }
+
+    .dismiss-btn {
+        width: 28px;
+        height: 28px;
+        font-size: 16px;
+    }
+}
+
+/* Accessibility */
+@media (prefers-reduced-motion: reduce) {
+
+    .past-due-banner,
+    .past-due-banner.past-due-urgent,
+    .past-due-banner.past-due-critical,
+    .past-due-banner-icon,
+    .pulse-dot,
+    .urgency-gradient,
+    .warning-pattern {
+        animation: none;
+    }
+
+    .update-payment-btn:hover,
+    .dismiss-btn:hover {
+        transform: none;
+    }
+}
+
+/* High Contrast Mode */
+@media (prefers-contrast: high) {
+    .past-due-banner {
+        border-bottom: 2px solid;
+    }
+
+    .update-payment-btn,
+    .dismiss-btn {
+        border-width: 2px;
+    }
+
+    .progress-bar {
+        border: 1px solid rgba(255, 255, 255, 0.5);
+    }
+}

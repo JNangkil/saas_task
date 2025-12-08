@@ -1,0 +1,89 @@
+<section class="upgrade-prompt" *ngIf="shouldShow()" [class]="getUrgencyClass()" role="alert" aria-live="polite">
+    <div class="upgrade-prompt-container">
+        <!-- Prompt Content -->
+        <div class="upgrade-prompt-content">
+            <!-- Icon and Title -->
+            <div class="upgrade-prompt-header">
+                <span class="upgrade-prompt-icon" aria-hidden="true">{{ getPromptTitle().split(' ')[0] }}</span>
+                <div class="upgrade-prompt-title-section">
+                    <h2 class="upgrade-prompt-title">{{ getPromptTitle().split(' ').slice(1).join(' ') }}</h2>
+                    <p class="upgrade-prompt-message">{{ getPromptMessage() }}</p>
+                </div>
+            </div>
+
+            <!-- Current Usage Overview -->
+            <div class="usage-overview" *ngIf="usageStatistics">
+                <h3 class="overview-title">Current Usage Overview</h3>
+                <div class="usage-grid">
+                    <div class="usage-item" *ngFor="let feature of overLimitFeatures; let i = index"
+                        [class.over-limit]="true">
+                        <div class="usage-info">
+                            <span class="feature-name">{{ feature }}</span>
+                            <span class="usage-status">Over Limit</span>
+                        </div>
+                        <div class="usage-details">
+                            <span class="current-usage">
+                                {{ usageStatistics.current_usage[feature.toLowerCase().replace(/\s+/g, '_')] || 0 }}
+                            </span>
+                            <span class="limit-separator">/</span>
+                            <span class="limit-value">
+                                {{ usageStatistics.limits[feature.toLowerCase().replace(/\s+/g, '_')] || '∞' }}
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Recommended Plan -->
+            <div class="recommended-plan" *ngIf="recommendedPlan">
+                <div class="plan-card recommended">
+                    <div class="plan-header">
+                        <h4 class="plan-name">{{ recommendedPlan.name }}</h4>
+                        <div class="plan-price">
+                            <span class="currency">{{ recommendedPlan.currency_symbol }}</span>
+                            <span class="amount">{{ recommendedPlan.price }}</span>
+                            <span class="billing-period">/{{ recommendedPlan.billing_interval_display.toLowerCase()
+                                }}</span>
+                        </div>
+                        <div class="plan-comparison">
+                            <span class="comparison-text">{{ getPlanComparisonText(recommendedPlan) }}</span>
+                        </div>
+                    </div>
+
+                    <div class="plan-features">
+                        <div class="feature-highlight" *ngFor="let feature of getPlanHighlights(recommendedPlan)">
+                            <span class="feature-icon">✓</span>
+                            <span class="feature-text">{{ feature }}</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Actions -->
+            <div class="upgrade-prompt-actions">
+                <button class="upgrade-btn" *ngIf="showUpgradeButton && recommendedPlan"
+                    (click)="onUpgradeClick(recommendedPlan)" [class]="isUrgent ? 'btn-urgent' : 'btn-normal'"
+                    [attr.aria-label]="`Upgrade to ${recommendedPlan.name} plan`">
+                    <span class="btn-icon">⚡</span>
+                    <span class="btn-text">{{ getUpgradeButtonText(recommendedPlan) }}</span>
+                </button>
+
+                <button class="dismiss-btn" (click)="onDismissClick()" [attr.aria-label]="'Dismiss upgrade prompt'"
+                    title="Hide this prompt for current session">
+                    <span class="dismiss-icon" aria-hidden="true">×</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- Urgency Indicator -->
+        <div class="urgency-indicator" *ngIf="isUrgent" [attr.aria-label]="getPromptMessage()">
+            <div class="pulse-dot"></div>
+            <span class="urgency-text">Action Required</span>
+        </div>
+    </div>
+
+    <!-- Animated Background for Urgent States -->
+    <div class="upgrade-prompt-background" *ngIf="isUrgent">
+        <div class="urgency-gradient"></div>
+    </div>
+</section>

@@ -1,0 +1,460 @@
+/* ============================================
+   TRIAL BANNER COMPONENT - Professional Styles
+   ============================================ */
+
+/* Base Banner Styles */
+.trial-banner {
+    position: relative;
+    width: 100%;
+    background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+    color: white;
+    overflow: hidden;
+    transition: all 0.3s ease;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+/* Urgency State Variations */
+.trial-banner.trial-normal {
+    background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+}
+
+.trial-banner.trial-warning {
+    background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+}
+
+.trial-banner.trial-urgent {
+    background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+    animation: urgentPulse 2s ease-in-out infinite;
+}
+
+.trial-banner.trial-critical {
+    background: linear-gradient(135deg, #dc2626 0%, #991b1b 100%);
+    animation: criticalPulse 1s ease-in-out infinite;
+}
+
+.trial-banner.trial-expired {
+    background: linear-gradient(135deg, #991b1b 0%, #7f1d1d 100%);
+    animation: expiredPulse 0.5s ease-in-out infinite;
+}
+
+/* Banner Container */
+.trial-banner-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 16px 24px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    position: relative;
+    z-index: 2;
+}
+
+/* Banner Content */
+.trial-banner-content {
+    display: flex;
+    align-items: center;
+    gap: 24px;
+    flex: 1;
+}
+
+/* Header Section */
+.trial-banner-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex: 1;
+}
+
+.trial-banner-icon {
+    font-size: 24px;
+    line-height: 1;
+    animation: iconBounce 2s ease-in-out infinite;
+}
+
+.trial-banner-title-section {
+    flex: 1;
+}
+
+.trial-banner-title {
+    font-size: 18px;
+    font-weight: 700;
+    margin: 0 0 4px 0;
+    line-height: 1.2;
+    letter-spacing: -0.02em;
+}
+
+.trial-banner-message {
+    font-size: 14px;
+    margin: 0;
+    opacity: 0.9;
+    line-height: 1.4;
+    font-weight: 500;
+}
+
+/* Time Display */
+.trial-banner-time {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    min-width: 120px;
+}
+
+.time-display {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+    cursor: help;
+}
+
+.time-value {
+    font-size: 20px;
+    font-weight: 800;
+    line-height: 1;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+}
+
+.time-label {
+    font-size: 12px;
+    opacity: 0.8;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+/* Progress Bar */
+.trial-progress {
+    width: 100%;
+    max-width: 100px;
+}
+
+.progress-bar {
+    width: 100%;
+    height: 4px;
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 2px;
+    overflow: hidden;
+}
+
+.progress-fill {
+    height: 100%;
+    background: rgba(255, 255, 255, 0.8);
+    border-radius: 2px;
+    transition: width 0.3s ease;
+}
+
+/* Actions */
+.trial-banner-actions {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.upgrade-btn {
+    background: rgba(255, 255, 255, 0.2);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    color: white;
+    padding: 10px 20px;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    backdrop-filter: blur(10px);
+}
+
+.upgrade-btn:hover {
+    background: rgba(255, 255, 255, 0.3);
+    border-color: rgba(255, 255, 255, 0.5);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.upgrade-btn:active {
+    transform: translateY(0);
+}
+
+.btn-icon {
+    font-size: 16px;
+}
+
+.btn-text {
+    font-weight: 600;
+}
+
+.dismiss-btn {
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    color: white;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    font-size: 18px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    line-height: 1;
+}
+
+.dismiss-btn:hover {
+    background: rgba(255, 255, 255, 0.2);
+    border-color: rgba(255, 255, 255, 0.3);
+    transform: scale(1.1);
+}
+
+.dismiss-icon {
+    display: block;
+    line-height: 1;
+}
+
+/* Urgency Indicator */
+.urgency-indicator {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    background: rgba(255, 255, 255, 0.2);
+    padding: 4px 8px;
+    border-radius: 12px;
+    font-size: 12px;
+    font-weight: 600;
+    backdrop-filter: blur(10px);
+    z-index: 3;
+}
+
+.pulse-dot {
+    width: 8px;
+    height: 8px;
+    background: #ef4444;
+    border-radius: 50%;
+    animation: pulse 1.5s ease-in-out infinite;
+}
+
+.urgency-text {
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+/* Background Effects */
+.trial-banner-background {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 1;
+    pointer-events: none;
+}
+
+.urgency-gradient {
+    position: absolute;
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    background: radial-gradient(circle, rgba(255, 255, 255, 0.1) 0%, transparent 70%);
+    animation: rotate 10s linear infinite;
+}
+
+/* Animations */
+@keyframes urgentPulse {
+
+    0%,
+    100% {
+        opacity: 1;
+    }
+
+    50% {
+        opacity: 0.9;
+    }
+}
+
+@keyframes criticalPulse {
+
+    0%,
+    100% {
+        opacity: 1;
+        transform: scale(1);
+    }
+
+    50% {
+        opacity: 0.95;
+        transform: scale(1.01);
+    }
+}
+
+@keyframes expiredPulse {
+
+    0%,
+    100% {
+        opacity: 1;
+        transform: scale(1);
+    }
+
+    50% {
+        opacity: 0.9;
+        transform: scale(1.02);
+    }
+}
+
+@keyframes iconBounce {
+
+    0%,
+    100% {
+        transform: translateY(0);
+    }
+
+    50% {
+        transform: translateY(-2px);
+    }
+}
+
+@keyframes pulse {
+
+    0%,
+    100% {
+        opacity: 1;
+        transform: scale(1);
+    }
+
+    50% {
+        opacity: 0.5;
+        transform: scale(1.2);
+    }
+}
+
+@keyframes rotate {
+    from {
+        transform: rotate(0deg);
+    }
+
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .trial-banner-container {
+        padding: 12px 16px;
+        flex-direction: column;
+        gap: 16px;
+    }
+
+    .trial-banner-content {
+        flex-direction: column;
+        gap: 16px;
+        text-align: center;
+    }
+
+    .trial-banner-header {
+        flex-direction: column;
+        gap: 8px;
+    }
+
+    .trial-banner-title {
+        font-size: 16px;
+    }
+
+    .trial-banner-message {
+        font-size: 13px;
+    }
+
+    .trial-banner-time {
+        min-width: auto;
+    }
+
+    .time-value {
+        font-size: 18px;
+    }
+
+    .trial-banner-actions {
+        width: 100%;
+        justify-content: center;
+    }
+
+    .upgrade-btn {
+        flex: 1;
+        justify-content: center;
+        max-width: 200px;
+    }
+
+    .urgency-indicator {
+        position: static;
+        align-self: center;
+        margin-top: 8px;
+    }
+}
+
+@media (max-width: 480px) {
+    .trial-banner-container {
+        padding: 10px 12px;
+    }
+
+    .trial-banner-title {
+        font-size: 15px;
+    }
+
+    .trial-banner-message {
+        font-size: 12px;
+    }
+
+    .time-value {
+        font-size: 16px;
+    }
+
+    .upgrade-btn {
+        padding: 8px 16px;
+        font-size: 13px;
+    }
+
+    .dismiss-btn {
+        width: 28px;
+        height: 28px;
+        font-size: 16px;
+    }
+}
+
+/* Accessibility */
+@media (prefers-reduced-motion: reduce) {
+
+    .trial-banner,
+    .trial-banner-trial-urgent,
+    .trial-banner-trial-critical,
+    .trial-banner-trial-expired,
+    .trial-banner-icon,
+    .pulse-dot,
+    .urgency-gradient {
+        animation: none;
+    }
+
+    .upgrade-btn:hover,
+    .dismiss-btn:hover {
+        transform: none;
+    }
+}
+
+/* High Contrast Mode */
+@media (prefers-contrast: high) {
+    .trial-banner {
+        border-bottom: 2px solid;
+    }
+
+    .upgrade-btn,
+    .dismiss-btn {
+        border-width: 2px;
+    }
+
+    .progress-bar {
+        border: 1px solid rgba(255, 255, 255, 0.5);
+    }
+}

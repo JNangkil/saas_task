@@ -1,0 +1,347 @@
+<main class="pricing-page" role="main">
+    <!-- Hero Section -->
+    <section class="hero-section" id="hero">
+        <div class="container">
+            <div class="hero-content">
+                <h1 class="hero-title">Choose Your Perfect Plan</h1>
+                <p class="hero-subtitle">
+                    Scale your team collaboration with flexible pricing that grows with your business.
+                    Start free, upgrade when you need more power.
+                </p>
+
+                <!-- Billing Toggle -->
+                <div class="billing-toggle" role="group" aria-label="Billing interval selection">
+                    <button class="toggle-btn" [class.active]="billingInterval === 'month'"
+                        (click)="toggleBillingInterval('month')" aria-pressed="true" id="monthly-billing">
+                        Monthly
+                    </button>
+                    <button class="toggle-btn" [class.active]="billingInterval === 'year'"
+                        (click)="toggleBillingInterval('year')" aria-pressed="false" id="yearly-billing">
+                        Yearly
+                        <span class="savings-badge">Save 17%</span>
+                    </button>
+                </div>
+
+                <!-- Current Plan Indicator -->
+                <div class="current-plan-indicator" *ngIf="currentSubscription">
+                    <span class="current-plan-label">Current Plan:</span>
+                    <span class="current-plan-name">{{ currentSubscription.plan?.name }}</span>
+                    <span class="current-plan-status">{{ getSubscriptionStatusDisplay() }}</span>
+                    <button class="manage-btn" (click)="goToCustomerPortal()" aria-label="Manage your subscription">
+                        Manage Subscription
+                    </button>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Loading State -->
+    <div class="loading-container" *ngIf="isLoading">
+        <div class="loading-spinner"></div>
+        <p>Loading pricing plans...</p>
+    </div>
+
+    <!-- Error State -->
+    <div class="error-container" *ngIf="error">
+        <div class="error-message">
+            <span class="error-icon">⚠️</span>
+            <span>{{ error }}</span>
+            <button class="retry-btn" (click)="loadPricingData()">Retry</button>
+        </div>
+    </div>
+
+    <!-- Pricing Plans Section -->
+    <section class="pricing-plans-section" id="pricing" *ngIf="!isLoading && !error">
+        <div class="container">
+            <div class="plans-grid">
+                <!-- Plan Card -->
+                <article *ngFor="let plan of plans" class="plan-card" [class]="getPlanCardClasses(plan)" role="article"
+                    [attr.aria-label]="`${plan.name} plan - ${plan.description || 'Choose this plan'}`">
+
+                    <!-- Popular Badge -->
+                    <div class="popular-badge" *ngIf="plan.is_popular">
+                        <span class="badge-text">Most Popular</span>
+                    </div>
+
+                    <!-- Current Plan Badge -->
+                    <div class="current-badge" *ngIf="isCurrentPlan(plan)">
+                        <span class="badge-text">Current Plan</span>
+                    </div>
+
+                    <!-- Plan Header -->
+                    <header class="plan-header">
+                        <h3 class="plan-name">{{ plan.name }}</h3>
+                        <div class="plan-price">
+                            <span class="currency">{{ plan.currency_symbol }}</span>
+                            <span class="amount">{{ plan.price }}</span>
+                            <span class="billing-period">/{{ plan.billing_interval_display }}</span>
+                        </div>
+                        <div class="yearly-savings"
+                            *ngIf="billingInterval === 'year' && plan.yearly_discount_percentage">
+                            <span class="savings-text">{{ getYearlySavingsDisplay(plan) }}</span>
+                        </div>
+                        <p class="plan-description" *ngIf="plan.description">
+                            {{ plan.description }}
+                        </p>
+                    </header>
+
+                    <!-- Plan Features -->
+                    <div class="plan-features">
+                        <h4 class="features-title">What's included</h4>
+                        <ul class="features-list">
+                            <!-- Feature Highlights -->
+                            <li class="feature-item" *ngFor="let feature of plan.feature_highlights">
+                                <span class="feature-icon">✓</span>
+                                <span class="feature-text">{{ feature }}</span>
+                            </li>
+
+                            <!-- Limits -->
+                            <li class="limit-item" *ngFor="let limit of plan.limit_highlights">
+                                <span class="limit-icon">📊</span>
+                                <span class="limit-text">{{ limit }}</span>
+                            </li>
+                        </ul>
+                    </div>
+
+                    <!-- Plan Actions -->
+                    <div class="plan-actions">
+                        <!-- Comparison Toggle -->
+                        <button class="compare-btn" (click)="togglePlanForComparison(plan.slug)"
+                            [class.selected]="selectedPlansForComparison.includes(plan.slug)"
+                            aria-label="Add {{ plan.name }} to comparison">
+                            <span class="compare-icon">⚖️</span>
+                            {{ selectedPlansForComparison.includes(plan.slug) ? 'Remove from' : 'Add to' }} Comparison
+                        </button>
+
+                        <!-- Select Plan Button -->
+                        <button class="select-plan-btn" [class.current-plan]="isCurrentPlan(plan)"
+                            [class.loading]="isProcessingCheckout" (click)="selectPlan(plan)"
+                            [disabled]="isCurrentPlan(plan) || isProcessingCheckout"
+                            aria-label="Select {{ plan.name }} plan">
+                            <span class="btn-text" *ngIf="!isCurrentPlan(plan)">
+                                {{ isProcessingCheckout ? 'Processing...' : 'Select Plan' }}
+                            </span>
+                            <span class="btn-text" *ngIf="isCurrentPlan(plan)">
+                                Current Plan
+                            </span>
+                        </button>
+
+                        <!-- Trial Information -->
+                        <div class="trial-info" *ngIf="plan.trial_days > 0 && !isCurrentPlan(plan)">
+                            <span class="trial-text">{{ plan.trial_days }}-day free trial</span>
+                        </div>
+                    </div>
+                </article>
+            </div>
+        </div>
+    </section>
+
+    <!-- Plan Comparison Section -->
+    <section class="comparison-section" id="comparison" *ngIf="showComparison && planComparison">
+        <div class="container">
+            <h2 class="section-title">Plan Comparison</h2>
+
+            <!-- Comparison Loading -->
+            <div class="comparison-loading" *ngIf="comparisonLoading">
+                <div class="loading-spinner"></div>
+                <p>Generating comparison...</p>
+            </div>
+
+            <!-- Comparison Table -->
+            <div class="comparison-table-container" *ngIf="!comparisonLoading && planComparison">
+                <table class="comparison-table">
+                    <thead>
+                        <tr>
+                            <th class="feature-column">Features</th>
+                            <th *ngFor="let plan of planComparison.plans" class="plan-column">
+                                <div class="plan-header-cell">
+                                    <h4>{{ plan.name }}</h4>
+                                    <div class="plan-price-cell">
+                                        <span>{{ plan.currency_symbol }}{{ plan.price }}/{{
+                                            plan.billing_interval_display }}</span>
+                                    </div>
+                                </div>
+                            </th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <!-- Features Comparison -->
+                        <tr *ngFor="let feature of planComparison.comparison_matrix.features" class="feature-row">
+                            <td class="feature-name">
+                                <div class="feature-info">
+                                    <strong>{{ feature.display_name }}</strong>
+                                    <small>{{ feature.description }}</small>
+                                </div>
+                            </td>
+                            <td *ngFor="let planFeature of feature.plans" class="feature-value">
+                                <span class="feature-check" *ngIf="planFeature.has_feature"
+                                    aria-label="Included">✓</span>
+                                <span class="feature-cross" *ngIf="!planFeature.has_feature"
+                                    aria-label="Not included">✗</span>
+                            </td>
+                        </tr>
+
+                        <!-- Limits Comparison -->
+                        <tr *ngFor="let limit of planComparison.comparison_matrix.limits" class="limit-row">
+                            <td class="limit-name">
+                                <div class="limit-info">
+                                    <strong>{{ limit.display_name }}</strong>
+                                    <small>{{ limit.unit }}</small>
+                                </div>
+                            </td>
+                            <td *ngFor="let planLimit of limit.plans" class="limit-value">
+                                <span class="limit-display">
+                                    {{ planLimit.is_unlimited ? 'Unlimited' : planLimit.display_value }}
+                                </span>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </section>
+
+    <!-- Testimonials Section -->
+    <section class="testimonials-section" id="testimonials">
+        <div class="container">
+            <h2 class="section-title">What Our Customers Say</h2>
+            <div class="testimonials-grid">
+                <article *ngFor="let testimonial of testimonials" class="testimonial-card">
+                    <div class="testimonial-content">
+                        <div class="testimonial-rating">
+                            <span *ngFor="let star of getStarRating(testimonial.rating)" class="star"
+                                [class.filled]="star === '★'" aria-label="Rating star">
+                                {{ star }}
+                            </span>
+                        </div>
+                        <blockquote class="testimonial-text">
+                            "{{ testimonial.content }}"
+                        </blockquote>
+                    </div>
+                    <div class="testimonial-author">
+                        <div class="author-avatar">{{ testimonial.avatar }}</div>
+                        <div class="author-info">
+                            <h4 class="author-name">{{ testimonial.name }}</h4>
+                            <p class="author-role">{{ testimonial.role }}</p>
+                        </div>
+                    </div>
+                </article>
+            </div>
+        </div>
+    </section>
+
+    <!-- FAQ Section -->
+    <section class="faq-section" id="faq">
+        <div class="container">
+            <h2 class="section-title">Frequently Asked Questions</h2>
+            <div class="faq-list">
+                <article *ngFor="let faq of faqItems" class="faq-item" [class.expanded]="expandedFaqItems.has(faq.id)">
+                    <button class="faq-question" (click)="toggleFaqItem(faq.id)"
+                        aria-expanded="expandedFaqItems.has(faq.id)" [attr.aria-controls]="'faq-answer-' + faq.id">
+                        <span class="question-text">{{ faq.question }}</span>
+                        <span class="toggle-icon" [class.rotated]="expandedFaqItems.has(faq.id)">
+                            ▼
+                        </span>
+                    </button>
+                    <div class="faq-answer" id="faq-answer-{{ faq.id }}" [class.visible]="expandedFaqItems.has(faq.id)">
+                        <p>{{ faq.answer }}</p>
+                    </div>
+                </article>
+            </div>
+        </div>
+    </section>
+
+    <!-- Enterprise Contact Section -->
+    <section class="enterprise-section" id="enterprise">
+        <div class="container">
+            <div class="enterprise-content">
+                <div class="enterprise-info">
+                    <h2 class="enterprise-title">Need a Custom Solution?</h2>
+                    <p class="enterprise-description">
+                        Our Enterprise plan offers custom features, dedicated support, and flexible pricing
+                        tailored to your organization's specific needs.
+                    </p>
+                    <ul class="enterprise-features">
+                        <li class="enterprise-feature">
+                            <span class="feature-icon">🔒</span>
+                            <span>Advanced security & compliance</span>
+                        </li>
+                        <li class="enterprise-feature">
+                            <span class="feature-icon">👥</span>
+                            <span>Dedicated account manager</span>
+                        </li>
+                        <li class="enterprise-feature">
+                            <span class="feature-icon">⚡</span>
+                            <span>99.9% uptime SLA guarantee</span>
+                        </li>
+                        <li class="enterprise-feature">
+                            <span class="feature-icon">🎯</span>
+                            <span>Custom feature development</span>
+                        </li>
+                    </ul>
+                </div>
+
+                <div class="enterprise-form">
+                    <h3>Contact Sales</h3>
+                    <form [formGroup]="contactForm" (ngSubmit)="submitContactForm()">
+                        <div class="form-group">
+                            <label for="contact-name">Name *</label>
+                            <input id="contact-name" type="text" formControlName="name" placeholder="Your full name"
+                                required aria-required="true">
+                        </div>
+
+                        <div class="form-group">
+                            <label for="contact-email">Email *</label>
+                            <input id="contact-email" type="email" formControlName="email" placeholder="your@email.com"
+                                required aria-required="true">
+                        </div>
+
+                        <div class="form-group">
+                            <label for="contact-company">Company</label>
+                            <input id="contact-company" type="text" formControlName="company"
+                                placeholder="Your company name">
+                        </div>
+
+                        <div class="form-group">
+                            <label for="contact-message">Message</label>
+                            <textarea id="contact-message" formControlName="message"
+                                placeholder="Tell us about your needs..." rows="4"></textarea>
+                        </div>
+
+                        <button type="submit" class="submit-btn" [disabled]="contactForm.invalid">
+                            Contact Sales
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Trust Signals Section -->
+    <section class="trust-section">
+        <div class="container">
+            <div class="trust-badges">
+                <div class="trust-badge">
+                    <span class="badge-icon">🔒</span>
+                    <span class="badge-text">SSL Encrypted</span>
+                </div>
+                <div class="trust-badge">
+                    <span class="badge-icon">🛡️</span>
+                    <span class="badge-text">GDPR Compliant</span>
+                </div>
+                <div class="trust-badge">
+                    <span class="badge-icon">💳</span>
+                    <span class="badge-text">Secure Payments</span>
+                </div>
+                <div class="trust-badge">
+                    <span class="badge-icon">📞</span>
+                    <span class="badge-text">24/7 Support</span>
+                </div>
+                <div class="trust-badge">
+                    <span class="badge-icon">🔄</span>
+                    <span class="badge-text">30-Day Guarantee</span>
+                </div>
+            </div>
+        </div>
+    </section>
+</main>

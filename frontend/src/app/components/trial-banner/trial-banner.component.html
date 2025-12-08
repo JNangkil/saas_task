@@ -1,0 +1,59 @@
+<section class="trial-banner" *ngIf="shouldShow()" [class]="getUrgencyClass()" role="alert" aria-live="polite">
+    <div class="trial-banner-container">
+        <!-- Banner Content -->
+        <div class="trial-banner-content">
+            <!-- Icon and Title -->
+            <div class="trial-banner-header">
+                <span class="trial-banner-icon" aria-hidden="true">{{ getBannerTitle().split(' ')[0] }}</span>
+                <div class="trial-banner-title-section">
+                    <h2 class="trial-banner-title">{{ getBannerTitle().split(' ').slice(1).join(' ') }}</h2>
+                    <p class="trial-banner-message">{{ getUrgencyMessage() }}</p>
+                </div>
+            </div>
+
+            <!-- Time Remaining -->
+            <div class="trial-banner-time">
+                <div class="time-display" [attr.title]="getDetailedTimeRemaining()"
+                    [attr.aria-label]="`Time remaining: ${getDetailedTimeRemaining()}`">
+                    <span class="time-value">{{ getTimeRemainingDisplay() }}</span>
+                    <span class="time-label" *ngIf="daysRemaining > 0">left</span>
+                </div>
+
+                <!-- Progress Bar -->
+                <div class="trial-progress" *ngIf="subscription?.trial_days_remaining !== undefined"
+                    [attr.aria-label]="`Trial progress: ${100 - (subscription.trial_days_remaining / subscription.plan?.trial_days * 100)}% complete`">
+                    <div class="progress-bar">
+                        <div class="progress-fill"
+                            [style.width.%]="subscription.trial_days_remaining ? 100 - (subscription.trial_days_remaining / (subscription.plan?.trial_days || 14) * 100) : 0">
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Actions -->
+            <div class="trial-banner-actions">
+                <button class="upgrade-btn" *ngIf="showUpgradeButton" (click)="onUpgradeClick()"
+                    [attr.aria-label]="isUrgent ? 'Upgrade now - trial expiring soon' : 'Upgrade to paid plan'">
+                    <span class="btn-icon">⚡</span>
+                    <span class="btn-text">Upgrade Now</span>
+                </button>
+
+                <button class="dismiss-btn" (click)="onDismissClick()" [attr.aria-label]="'Dismiss trial banner'"
+                    title="Hide this banner for current session">
+                    <span class="dismiss-icon" aria-hidden="true">×</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- Urgency Indicator -->
+        <div class="urgency-indicator" *ngIf="isUrgent" [attr.aria-label]="getUrgencyMessage()">
+            <div class="pulse-dot"></div>
+            <span class="urgency-text">Urgent</span>
+        </div>
+    </div>
+
+    <!-- Animated Background for Urgent States -->
+    <div class="trial-banner-background" *ngIf="isUrgent">
+        <div class="urgency-gradient"></div>
+    </div>
+</section>

@@ -1,0 +1,607 @@
+/* ============================================
+   UPGRADE PROMPT COMPONENT - Professional Styles
+   ============================================ */
+
+/* Base Prompt Styles */
+.upgrade-prompt {
+    position: relative;
+    width: 100%;
+    background: linear-gradient(135deg, #8b5cf6 0%, #6366f1 100%);
+    color: white;
+    overflow: hidden;
+    transition: all 0.3s ease;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+/* Urgency State Variations */
+.upgrade-prompt.upgrade-prompt-normal {
+    background: linear-gradient(135deg, #8b5cf6 0%, #6366f1 100%);
+}
+
+.upgrade-prompt.upgrade-prompt-urgent {
+    background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+    animation: urgentPulse 2s ease-in-out infinite;
+}
+
+/* Prompt Container */
+.upgrade-prompt-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 20px 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+    position: relative;
+    z-index: 2;
+}
+
+/* Prompt Content */
+.upgrade-prompt-content {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+}
+
+/* Header Section */
+.upgrade-prompt-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 8px;
+}
+
+.upgrade-prompt-icon {
+    font-size: 28px;
+    line-height: 1;
+    animation: iconGlow 3s ease-in-out infinite;
+}
+
+.upgrade-prompt-title-section {
+    flex: 1;
+}
+
+.upgrade-prompt-title {
+    font-size: 20px;
+    font-weight: 700;
+    margin: 0 0 8px 0;
+    line-height: 1.2;
+    letter-spacing: -0.02em;
+}
+
+.upgrade-prompt-message {
+    font-size: 16px;
+    margin: 0;
+    line-height: 1.4;
+    font-weight: 500;
+    opacity: 0.95;
+}
+
+/* Usage Overview */
+.usage-overview {
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 12px;
+    padding: 20px;
+    margin-bottom: 24px;
+}
+
+.overview-title {
+    font-size: 16px;
+    font-weight: 600;
+    margin: 0 0 16px 0;
+    color: rgba(255, 255, 255, 0.9);
+}
+
+.usage-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 16px;
+}
+
+.usage-item {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 8px;
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    transition: all 0.2s ease;
+}
+
+.usage-item.over-limit {
+    background: rgba(239, 68, 68, 0.1);
+    border-color: rgba(239, 68, 68, 0.3);
+}
+
+.usage-info {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.feature-name {
+    font-weight: 600;
+    font-size: 14px;
+    text-transform: capitalize;
+}
+
+.usage-status {
+    font-size: 12px;
+    font-weight: 700;
+    padding: 2px 8px;
+    border-radius: 12px;
+    background: #ef4444;
+    color: white;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.usage-details {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 14px;
+}
+
+.current-usage {
+    font-weight: 700;
+    color: #ef4444;
+}
+
+.limit-separator {
+    opacity: 0.7;
+    margin: 0 4px;
+}
+
+.limit-value {
+    font-weight: 600;
+    color: rgba(255, 255, 255, 0.8);
+}
+
+/* Recommended Plan */
+.recommended-plan {
+    margin-bottom: 24px;
+}
+
+.plan-card {
+    background: rgba(255, 255, 255, 0.1);
+    border: 2px solid rgba(255, 255, 255, 0.2);
+    border-radius: 16px;
+    padding: 24px;
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
+}
+
+.plan-card.recommended {
+    border-color: #10b981;
+    background: linear-gradient(135deg, rgba(16, 185, 129, 0.1) 0%, rgba(16, 185, 129, 0.05) 100%);
+}
+
+.plan-card.recommended::before {
+    content: 'RECOMMENDED';
+    position: absolute;
+    top: 12px;
+    right: -30px;
+    background: #10b981;
+    color: white;
+    font-size: 10px;
+    font-weight: 700;
+    padding: 4px 12px;
+    border-radius: 4px;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    transform: rotate(45deg);
+    transform-origin: center;
+}
+
+.plan-header {
+    text-align: center;
+    margin-bottom: 20px;
+}
+
+.plan-name {
+    font-size: 18px;
+    font-weight: 700;
+    margin: 0 0 8px 0;
+    color: rgba(255, 255, 255, 0.95);
+}
+
+.plan-price {
+    display: flex;
+    align-items: baseline;
+    justify-content: center;
+    gap: 4px;
+    margin-bottom: 12px;
+}
+
+.currency {
+    font-size: 16px;
+    color: rgba(255, 255, 255, 0.7);
+    font-weight: 600;
+}
+
+.amount {
+    font-size: 32px;
+    font-weight: 800;
+    color: white;
+    line-height: 1;
+}
+
+.billing-period {
+    font-size: 14px;
+    color: rgba(255, 255, 255, 0.7);
+    font-weight: 500;
+}
+
+.plan-comparison {
+    margin-top: 8px;
+}
+
+.comparison-text {
+    font-size: 12px;
+    padding: 4px 8px;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 4px;
+    font-weight: 500;
+}
+
+.plan-features {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.feature-highlight {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 14px;
+    color: rgba(255, 255, 255, 0.9);
+}
+
+.feature-icon {
+    color: #10b981;
+    font-weight: 700;
+    font-size: 16px;
+}
+
+.feature-text {
+    font-weight: 500;
+}
+
+/* Actions */
+.upgrade-prompt-actions {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    justify-content: center;
+}
+
+.upgrade-btn {
+    background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+    border: 1px solid rgba(16, 185, 129, 0.3);
+    color: white;
+    padding: 14px 24px;
+    border-radius: 12px;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    min-width: 200px;
+}
+
+.upgrade-btn.btn-normal {
+    background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+}
+
+.upgrade-btn.btn-urgent {
+    background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+    animation: buttonPulse 2s ease-in-out infinite;
+}
+
+.upgrade-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2);
+}
+
+.upgrade-btn:active {
+    transform: translateY(0);
+}
+
+.btn-icon {
+    font-size: 18px;
+}
+
+.btn-text {
+    font-weight: 600;
+}
+
+.dismiss-btn {
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    color: white;
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    font-size: 20px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    line-height: 1;
+}
+
+.dismiss-btn:hover {
+    background: rgba(255, 255, 255, 0.2);
+    border-color: rgba(255, 255, 255, 0.3);
+    transform: scale(1.1);
+}
+
+.dismiss-icon {
+    display: block;
+    line-height: 1;
+}
+
+/* Urgency Indicator */
+.urgency-indicator {
+    position: absolute;
+    top: 12px;
+    right: 12px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    background: rgba(255, 255, 255, 0.2);
+    padding: 6px 12px;
+    border-radius: 12px;
+    font-size: 12px;
+    font-weight: 600;
+    backdrop-filter: blur(10px);
+    z-index: 3;
+}
+
+.pulse-dot {
+    width: 8px;
+    height: 8px;
+    background: #f59e0b;
+    border-radius: 50%;
+    animation: pulse 1.5s ease-in-out infinite;
+}
+
+.urgency-text {
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+/* Background Effects */
+.upgrade-prompt-background {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 1;
+    pointer-events: none;
+}
+
+.urgency-gradient {
+    position: absolute;
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    background: radial-gradient(circle, rgba(245, 158, 11, 0.1) 0%, transparent 70%);
+    animation: rotate 15s linear infinite;
+}
+
+/* Animations */
+@keyframes urgentPulse {
+
+    0%,
+    100% {
+        opacity: 1;
+    }
+
+    50% {
+        opacity: 0.9;
+    }
+}
+
+@keyframes iconGlow {
+
+    0%,
+    100% {
+        filter: brightness(1);
+    }
+
+    50% {
+        filter: brightness(1.2);
+    }
+}
+
+@keyframes pulse {
+
+    0%,
+    100% {
+        opacity: 1;
+        transform: scale(1);
+    }
+
+    50% {
+        opacity: 0.5;
+        transform: scale(1.2);
+    }
+}
+
+@keyframes rotate {
+    from {
+        transform: rotate(0deg);
+    }
+
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+@keyframes buttonPulse {
+
+    0%,
+    100% {
+        box-shadow: 0 0 0 0 rgba(245, 158, 11, 0.3);
+    }
+
+    50% {
+        box-shadow: 0 0 0 8px rgba(245, 158, 11, 0.5);
+    }
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .upgrade-prompt-container {
+        padding: 16px 20px;
+        gap: 20px;
+    }
+
+    .upgrade-prompt-header {
+        flex-direction: column;
+        gap: 8px;
+        text-align: center;
+    }
+
+    .upgrade-prompt-title {
+        font-size: 18px;
+    }
+
+    .upgrade-prompt-message {
+        font-size: 15px;
+        text-align: center;
+    }
+
+    .usage-grid {
+        grid-template-columns: 1fr;
+        gap: 12px;
+    }
+
+    .plan-card {
+        padding: 20px;
+    }
+
+    .plan-card.recommended::before {
+        right: -20px;
+        top: 8px;
+        font-size: 9px;
+        padding: 3px 8px;
+    }
+
+    .upgrade-prompt-actions {
+        flex-direction: column;
+        gap: 12px;
+        width: 100%;
+    }
+
+    .upgrade-btn {
+        width: 100%;
+        justify-content: center;
+        min-width: auto;
+    }
+
+    .urgency-indicator {
+        position: static;
+        align-self: center;
+        margin-top: 12px;
+    }
+}
+
+@media (max-width: 480px) {
+    .upgrade-prompt-container {
+        padding: 12px 16px;
+        gap: 16px;
+    }
+
+    .upgrade-prompt-title {
+        font-size: 16px;
+    }
+
+    .upgrade-prompt-message {
+        font-size: 14px;
+    }
+
+    .usage-overview {
+        padding: 16px;
+    }
+
+    .overview-title {
+        font-size: 14px;
+        margin-bottom: 12px;
+    }
+
+    .usage-item {
+        padding: 12px;
+    }
+
+    .plan-card {
+        padding: 16px;
+    }
+
+    .plan-card.recommended::before {
+        right: -15px;
+        font-size: 8px;
+    }
+
+    .amount {
+        font-size: 28px;
+    }
+
+    .upgrade-btn {
+        padding: 12px 20px;
+        font-size: 14px;
+    }
+
+    .dismiss-btn {
+        width: 32px;
+        height: 32px;
+        font-size: 18px;
+    }
+}
+
+/* Accessibility */
+@media (prefers-reduced-motion: reduce) {
+
+    .upgrade-prompt,
+    .upgrade-prompt.upgrade-prompt-urgent,
+    .upgrade-prompt-icon,
+    .pulse-dot,
+    .urgency-gradient {
+        animation: none;
+    }
+
+    .upgrade-btn:hover,
+    .dismiss-btn:hover {
+        transform: none;
+    }
+}
+
+/* High Contrast Mode */
+@media (prefers-contrast: high) {
+    .upgrade-prompt {
+        border-bottom: 2px solid;
+    }
+
+    .upgrade-btn,
+    .dismiss-btn {
+        border-width: 2px;
+    }
+
+    .usage-item {
+        border-width: 2px;
+    }
+
+    .plan-card {
+        border-width: 2px;
+    }
+}

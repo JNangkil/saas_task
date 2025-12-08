@@ -1,0 +1,553 @@
+<main class="billing-settings" role="main">
+    <div class="container">
+        <!-- Header -->
+        <header class="billing-header">
+            <h1 class="page-title">Billing Settings</h1>
+            <p class="page-subtitle">Manage your subscription, payment methods, and billing preferences</p>
+        </header>
+
+        <!-- Loading State -->
+        <div class="loading-container" *ngIf="isLoading">
+            <div class="loading-spinner"></div>
+            <p>Loading billing information...</p>
+        </div>
+
+        <!-- Error State -->
+        <div class="error-container" *ngIf="error">
+            <div class="error-message">
+                <span class="error-icon">⚠️</span>
+                <span>{{ error }}</span>
+                <button class="retry-btn" (click)="loadBillingData()">Retry</button>
+            </div>
+        </div>
+
+        <!-- Main Content -->
+        <div class="billing-content" *ngIf="!isLoading && !error">
+            <!-- Current Subscription Overview -->
+            <section class="subscription-overview" *ngIf="currentSubscription">
+                <div class="overview-header">
+                    <h2>Current Subscription</h2>
+                    <button class="portal-btn" (click)="openCustomerPortal()"
+                        aria-label="Manage billing in Stripe portal">
+                        <span class="btn-icon">🔧</span>
+                        Manage in Portal
+                    </button>
+                </div>
+
+                <div class="subscription-card" [class]="getSubscriptionStatusClass()">
+                    <div class="subscription-info">
+                        <div class="plan-details">
+                            <h3>{{ currentSubscription.plan?.name || 'No Plan' }}</h3>
+                            <div class="plan-price">
+                                <span class="currency">{{ currentSubscription.plan?.currency_symbol || '$' }}</span>
+                                <span class="amount">{{ currentSubscription.plan?.price || '0' }}</span>
+                                <span class="billing-period">/{{ currentSubscription.plan?.billing_interval_display ||
+                                    'month' }}</span>
+                            </div>
+                        </div>
+
+                        <div class="subscription-status">
+                            <span class="status-badge">{{ currentSubscription.status_display }}</span>
+                            <span class="next-billing" *ngIf="currentSubscription.current_period_end">
+                                Next billing: {{ formatDate(currentSubscription.current_period_end) }}
+                                ({{ getDaysRemaining() }} days)
+                            </span>
+                        </div>
+                    </div>
+
+                    <div class="subscription-actions">
+                        <button class="action-btn upgrade-btn" (click)="switchTab('plans')"
+                            [disabled]="!canChangePlan()" aria-label="Change subscription plan">
+                            <span class="btn-icon">⬆️</span>
+                            Change Plan
+                        </button>
+
+                        <button class="action-btn cancel-btn" (click)="openCancelModal(false)"
+                            [disabled]="!canCancelSubscription()" aria-label="Cancel subscription">
+                            <span class="btn-icon">❌</span>
+                            Cancel
+                        </button>
+
+                        <button class="action-btn resume-btn" (click)="resumeSubscription()"
+                            [disabled]="!canResumeSubscription()" *ngIf="canResumeSubscription()"
+                            aria-label="Resume subscription">
+                            <span class="btn-icon">▶️</span>
+                            Resume
+                        </button>
+                    </div>
+                </div>
+            </section>
+
+            <!-- No Subscription State -->
+            <section class="no-subscription" *ngIf="!currentSubscription">
+                <div class="no-subscription-content">
+                    <h2>No Active Subscription</h2>
+                    <p>You don't have an active subscription. Choose a plan to get started.</p>
+                    <button class="action-btn primary-btn" (click)="switchTab('plans')">
+                        <span class="btn-icon">🚀</span>
+                        Choose a Plan
+                    </button>
+                </div>
+            </section>
+
+            <!-- Tab Navigation -->
+            <nav class="tab-navigation" role="tablist">
+                <button class="tab-btn" [class.active]="activeTab === 'overview'" (click)="switchTab('overview')"
+                    role="tab" [attr.aria-selected]="activeTab === 'overview'">
+                    <span class="tab-icon">📊</span>
+                    Overview
+                </button>
+                <button class="tab-btn" [class.active]="activeTab === 'usage'" (click)="switchTab('usage')" role="tab"
+                    [attr.aria-selected]="activeTab === 'usage'">
+                    <span class="tab-icon">📈</span>
+                    Usage
+                </button>
+                <button class="tab-btn" [class.active]="activeTab === 'plans'" (click)="switchTab('plans')" role="tab"
+                    [attr.aria-selected]="activeTab === 'plans'">
+                    <span class="tab-icon">📦</span>
+                    Plans
+                </button>
+                <button class="tab-btn" [class.active]="activeTab === 'payment'" (click)="switchTab('payment')"
+                    role="tab" [attr.aria-selected]="activeTab === 'payment'">
+                    <span class="tab-icon">💳</span>
+                    Payment
+                </button>
+                <button class="tab-btn" [class.active]="activeTab === 'invoices'" (click)="switchTab('invoices')"
+                    role="tab" [attr.aria-selected]="activeTab === 'invoices'">
+                    <span class="tab-icon">🧾</span>
+                    Invoices
+                </button>
+                <button class="tab-btn" [class.active]="activeTab === 'history'" (click)="switchTab('history')"
+                    role="tab" [attr.aria-selected]="activeTab === 'history'">
+                    <span class="tab-icon">📜</span>
+                    History
+                </button>
+                <button class="tab-btn" [class.active]="activeTab === 'notifications'"
+                    (click)="switchTab('notifications')" role="tab"
+                    [attr.aria-selected]="activeTab === 'notifications'">
+                    <span class="tab-icon">🔔</span>
+                    Notifications
+                </button>
+            </nav>
+
+            <!-- Tab Content -->
+            <div class="tab-content">
+                <!-- Overview Tab -->
+                <section class="tab-pane" [class.active]="activeTab === 'overview'" *ngIf="activeTab === 'overview'">
+                    <div class="overview-grid">
+                        <div class="overview-card">
+                            <h3>Billing Summary</h3>
+                            <div class="summary-item">
+                                <span class="label">Current Plan:</span>
+                                <span class="value">{{ currentSubscription?.plan?.name || 'None' }}</span>
+                            </div>
+                            <div class="summary-item">
+                                <span class="label">Status:</span>
+                                <span class="value">{{ currentSubscription?.status_display || 'N/A' }}</span>
+                            </div>
+                            <div class="summary-item">
+                                <span class="label">Next Billing:</span>
+                                <span class="value">{{ currentSubscription?.current_period_end ?
+                                    formatDate(currentSubscription.current_period_end) : 'N/A' }}</span>
+                            </div>
+                            <div class="summary-item">
+                                <span class="label">Trial Days Left:</span>
+                                <span class="value">{{ currentSubscription?.trial_days_remaining || 0 }}</span>
+                            </div>
+                        </div>
+
+                        <div class="overview-card">
+                            <h3>Quick Actions</h3>
+                            <button class="quick-action-btn" (click)="openCustomerPortal()">
+                                <span class="action-icon">🔧</span>
+                                Manage Billing
+                            </button>
+                            <button class="quick-action-btn" (click)="switchTab('payment')">
+                                <span class="action-icon">💳</span>
+                                Update Payment
+                            </button>
+                            <button class="quick-action-btn" (click)="switchTab('invoices')">
+                                <span class="action-icon">🧾</span>
+                                View Invoices
+                            </button>
+                            <button class="quick-action-btn" (click)="switchTab('plans')">
+                                <span class="action-icon">📦</span>
+                                Change Plan
+                            </button>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Usage Tab -->
+                <section class="tab-pane" [class.active]="activeTab === 'usage'" *ngIf="activeTab === 'usage'">
+                    <div class="usage-container">
+                        <h3>Current Usage</h3>
+
+                        <div class="usage-grid" *ngIf="limitUsage.length > 0">
+                            <div class="usage-item" *ngFor="let limit of limitUsage">
+                                <div class="usage-header">
+                                    <h4>{{ limit.limit_name | titlecase }}</h4>
+                                    <span class="usage-stats">
+                                        {{ limit.current_usage }} / {{ limit.is_unlimited ? 'Unlimited' :
+                                        limit.limit_value }}
+                                    </span>
+                                </div>
+                                <div class="usage-progress">
+                                    <div class="progress-bar">
+                                        <div class="progress-fill"
+                                            [class]="getUsageProgressColor(limit.usage_percentage)"
+                                            [style.width.%]="limit.is_unlimited ? 0 : limit.usage_percentage">
+                                        </div>
+                                    </div>
+                                    <span class="progress-text">{{ limit.usage_percentage.toFixed(1) }}%</span>
+                                </div>
+                                <div class="usage-warning" *ngIf="limit.is_over_limit">
+                                    <span class="warning-icon">⚠️</span>
+                                    Over limit! Consider upgrading your plan.
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="no-usage-data" *ngIf="limitUsage.length === 0">
+                            <p>No usage data available.</p>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Plans Tab -->
+                <section class="tab-pane" [class.active]="activeTab === 'plans'" *ngIf="activeTab === 'plans'">
+                    <div class="plans-container">
+                        <h3>Available Plans</h3>
+
+                        <div class="plans-grid">
+                            <article class="plan-card" *ngFor="let plan of availablePlans"
+                                (click)="openUpgradeModal(plan)">
+                                <header class="plan-header">
+                                    <h4>{{ plan.name }}</h4>
+                                    <div class="plan-price">
+                                        <span class="currency">{{ plan.currency_symbol }}</span>
+                                        <span class="amount">{{ plan.price }}</span>
+                                        <span class="billing-period">/{{ plan.billing_interval_display }}</span>
+                                    </div>
+                                </header>
+
+                                <div class="plan-features">
+                                    <ul class="features-list">
+                                        <li class="feature-item" *ngFor="let feature of plan.feature_highlights">
+                                            <span class="feature-icon">✓</span>
+                                            {{ feature }}
+                                        </li>
+                                    </ul>
+                                </div>
+
+                                <footer class="plan-footer">
+                                    <button class="select-plan-btn" [disabled]="!canChangePlan()">
+                                        Select Plan
+                                    </button>
+                                </footer>
+                            </article>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Payment Tab -->
+                <section class="tab-pane" [class.active]="activeTab === 'payment'" *ngIf="activeTab === 'payment'">
+                    <div class="payment-container">
+                        <div class="payment-header">
+                            <h3>Payment Methods</h3>
+                            <button class="add-payment-btn" (click)="showPaymentMethodModal = true">
+                                <span class="btn-icon">➕</span>
+                                Add Payment Method
+                            </button>
+                        </div>
+
+                        <div class="payment-methods-list">
+                            <div class="payment-method-item" *ngFor="let method of paymentMethods">
+                                <div class="payment-info">
+                                    <div class="payment-type">
+                                        <span class="card-icon">💳</span>
+                                        <span class="card-details">
+                                            {{ method.card?.brand || 'Card' }} ending in {{ method.card?.last4 || '****'
+                                            }}
+                                        </span>
+                                    </div>
+                                    <div class="payment-meta">
+                                        <span class="expiry">Expires {{ method.card?.exp_month }}/{{
+                                            method.card?.exp_year }}</span>
+                                        <span class="default-badge" *ngIf="method.is_default">Default</span>
+                                    </div>
+                                </div>
+                                <div class="payment-actions">
+                                    <button class="action-btn secondary-btn"
+                                        (click)="setDefaultPaymentMethod(method.id)" [disabled]="method.is_default">
+                                        Set Default
+                                    </button>
+                                    <button class="action-btn danger-btn" (click)="removePaymentMethod(method.id)"
+                                        [disabled]="method.is_default">
+                                        Remove
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="no-payment-methods" *ngIf="paymentMethods.length === 0">
+                            <p>No payment methods on file.</p>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Invoices Tab -->
+                <section class="tab-pane" [class.active]="activeTab === 'invoices'" *ngIf="activeTab === 'invoices'">
+                    <div class="invoices-container">
+                        <h3>Invoice History</h3>
+
+                        <div class="invoices-list">
+                            <div class="invoice-item" *ngFor="let invoice of getPaginatedItems(invoices)">
+                                <div class="invoice-info">
+                                    <div class="invoice-number">
+                                        <strong>{{ invoice.number }}</strong>
+                                        <span class="invoice-date">{{ formatDate(invoice.created_at) }}</span>
+                                    </div>
+                                    <div class="invoice-amount">
+                                        {{ formatCurrency(invoice.amount_due, invoice.currency) }}
+                                    </div>
+                                    <div class="invoice-status">
+                                        <span class="status-badge" [class]="invoice.status">
+                                            {{ invoice.status }}
+                                        </span>
+                                    </div>
+                                </div>
+                                <div class="invoice-actions">
+                                    <button class="action-btn secondary-btn" (click)="downloadInvoice(invoice)"
+                                        [disabled]="!invoice.invoice_pdf">
+                                        Download
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Pagination -->
+                        <div class="pagination" *ngIf="getTotalPages(invoices) > 1">
+                            <button class="pagination-btn" (click)="changePage(currentPage - 1)"
+                                [disabled]="currentPage === 1">
+                                Previous
+                            </button>
+                            <span class="page-info">
+                                Page {{ currentPage }} of {{ getTotalPages(invoices) }}
+                            </span>
+                            <button class="pagination-btn" (click)="changePage(currentPage + 1)"
+                                [disabled]="currentPage === getTotalPages(invoices)">
+                                Next
+                            </button>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- History Tab -->
+                <section class="tab-pane" [class.active]="activeTab === 'history'" *ngIf="activeTab === 'history'">
+                    <div class="history-container">
+                        <h3>Subscription History</h3>
+
+                        <div class="history-list">
+                            <div class="history-item" *ngFor="let event of getPaginatedItems(subscriptionEvents)">
+                                <div class="history-info">
+                                    <div class="event-type">
+                                        <strong>{{ event.event_type_display }}</strong>
+                                        <span class="event-date">{{ formatDate(event.created_at) }}</span>
+                                    </div>
+                                    <div class="event-description">
+                                        {{ event.description }}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Pagination -->
+                        <div class="pagination" *ngIf="getTotalPages(subscriptionEvents) > 1">
+                            <button class="pagination-btn" (click)="changePage(currentPage - 1)"
+                                [disabled]="currentPage === 1">
+                                Previous
+                            </button>
+                            <span class="page-info">
+                                Page {{ currentPage }} of {{ getTotalPages(subscriptionEvents) }}
+                            </span>
+                            <button class="pagination-btn" (click)="changePage(currentPage + 1)"
+                                [disabled]="currentPage === getTotalPages(subscriptionEvents)">
+                                Next
+                            </button>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Notifications Tab -->
+                <section class="tab-pane" [class.active]="activeTab === 'notifications'"
+                    *ngIf="activeTab === 'notifications'">
+                    <div class="notifications-container">
+                        <h3>Billing Notifications</h3>
+
+                        <form [formGroup]="notificationForm" (ngSubmit)="saveNotificationPreferences()">
+                            <div class="form-group">
+                                <label for="billing-email">Billing Email</label>
+                                <input id="billing-email" type="email" formControlName="billingEmail"
+                                    placeholder="billing@example.com">
+                            </div>
+
+                            <div class="form-group checkbox-group">
+                                <label class="checkbox-label">
+                                    <input type="checkbox" formControlName="paymentFailed">
+                                    <span class="checkmark"></span>
+                                    Payment failed notifications
+                                </label>
+                            </div>
+
+                            <div class="form-group checkbox-group">
+                                <label class="checkbox-label">
+                                    <input type="checkbox" formControlName="subscriptionUpdated">
+                                    <span class="checkmark"></span>
+                                    Subscription updated notifications
+                                </label>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="usage-threshold">Usage Threshold Alert (%)</label>
+                                <input id="usage-threshold" type="number" formControlName="usageThreshold" min="50"
+                                    max="100" step="5">
+                            </div>
+
+                            <div class="form-group checkbox-group">
+                                <label class="checkbox-label">
+                                    <input type="checkbox" formControlName="advanceNotice">
+                                    <span class="checkmark"></span>
+                                    Advance billing notice (7 days)
+                                </label>
+                            </div>
+
+                            <button type="submit" class="save-btn" [disabled]="notificationForm.invalid">
+                                Save Preferences
+                            </button>
+                        </form>
+                    </div>
+                </section>
+            </div>
+        </div>
+    </div>
+
+    <!-- Upgrade Modal -->
+    <div class="modal-overlay" *ngIf="showUpgradeModal" (click)="closeModals()">
+        <div class="modal" (click)="$event.stopPropagation()">
+            <div class="modal-header">
+                <h3>Change Plan</h3>
+                <button class="close-btn" (click)="closeModals()" aria-label="Close modal">×</button>
+            </div>
+            <div class="modal-body">
+                <div class="plan-summary">
+                    <h4>{{ selectedPlan?.name }}</h4>
+                    <div class="plan-price">
+                        <span class="currency">{{ selectedPlan?.currency_symbol || '$' }}</span>
+                        <span class="amount">{{ selectedPlan?.price || '0' }}</span>
+                        <span class="billing-period">/{{ selectedPlan?.billing_interval_display || 'month' }}</span>
+                    </div>
+                </div>
+
+                <div class="proration-info" *ngIf="prorationCalculation">
+                    <h5>Proration Details</h5>
+                    <div class="proration-item">
+                        <span>Credit for current period:</span>
+                        <span>{{ formatCurrency(prorationCalculation.credit_amount, prorationCalculation.currency)
+                            }}</span>
+                    </div>
+                    <div class="proration-item">
+                        <span>Charge for new plan:</span>
+                        <span>{{ formatCurrency(prorationCalculation.debit_amount, prorationCalculation.currency)
+                            }}</span>
+                    </div>
+                    <div class="proration-item total">
+                        <span>Net amount:</span>
+                        <span>{{ formatCurrency(prorationCalculation.net_amount, prorationCalculation.currency)
+                            }}</span>
+                    </div>
+                </div>
+
+                <div class="change-options">
+                    <label class="radio-label">
+                        <input type="radio" name="changeTiming" [value]="false" [(ngModel)]="cancelImmediately">
+                        <span class="radio-mark"></span>
+                        Change at next billing period
+                    </label>
+                    <label class="radio-label">
+                        <input type="radio" name="changeTiming" [value]="true" [(ngModel)]="cancelImmediately">
+                        <span class="radio-mark"></span>
+                        Change immediately
+                    </label>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn secondary-btn" (click)="closeModals()">Cancel</button>
+                <button class="btn primary-btn" (click)="processPlanChange(cancelImmediately)"
+                    [disabled]="isProcessing">
+                    {{ isProcessing ? 'Processing...' : 'Confirm Change' }}
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Cancel Modal -->
+    <div class="modal-overlay" *ngIf="showCancelModal" (click)="closeModals()">
+        <div class="modal" (click)="$event.stopPropagation()">
+            <div class="modal-header">
+                <h3>Cancel Subscription</h3>
+                <button class="close-btn" (click)="closeModals()" aria-label="Close modal">×</button>
+            </div>
+            <div class="modal-body">
+                <form [formGroup]="cancelForm">
+                    <div class="form-group">
+                        <label for="cancel-reason">Reason for cancellation</label>
+                        <select id="cancel-reason" formControlName="reason" required>
+                            <option value="">Please select a reason</option>
+                            <option value="too_expensive">Too expensive</option>
+                            <option value="missing_features">Missing features</option>
+                            <option value="found_alternative">Found alternative solution</option>
+                            <option value="no_longer_needed">No longer needed</option>
+                            <option value="technical_issues">Technical issues</option>
+                            <option value="other">Other</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="cancel-feedback">Additional feedback (optional)</label>
+                        <textarea id="cancel-feedback" formControlName="feedback"
+                            placeholder="Tell us more about your experience..." rows="4"></textarea>
+                    </div>
+
+                    <div class="form-group checkbox-group">
+                        <label class="checkbox-label">
+                            <input type="checkbox" formControlName="confirm">
+                            <span class="checkmark"></span>
+                            I understand that canceling will result in loss of access to premium features
+                        </label>
+                    </div>
+
+                    <div class="cancel-timing">
+                        <label class="radio-label">
+                            <input type="radio" name="cancelTiming" [value]="false" [(ngModel)]="cancelImmediately">
+                            <span class="radio-mark"></span>
+                            Cancel at end of billing period
+                        </label>
+                        <label class="radio-label">
+                            <input type="radio" name="cancelTiming" [value]="true" [(ngModel)]="cancelImmediately">
+                            <span class="radio-mark"></span>
+                            Cancel immediately
+                        </label>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button class="btn secondary-btn" (click)="closeModals()">Keep Subscription</button>
+                <button class="btn danger-btn" (click)="processCancellation()"
+                    [disabled]="cancelForm.invalid || isProcessing">
+                    {{ isProcessing ? 'Processing...' : 'Cancel Subscription' }}
+                </button>
+            </div>
+        </div>
+    </div>
+</main>

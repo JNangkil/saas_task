@@ -1,0 +1,65 @@
+<section class="past-due-banner" *ngIf="shouldShow()" [class]="getUrgencyClass()" role="alert" aria-live="polite">
+    <div class="past-due-banner-container">
+        <!-- Banner Content -->
+        <div class="past-due-banner-content">
+            <!-- Icon and Title -->
+            <div class="past-due-banner-header">
+                <span class="past-due-banner-icon" aria-hidden="true">{{ getBannerTitle().split(' ')[0] }}</span>
+                <div class="past-due-banner-title-section">
+                    <h2 class="past-due-banner-title">{{ getBannerTitle().split(' ').slice(1).join(' ') }}</h2>
+                    <p class="past-due-banner-message">{{ getUrgencyMessage() }}</p>
+                    <p class="past-due-banner-description">{{ getPaymentStatusDescription() }}</p>
+                </div>
+            </div>
+
+            <!-- Time Remaining -->
+            <div class="past-due-banner-time" *ngIf="isInGracePeriod()">
+                <div class="time-display" [attr.title]="getDetailedTimeRemaining()"
+                    [attr.aria-label]="`Time remaining in grace period: ${getDetailedTimeRemaining()}`">
+                    <span class="time-label">Grace period:</span>
+                    <span class="time-value">{{ getTimeRemainingDisplay() }}</span>
+                </div>
+
+                <!-- Progress Bar -->
+                <div class="grace-period-progress"
+                    [attr.aria-label]="`Grace period progress: ${getTimeRemainingDisplay()} remaining`">
+                    <div class="progress-bar">
+                        <div class="progress-fill" [class.progress-critical]="isCritical"
+                            [class.progress-urgent]="isUrgent && !isCritical"
+                            [style.width.%]="daysRemaining ? Math.max(10, (daysRemaining / 7) * 100) : 0">
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Actions -->
+            <div class="past-due-banner-actions">
+                <button class="update-payment-btn" *ngIf="showUpdateButton" (click)="onUpdatePaymentClick()"
+                    [class]="isCritical ? 'btn-critical' : isUrgent ? 'btn-urgent' : 'btn-normal'"
+                    [attr.aria-label]="getActionButtonText()">
+                    <span class="btn-icon">💳</span>
+                    <span class="btn-text">{{ getActionButtonText() }}</span>
+                </button>
+
+                <button class="dismiss-btn" (click)="onDismissClick()"
+                    [attr.aria-label]="'Dismiss payment failed banner'" title="Hide this banner for current session">
+                    <span class="dismiss-icon" aria-hidden="true">×</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- Urgency Indicator -->
+        <div class="urgency-indicator" *ngIf="isUrgent || isCritical" [attr.aria-label]="getUrgencyMessage()">
+            <div class="pulse-dot" [class.pulse-critical]="isCritical"></div>
+            <span class="urgency-text">{{ isCritical ? 'Critical' : 'Urgent' }}</span>
+        </div>
+    </div>
+
+    <!-- Animated Background for Urgent States -->
+    <div class="past-due-banner-background" *ngIf="isUrgent || isCritical">
+        <div class="urgency-gradient"></div>
+    </div>
+
+    <!-- Warning Pattern Overlay -->
+    <div class="warning-pattern" *ngIf="isCritical"></div>
+</section>

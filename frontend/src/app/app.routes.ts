@@ -3,6 +3,9 @@ import { WorkspaceManagementComponent } from './pages/workspace-management/works
 import { WorkspaceListComponent } from './components/workspace-list/workspace-list.component';
 import { WorkspaceFormComponent } from './components/workspace-form/workspace-form.component';
 import { AcceptInvitationComponent } from './components/accept-invitation/accept-invitation.component';
+import { PricingPageComponent } from './components/pricing-page/pricing-page.component';
+import { BillingSettingsComponent } from './components/billing-settings/billing-settings.component';
+import { AuthGuard } from './guards/auth.guard';
 
 export const routes: Routes = [
     {
@@ -26,6 +29,16 @@ export const routes: Routes = [
     {
         path: 'accept-invitation/:token',
         component: AcceptInvitationComponent
+    },
+    {
+        path: 'pricing',
+        component: PricingPageComponent
+    },
+    {
+        path: 'billing',
+        component: BillingSettingsComponent,
+        canActivate: [AuthGuard],
+        title: 'Billing Settings'
     },
     {
         path: '',

@@ -2,7 +2,10 @@
 
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\InvitationController;
+use App\Http\Controllers\PlanController;
+use App\Http\Controllers\SubscriptionController;
 use App\Http\Controllers\TenantController;
+use App\Http\Controllers\WebhookController;
 use App\Http\Controllers\WorkspaceController;
 use App\Http\Controllers\WorkspaceMemberController;
 use Illuminate\Support\Facades\Route;
@@ -77,9 +80,39 @@ Route::middleware(['auth:sanctum'])->group(function () {
     });
 });
 
+// Public plan routes (no auth required)
+Route::prefix('plans')->group(function () {
+    Route::get('/', [PlanController::class, 'index'])->name('plans.index');
+    Route::get('/{slug}', [PlanController::class, 'show'])->name('plans.show');
+    Route::get('/compare', [PlanController::class, 'compare'])->name('plans.compare');
+    Route::get('/features', [PlanController::class, 'features'])->name('plans.features');
+    
+    // Authenticated plan routes
+    Route::middleware(['auth:sanctum', 'tenant.resolution'])->group(function () {
+        Route::get('/current', [PlanController::class, 'current'])->name('plans.current');
+    });
+});
+
+// Subscription routes (require auth and tenant resolution)
+Route::middleware(['auth:sanctum', 'tenant.resolution'])->prefix('subscription')->group(function () {
+    Route::get('/', [SubscriptionController::class, 'index'])->name('subscription.index');
+    Route::post('/checkout', [SubscriptionController::class, 'checkout'])->name('subscription.checkout');
+    Route::post('/upgrade', [SubscriptionController::class, 'upgrade'])->name('subscription.upgrade');
+    Route::post('/cancel', [SubscriptionController::class, 'cancel'])->name('subscription.cancel');
+    Route::post('/resume', [SubscriptionController::class, 'resume'])->name('subscription.resume');
+    Route::get('/portal', [SubscriptionController::class, 'portal'])->name('subscription.portal');
+    Route::get('/history', [SubscriptionController::class, 'history'])->name('subscription.history');
+    Route::get('/usage', [SubscriptionController::class, 'usage'])->name('subscription.usage');
+});
+
 // Public invitation routes (no auth required)
 Route::prefix('invitations')->group(function () {
     Route::get('/{token}', [InvitationController::class, 'show'])->name('invitations.show');
     Route::post('/{token}/accept', [InvitationController::class, 'accept'])->name('invitations.accept');
     Route::post('/{token}/decline', [InvitationController::class, 'decline'])->name('invitations.decline');
+});
+
+// Webhook routes (no auth required, verified by signature)
+Route::prefix('webhooks')->group(function () {
+    Route::post('/stripe', [WebhookController::class, 'handleStripeWebhook'])->name('webhooks.stripe');
 });
