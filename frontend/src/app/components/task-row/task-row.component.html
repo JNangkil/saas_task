@@ -9,7 +9,21 @@
     <!-- Task Title -->
     <td class="title-cell">
         <div class="task-content">
-            <div class="task-title">{{ task.title }}</div>
+            <!-- Title Display -->
+            <div class="task-title editable-field" *ngIf="!isEditing('title')" (click)="startEditing('title', $event)"
+                title="Click to edit">
+                {{ task.title }}
+            </div>
+            <!-- Title Edit -->
+            <div class="task-title-edit" *ngIf="isEditing('title')">
+                <input type="text" class="title-input" [ngModel]="editValue" (ngModelChange)="editValue = $event"
+                    (keydown)="onEditKeydown($event)" (blur)="onEditBlur()" data-edit-field="title"
+                    [disabled]="loading">
+                <div class="edit-actions" *ngIf="loading || error">
+                    <span class="loading-spinner" *ngIf="loading">⏳</span>
+                    <span class="error-message" *ngIf="error">{{ error }}</span>
+                </div>
+            </div>
             <div class="task-description" *ngIf="task.description">
                 {{ task.description }}
             </div>
@@ -18,42 +32,87 @@
 
     <!-- Status -->
     <td class="status-cell">
-        <span class="status-badge" [class]="getStatusBadgeClass(task.status)">
+        <!-- Status Display -->
+        <span class="status-badge editable-field" *ngIf="!isEditing('status')"
+            [class]="getStatusBadgeClass(task.status)" (click)="startEditing('status', $event)" title="Click to edit">
             {{ formatStatus(task.status) }}
         </span>
+        <!-- Status Edit -->
+        <select class="status-select editable-field" *ngIf="isEditing('status')" [ngModel]="editValue"
+            (ngModelChange)="editValue = $event" (keydown)="onEditKeydown($event)" (blur)="onEditBlur()"
+            data-edit-field="status" [disabled]="loading">
+            <option *ngFor="let option of statusOptions" [value]="option.value">
+                {{ option.label }}
+            </option>
+        </select>
     </td>
 
     <!-- Priority -->
     <td class="priority-cell">
-        <span class="priority-badge" [class]="getPriorityBadgeClass(task.priority)">
+        <!-- Priority Display -->
+        <span class="priority-badge editable-field" *ngIf="!isEditing('priority')"
+            [class]="getPriorityBadgeClass(task.priority)" (click)="startEditing('priority', $event)"
+            title="Click to edit">
             {{ formatPriority(task.priority) }}
         </span>
+        <!-- Priority Edit -->
+        <select class="priority-select editable-field" *ngIf="isEditing('priority')" [ngModel]="editValue"
+            (ngModelChange)="editValue = $event" (keydown)="onEditKeydown($event)" (blur)="onEditBlur()"
+            data-edit-field="priority" [disabled]="loading">
+            <option *ngFor="let option of priorityOptions" [value]="option.value">
+                {{ option.label }}
+            </option>
+        </select>
     </td>
 
     <!-- Assignee -->
     <td class="assignee-cell">
-        <div class="assignee-info" *ngIf="task.assignee; else noAssignee">
-            <div class="assignee-avatar" [style.background-color]="getAvatarColor(task.assignee.email)">
-                {{ getUserInitials(task.assignee) }}
+        <!-- Assignee Display -->
+        <div class="assignee-info editable-field" *ngIf="!isEditing('assignee_id')"
+            (click)="startEditing('assignee_id', $event)" title="Click to edit">
+            <div class="assignee-info" *ngIf="task.assignee; else noAssignee">
+                <div class="assignee-avatar" [style.background-color]="getAvatarColor(task.assignee.email)">
+                    {{ getUserInitials(task.assignee) }}
+                </div>
+                <div class="assignee-details">
+                    <div class="assignee-name">{{ task.assignee.name }}</div>
+                    <div class="assignee-email">{{ task.assignee.email }}</div>
+                </div>
             </div>
-            <div class="assignee-details">
-                <div class="assignee-name">{{ task.assignee.name }}</div>
-                <div class="assignee-email">{{ task.assignee.email }}</div>
-            </div>
+            <ng-template #noAssignee>
+                <span class="no-assignee">Unassigned</span>
+            </ng-template>
         </div>
-        <ng-template #noAssignee>
-            <span class="no-assignee">Unassigned</span>
-        </ng-template>
+        <!-- Assignee Edit -->
+        <div class="assignee-edit" *ngIf="isEditing('assignee_id')">
+            <select class="assignee-select editable-field" [ngModel]="editValue" (ngModelChange)="editValue = $event"
+                (keydown)="onEditKeydown($event)" (blur)="onEditBlur()" data-edit-field="assignee_id"
+                [disabled]="loading">
+                <option [ngValue]="null">Unassigned</option>
+                <!-- This would need to be populated with actual users from the workspace -->
+                <option [ngValue]="1">User 1</option>
+                <option [ngValue]="2">User 2</option>
+                <!-- TODO: Replace with actual workspace users -->
+            </select>
+        </div>
     </td>
 
     <!-- Due Date -->
     <td class="due-date-cell">
-        <span class="due-date" [class.overdue]="isOverdue(task.due_date)" *ngIf="task.due_date; else noDueDate">
-            {{ formatDate(task.due_date) }}
+        <!-- Due Date Display -->
+        <span class="due-date editable-field" *ngIf="!isEditing('due_date')" [class.overdue]="isOverdue(task.due_date)"
+            (click)="startEditing('due_date', $event)" title="Click to edit">
+            <span *ngIf="task.due_date; else noDueDate">
+                {{ formatDate(task.due_date) }}
+            </span>
+            <ng-template #noDueDate>
+                <span class="no-due-date">No due date</span>
+            </ng-template>
         </span>
-        <ng-template #noDueDate>
-            <span class="no-due-date">No due date</span>
-        </ng-template>
+        <!-- Due Date Edit -->
+        <input type="date" class="due-date-input editable-field" *ngIf="isEditing('due_date')" [ngModel]="editValue"
+            (ngModelChange)="editValue = $event" (keydown)="onEditKeydown($event)" (blur)="onEditBlur()"
+            data-edit-field="due_date" [disabled]="loading">
     </td>
 
     <!-- Labels -->

@@ -1,0 +1,100 @@
+<div class="bulk-action-toolbar" [class.visible]="visible && hasSelectedTasks()">
+    <!-- Selection Info -->
+    <div class="selection-info">
+        <span class="selection-count">{{ getSelectionText() }}</span>
+        <button class="clear-selection-btn" (click)="clearSelection()" title="Clear selection">
+            <span class="icon">×</span>
+        </button>
+    </div>
+
+    <!-- Bulk Actions -->
+    <div class="bulk-actions">
+        <!-- Status Change -->
+        <div class="action-group">
+            <label class="action-label">Change Status</label>
+            <div class="action-controls">
+                <select class="action-select" [(ngModel)]="bulkStatus" [disabled]="loading">
+                    <option value="">Select status...</option>
+                    <option *ngFor="let option of statusOptions" [value]="option.value">
+                        {{ option.label }}
+                    </option>
+                </select>
+                <button class="action-btn apply-btn" (click)="applyBulkStatusChange()"
+                    [disabled]="!bulkStatus || loading" title="Apply status to all selected tasks">
+                    <span class="icon" *ngIf="!loading">✓</span>
+                    <span class="icon" *ngIf="loading">⏳</span>
+                    Apply
+                </button>
+            </div>
+        </div>
+
+        <!-- Priority Change -->
+        <div class="action-group">
+            <label class="action-label">Change Priority</label>
+            <div class="action-controls">
+                <select class="action-select" [(ngModel)]="bulkPriority" [disabled]="loading">
+                    <option value="">Select priority...</option>
+                    <option *ngFor="let option of priorityOptions" [value]="option.value">
+                        {{ option.label }}
+                    </option>
+                </select>
+                <button class="action-btn apply-btn" (click)="applyBulkPriorityChange()"
+                    [disabled]="!bulkPriority || loading" title="Apply priority to all selected tasks">
+                    <span class="icon" *ngIf="!loading">✓</span>
+                    <span class="icon" *ngIf="loading">⏳</span>
+                    Apply
+                </button>
+            </div>
+        </div>
+
+        <!-- Assignee Change -->
+        <div class="action-group">
+            <label class="action-label">Change Assignee</label>
+            <div class="action-controls">
+                <select class="action-select" [(ngModel)]="bulkAssigneeId" [disabled]="loading">
+                    <option [ngValue]="null">Unassigned</option>
+                    <option *ngFor="let user of assigneeOptions" [ngValue]="user.id">
+                        {{ user.name }}
+                    </option>
+                </select>
+                <button class="action-btn apply-btn" (click)="applyBulkAssigneeChange()"
+                    [disabled]="bulkAssigneeId === null || loading" title="Apply assignee to all selected tasks">
+                    <span class="icon" *ngIf="!loading">✓</span>
+                    <span class="icon" *ngIf="loading">⏳</span>
+                    Apply
+                </button>
+            </div>
+        </div>
+
+        <!-- Destructive Actions -->
+        <div class="action-group destructive">
+            <label class="action-label">Actions</label>
+            <div class="action-controls">
+                <button class="action-btn archive-btn" (click)="archiveSelectedTasks()" [disabled]="loading"
+                    title="Archive selected tasks">
+                    <span class="icon" *ngIf="!loading">📦</span>
+                    <span class="icon" *ngIf="loading">⏳</span>
+                    Archive
+                </button>
+                <button class="action-btn delete-btn" (click)="deleteSelectedTasks()" [disabled]="loading"
+                    title="Delete selected tasks">
+                    <span class="icon" *ngIf="!loading">🗑️</span>
+                    <span class="icon" *ngIf="loading">⏳</span>
+                    Delete
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Error Message -->
+    <div class="error-message" *ngIf="error">
+        <span class="icon">⚠️</span>
+        {{ error }}
+    </div>
+
+    <!-- Loading Overlay -->
+    <div class="loading-overlay" *ngIf="loading">
+        <div class="loading-spinner"></div>
+        <span>Processing...</span>
+    </div>
+</div>

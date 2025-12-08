@@ -1,6 +1,11 @@
-import { Component, Input, Output, EventEmitter, ChangeDetectionStrategy, HostBinding } from '@angular/core';
+import { Component, Input, Output, EventEmitter, ChangeDetectionStrategy, HostBinding, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { Task, Label, User } from '../../models';
+import { FormsModule } from '@angular/forms';
+import { Subject, of } from 'rxjs';
+import { catchError, takeUntil } from 'rxjs/operators';
+import { Task, Label, User, TaskUpdate } from '../../models';
+import { TaskService } from '../../services/task.service';
+import { WorkspaceContextService } from '../../services/workspace-context.service';
 
 /**
  * TaskRowComponent - Individual task row for the task table
@@ -17,12 +22,12 @@ import { Task, Label, User } from '../../models';
 @Component({
     selector: 'app-task-row',
     standalone: true,
-    imports: [CommonModule],
+    imports: [CommonModule, FormsModule],
     templateUrl: './task-row.component.html',
     styleUrls: ['./task-row.component.css'],
     changeDetection: ChangeDetectionStrategy.OnPush
 })
-export class TaskRowComponent {
+export class TaskRowComponent implements OnInit, OnDestroy {
     // Inputs
     @Input() task!: Task;
     @Input() selected = false;
@@ -33,6 +38,7 @@ export class TaskRowComponent {
     @Output() taskClick = new EventEmitter<Task>();
     @Output() taskDoubleClick = new EventEmitter<Task>();
     @Output() selectionChange = new EventEmitter<{ task: Task; selected: boolean }>();
+    @Output() taskUpdate = new EventEmitter<Task>();
 
     // Host bindings for row styling
     @HostBinding('class.selected') get selectedClass() {
@@ -43,16 +49,254 @@ export class TaskRowComponent {
         return true;
     }
 
+    @HostBinding('class.editing') get editingClass() {
+        return this.isEditingAny();
+    }
+
+    // Inline editing state
+    editingField: string | null = null;
+    editValue: any = null;
+    originalValue: any = null;
+    loading = false;
+    error: string | null = null;
+
+    // Available options for select fields
+    readonly statusOptions = [
+        { value: 'todo', label: 'To Do' },
+        { value: 'in_progress', label: 'In Progress' },
+        { value: 'review', label: 'Review' },
+        { value: 'done', label: 'Done' },
+        { value: 'archived', label: 'Archived' }
+    ];
+
+    readonly priorityOptions = [
+        { value: 'low', label: 'Low' },
+        { value: 'medium', label: 'Medium' },
+        { value: 'high', label: 'High' },
+        { value: 'urgent', label: 'Urgent' }
+    ];
+
+    // Private properties
+    private destroy$ = new Subject<void>();
+
+    constructor(
+        private taskService: TaskService,
+        private workspaceContextService: WorkspaceContextService
+    ) { }
+
+    /**
+     * Initialize component
+     */
+    ngOnInit(): void {
+        // No initialization needed for now
+    }
+
+    /**
+     * Clean up subscriptions
+     */
+    ngOnDestroy(): void {
+        this.destroy$.next();
+        this.destroy$.complete();
+    }
+
     /**
      * Handle row click
      */
     onRowClick(event: MouseEvent): void {
         // Prevent selection toggle when clicking on interactive elements
-        if ((event.target as HTMLElement).closest('button, a, input, select')) {
+        if ((event.target as HTMLElement).closest('button, a, input, select, .editable-field')) {
             return;
         }
 
         this.taskClick.emit(this.task);
+    }
+
+    /**
+     * Check if any field is being edited
+     */
+    isEditingAny(): boolean {
+        return this.editingField !== null;
+    }
+
+    /**
+     * Check if a specific field is being edited
+     */
+    isEditing(field: string): boolean {
+        return this.editingField === field;
+    }
+
+    /**
+     * Start editing a field
+     */
+    startEditing(field: string, event?: MouseEvent): void {
+        if (event) {
+            event.stopPropagation();
+        }
+
+        // Don't start editing if already editing another field
+        if (this.editingField && this.editingField !== field) {
+            return;
+        }
+
+        this.editingField = field;
+        this.originalValue = this.getFieldValue(field);
+        this.editValue = this.originalValue;
+        this.error = null;
+
+        // Focus the input after a brief delay to ensure DOM is updated
+        setTimeout(() => {
+            const element = document.querySelector(`[data-edit-field="${field}"]`) as HTMLInputElement;
+            if (element) {
+                element.focus();
+                if (element.type === 'text') {
+                    element.select();
+                }
+            }
+        }, 50);
+    }
+
+    /**
+     * Get the current value of a field
+     */
+    getFieldValue(field: string): any {
+        switch (field) {
+            case 'title':
+                return this.task.title;
+            case 'status':
+                return this.task.status;
+            case 'priority':
+                return this.task.priority;
+            case 'assignee_id':
+                return this.task.assignee_id;
+            case 'due_date':
+                return this.task.due_date;
+            default:
+                return null;
+        }
+    }
+
+    /**
+     * Save the current edit
+     */
+    saveEdit(): void {
+        if (!this.editingField || this.loading) {
+            return;
+        }
+
+        // Check if value actually changed
+        if (this.editValue === this.originalValue) {
+            this.cancelEdit();
+            return;
+        }
+
+        this.loading = true;
+        this.error = null;
+
+        // Prepare update payload with proper typing
+        const updateData: TaskUpdate = {};
+        switch (this.editingField) {
+            case 'title':
+                updateData.title = this.editValue;
+                break;
+            case 'status':
+                updateData.status = this.editValue;
+                break;
+            case 'priority':
+                updateData.priority = this.editValue;
+                break;
+            case 'assignee_id':
+                updateData.assignee_id = this.editValue;
+                break;
+            case 'due_date':
+                updateData.due_date = this.editValue;
+                break;
+        }
+
+        // Get current workspace context
+        this.workspaceContextService.context$.pipe(
+            takeUntil(this.destroy$)
+        ).subscribe(context => {
+            if (!context.currentTenant || !context.currentWorkspace) {
+                this.error = 'No tenant or workspace context';
+                this.loading = false;
+                return;
+            }
+
+            // Optimistic update - update local task immediately
+            const optimisticTask: Task = {
+                ...this.task,
+                ...updateData,
+                // Ensure labels property is properly typed
+                labels: this.task.labels,
+                // Ensure custom_values property is properly typed
+                custom_values: this.task.custom_values
+            };
+            this.taskUpdate.emit(optimisticTask);
+
+            // Send update to server
+            this.taskService.updateTask(
+                parseInt(context.currentTenant.id, 10),
+                parseInt(context.currentWorkspace.id, 10),
+                this.task.id,
+                updateData
+            ).pipe(
+                takeUntil(this.destroy$),
+                catchError(error => {
+                    // Rollback on error
+                    this.taskUpdate.emit(this.task);
+                    this.error = error.message || 'Failed to update task';
+                    this.loading = false;
+                    return of(null);
+                })
+            ).subscribe(updatedTask => {
+                this.loading = false;
+                if (updatedTask) {
+                    this.taskUpdate.emit(updatedTask);
+                    this.editingField = null;
+                    this.editValue = null;
+                    this.originalValue = null;
+                }
+            });
+        });
+    }
+
+    /**
+     * Cancel the current edit
+     */
+    cancelEdit(): void {
+        this.editingField = null;
+        this.editValue = null;
+        this.originalValue = null;
+        this.error = null;
+        this.loading = false;
+    }
+
+    /**
+     * Handle keydown events for editing
+     */
+    onEditKeydown(event: KeyboardEvent): void {
+        switch (event.key) {
+            case 'Enter':
+                event.preventDefault();
+                this.saveEdit();
+                break;
+            case 'Escape':
+                event.preventDefault();
+                this.cancelEdit();
+                break;
+        }
+    }
+
+    /**
+     * Handle blur events for editing
+     */
+    onEditBlur(): void {
+        // Small delay to allow other click events to process
+        setTimeout(() => {
+            if (!this.loading) {
+                this.saveEdit();
+            }
+        }, 150);
     }
 
     /**
@@ -80,10 +324,12 @@ export class TaskRowComponent {
                 return 'status-todo';
             case 'in_progress':
                 return 'status-in-progress';
-            case 'completed':
-                return 'status-completed';
-            case 'cancelled':
-                return 'status-cancelled';
+            case 'review':
+                return 'status-review';
+            case 'done':
+                return 'status-done';
+            case 'archived':
+                return 'status-archived';
             default:
                 return 'status-default';
         }

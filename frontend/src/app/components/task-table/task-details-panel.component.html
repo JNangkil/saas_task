@@ -1,0 +1,256 @@
+<div class="task-details-panel" [class.visible]="visible" [class.minimized]="minimized">
+    <!-- Panel Header -->
+    <div class="panel-header">
+        <div class="header-left">
+            <h2 class="task-title" *ngIf="!editing">{{ task.title }}</h2>
+            <input *ngIf="editing" type="text" class="task-title-input" [(ngModel)]="editedTask.title"
+                placeholder="Task title" [disabled]="saving">
+        </div>
+
+        <div class="header-right">
+            <button class="panel-btn minimize-btn" (click)="onMinimize()" title="Minimize">
+                <span class="icon">−</span>
+            </button>
+            <button class="panel-btn close-btn" (click)="onClose()" title="Close">
+                <span class="icon">×</span>
+            </button>
+        </div>
+    </div>
+
+    <!-- Panel Content (hidden when minimized) -->
+    <div class="panel-content" *ngIf="!minimized">
+        <!-- Task Actions -->
+        <div class="task-actions">
+            <button *ngIf="!editing" class="action-btn edit-btn" (click)="startEditing()" [disabled]="loading">
+                <span class="icon">✏️</span>
+                Edit Task
+            </button>
+
+            <ng-container *ngIf="editing">
+                <button class="action-btn save-btn" (click)="saveTask()"
+                    [disabled]="saving || !editedTask.title?.trim()">
+                    <span class="icon" *ngIf="!saving">💾</span>
+                    <span class="icon" *ngIf="saving">⏳</span>
+                    {{ saving ? 'Saving...' : 'Save' }}
+                </button>
+                <button class="action-btn cancel-btn" (click)="cancelEditing()" [disabled]="saving">
+                    <span class="icon">❌</span>
+                    Cancel
+                </button>
+            </ng-container>
+        </div>
+
+        <!-- Error Message -->
+        <div class="error-message" *ngIf="error">
+            <span class="icon">⚠️</span>
+            {{ error }}
+        </div>
+
+        <!-- Task Details -->
+        <div class="task-details">
+            <!-- Status and Priority -->
+            <div class="details-row">
+                <div class="detail-group">
+                    <label class="detail-label">Status</label>
+                    <div *ngIf="!editing" class="status-badge" [class]="getStatusBadgeClass(task.status)">
+                        {{ task.status.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase()) }}
+                    </div>
+                    <select *ngIf="editing" class="detail-select" [(ngModel)]="editedTask.status" [disabled]="saving">
+                        <option *ngFor="let option of statusOptions" [value]="option.value">
+                            {{ option.label }}
+                        </option>
+                    </select>
+                </div>
+
+                <div class="detail-group">
+                    <label class="detail-label">Priority</label>
+                    <div *ngIf="!editing" class="priority-badge" [class]="getPriorityBadgeClass(task.priority)">
+                        {{ task.priority.charAt(0).toUpperCase() + task.priority.slice(1) }}
+                    </div>
+                    <select *ngIf="editing" class="detail-select" [(ngModel)]="editedTask.priority" [disabled]="saving">
+                        <option *ngFor="let option of priorityOptions" [value]="option.value">
+                            {{ option.label }}
+                        </option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- Assignee and Dates -->
+            <div class="details-row">
+                <div class="detail-group">
+                    <label class="detail-label">Assignee</label>
+                    <div *ngIf="!editing" class="assignee-info">
+                        <div *ngIf="task.assignee; else noAssignee" class="assignee-display">
+                            <div class="assignee-avatar" [style.background-color]="getAvatarColor(task.assignee.email)">
+                                {{ getUserInitials(task.assignee) }}
+                            </div>
+                            <div class="assignee-name">{{ task.assignee.name }}</div>
+                        </div>
+                        <ng-template #noAssignee>
+                            <span class="no-assignee">Unassigned</span>
+                        </ng-template>
+                    </div>
+                    <select *ngIf="editing" class="detail-select" [(ngModel)]="editedTask.assignee_id"
+                        [disabled]="saving">
+                        <option [ngValue]="null">Unassigned</option>
+                        <!-- TODO: Populate with actual workspace users -->
+                        <option [ngValue]="1">User 1</option>
+                        <option [ngValue]="2">User 2</option>
+                    </select>
+                </div>
+
+                <div class="detail-group">
+                    <label class="detail-label">Due Date</label>
+                    <div *ngIf="!editing" class="date-display">
+                        <span *ngIf="task.due_date; else noDueDate">
+                            {{ formatDate(task.due_date) }}
+                        </span>
+                        <ng-template #noDueDate>
+                            <span class="no-date">No due date</span>
+                        </ng-template>
+                    </div>
+                    <input *ngIf="editing" type="date" class="detail-input" [(ngModel)]="editedTask.due_date"
+                        [disabled]="saving">
+                </div>
+            </div>
+
+            <!-- Labels -->
+            <div class="details-row" *ngIf="task.labels && task.labels.length > 0">
+                <div class="detail-group full-width">
+                    <label class="detail-label">Labels</label>
+                    <div class="task-labels">
+                        <span class="task-label" *ngFor="let label of getVisibleLabels()"
+                            [style.background-color]="label.color + '20'" [style.color]="label.color"
+                            [title]="label.name">
+                            {{ label.name }}
+                        </span>
+                        <span class="more-labels" *ngIf="getHiddenLabelsCount() > 0"
+                            [title]="'+' + getHiddenLabelsCount() + ' more labels'">
+                            +{{ getHiddenLabelsCount() }}
+                        </span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Description -->
+            <div class="details-row">
+                <div class="detail-group full-width">
+                    <label class="detail-label">Description</label>
+                    <div *ngIf="!editing" class="description-display">
+                        <div *ngIf="task.description; else noDescription" class="description-content">
+                            {{ task.description }}
+                        </div>
+                        <ng-template #noDescription>
+                            <span class="no-description">No description provided</span>
+                        </ng-template>
+                    </div>
+                    <textarea *ngIf="editing" class="description-editor" [(ngModel)]="editedTask.description"
+                        placeholder="Add a description..." rows="6" [disabled]="saving"></textarea>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tabs -->
+        <div class="tabs-container">
+            <div class="tab-buttons">
+                <button class="tab-btn active" data-tab="activity">
+                    <span class="icon">📋</span>
+                    Activity
+                </button>
+                <button class="tab-btn" data-tab="comments">
+                    <span class="icon">💬</span>
+                    Comments ({{ task.comments?.length || 0 }})
+                </button>
+                <button class="tab-btn" data-tab="attachments">
+                    <span class="icon">📎</span>
+                    Attachments
+                </button>
+            </div>
+
+            <!-- Tab Content -->
+            <div class="tab-content">
+                <!-- Activity Tab -->
+                <div class="tab-pane active" data-tab-content="activity">
+                    <div class="activity-log">
+                        <div class="activity-item" *ngFor="let item of activityLog">
+                            <div class="activity-icon">{{ getActivityIcon(item.type) }}</div>
+                            <div class="activity-details">
+                                <div class="activity-message">{{ item.message }}</div>
+                                <div class="activity-meta">
+                                    <span class="activity-user" *ngIf="item.user">{{ item.user.name }}</span>
+                                    <span class="activity-time">{{ formatDate(item.timestamp) }}</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="no-activity" *ngIf="activityLog.length === 0">
+                            <span class="icon">📝</span>
+                            No activity yet
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Comments Tab -->
+                <div class="tab-pane" data-tab-content="comments">
+                    <div class="comments-section">
+                        <!-- Add Comment -->
+                        <div class="add-comment">
+                            <textarea class="comment-input" [(ngModel)]="newComment" placeholder="Add a comment..."
+                                rows="3" [disabled]="loading"></textarea>
+                            <button class="comment-btn" (click)="addComment()"
+                                [disabled]="!newComment.trim() || loading">
+                                <span class="icon" *ngIf="!loading">📤</span>
+                                <span class="icon" *ngIf="loading">⏳</span>
+                                {{ loading ? 'Posting...' : 'Post' }}
+                            </button>
+                        </div>
+
+                        <!-- Comments List -->
+                        <div class="comments-list">
+                            <div class="comment-item" *ngFor="let comment of task.comments">
+                                <div class="comment-avatar"
+                                    [style.background-color]="getAvatarColor(comment.user_id + '@example.com')">
+                                    {{ getUserInitials({ id: comment.user_id, name: 'User ' + comment.user_id, email:
+                                    comment.user_id + '@example.com' } as User) }}
+                                </div>
+                                <div class="comment-content">
+                                    <div class="comment-header">
+                                        <span class="comment-author">User {{ comment.user_id }}</span>
+                                        <span class="comment-time">{{ formatDate(comment.created_at) }}</span>
+                                    </div>
+                                    <div class="comment-text">{{ comment.content }}</div>
+                                </div>
+                            </div>
+
+                            <div class="no-comments" *ngIf="!task.comments || task.comments.length === 0">
+                                <span class="icon">💬</span>
+                                No comments yet
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Attachments Tab -->
+                <div class="tab-pane" data-tab-content="attachments">
+                    <div class="attachments-section">
+                        <div class="upload-area">
+                            <div class="upload-content">
+                                <span class="upload-icon">📎</span>
+                                <p>Drop files here or click to upload</p>
+                                <button class="upload-btn">Choose Files</button>
+                            </div>
+                        </div>
+
+                        <div class="no-attachments">
+                            <span class="icon">📎</span>
+                            No attachments yet
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Overlay -->
+<div class="panel-overlay" [class.visible]="visible" (click)="onClose()"></div>

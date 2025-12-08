@@ -48,8 +48,9 @@
                     class="filter-select status-filter">
                     <option value="todo">To Do</option>
                     <option value="in_progress">In Progress</option>
-                    <option value="completed">Completed</option>
-                    <option value="cancelled">Cancelled</option>
+                    <option value="review">Review</option>
+                    <option value="done">Done</option>
+                    <option value="archived">Archived</option>
                 </select>
             </div>
 
@@ -96,51 +97,55 @@
         </div>
 
         <!-- Tasks Table -->
-        <div class="tasks-table-wrapper" *ngIf="(tasks$ | async)?.length > 0">
-            <table class="tasks-table">
-                <thead>
-                    <tr>
-                        <!-- Select All Checkbox -->
-                        <th class="select-column" *ngIf="tableConfig.allowRowSelection">
-                            <input type="checkbox" [checked]="areAllTasksSelected()"
-                                (change)="onSelectAllTasks($event.target.checked)" class="select-checkbox">
-                        </th>
+        <ng-container *ngIf="tasks$ | async as tasks">
+            <div class="tasks-table-wrapper" *ngIf="tasks.length > 0">
+                <table class="tasks-table">
+                    <thead>
+                        <tr>
+                            <!-- Select All Checkbox -->
+                            <th class="select-column" *ngIf="tableConfig.allowRowSelection">
+                                <input type="checkbox" [checked]="areAllTasksSelected()"
+                                    (change)="onSelectAllTasks($event.target.checked)" class="select-checkbox">
+                            </th>
 
-                        <!-- Column Headers -->
-                        <th *ngFor="let column of getVisibleColumns()" [style.width]="column.width"
-                            [class.sortable]="column.sortable"
-                            (click)="column.sortable ? onSortChange(column.key) : null">
-                            <div class="column-header">
-                                <span class="column-title">{{ column.label }}</span>
-                                <span class="sort-indicator"
-                                    *ngIf="column.sortable && (sort$ | async)?.sort_by === column.key">
-                                    <span class="sort-asc" *ngIf="(sort$ | async)?.sort_order === 'asc'">↑</span>
-                                    <span class="sort-desc" *ngIf="(sort$ | async)?.sort_order === 'desc'">↓</span>
-                                </span>
-                            </div>
-                        </th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <!-- Task Rows using TaskRowComponent -->
-                    <app-task-row *ngFor="let task of tasks$ | async; trackBy: trackByTaskId" [task]="task"
-                        [selected]="(selectedTasks$ | async).has(task.id)" [selectable]="tableConfig.allowRowSelection"
-                        [showCheckbox]="tableConfig.allowRowSelection" (taskClick)="onTaskSelect(task, true)"
-                        (taskDoubleClick)="onTaskDoubleClick(task)"
-                        (selectionChange)="onTaskSelect($event.task, $event.selected)">
-                    </app-task-row>
-                </tbody>
-            </table>
-        </div>
+                            <!-- Column Headers -->
+                            <th *ngFor="let column of getVisibleColumns()" [style.width]="column.width"
+                                [class.sortable]="column.sortable"
+                                (click)="column.sortable ? onSortChange(column.key) : null">
+                                <div class="column-header">
+                                    <span class="column-title">{{ column.label }}</span>
+                                    <span class="sort-indicator"
+                                        *ngIf="column.sortable && (sort$ | async)?.sort_by === column.key">
+                                        <span class="sort-asc" *ngIf="(sort$ | async)?.sort_order === 'asc'">↑</span>
+                                        <span class="sort-desc" *ngIf="(sort$ | async)?.sort_order === 'desc'">↓</span>
+                                    </span>
+                                </div>
+                            </th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <!-- Task Rows using TaskRowComponent -->
+                        <app-task-row *ngFor="let task of tasks; trackBy: trackByTaskId" [task]="task"
+                            [selected]="(selectedTasks$ | async)?.has(task.id) || false"
+                            [selectable]="tableConfig.allowRowSelection" [showCheckbox]="tableConfig.allowRowSelection"
+                            (taskClick)="onTaskSelect(task, true)" (taskDoubleClick)="onTaskDoubleClick(task)"
+                            (selectionChange)="onTaskSelect($event.task, $event.selected)"
+                            (taskUpdate)="onTaskUpdate($event)">
+                        </app-task-row>
+                    </tbody>
+                </table>
+            </div>
+        </ng-container>
     </div>
 
     <!-- Pagination -->
-    <div class="pagination-container"
-        *ngIf="tableConfig.showPagination && !(loading$ | async) && !(error$ | async) && (tasks$ | async)?.length > 0">
+    <div class="pagination-container" <ng-container
+        *ngIf="tableConfig.showPagination && !(loading$ | async) && !(error$ | async) && (tasks$ | async as tasks); tasks.length > 0">
         <div class="pagination-info" *ngIf="pagination$ | async as pagination">
-            Showing {{ (pagination.currentPage - 1) * tableConfig.pageSize + 1 }}-{{
-            Math.min(pagination.currentPage * tableConfig.pageSize, pagination.total)
-            }} of {{ pagination.total }} tasks
+            Showing {{ (((pagination$ | async)?.currentPage || 1) - 1) * tableConfig.pageSize + 1 }}-{{
+            Math.min(((pagination$ | async)?.currentPage || 1) * tableConfig.pageSize, (pagination$ | async)?.total ||
+            0)
+            }} of {{ (pagination$ | async)?.total || 0 }} tasks
         </div>
 
         <div class="pagination-controls" *ngIf="pagination$ | async as pagination">
@@ -156,7 +161,7 @@
                 <button class="pagination-btn page-number"
                     *ngFor="let page of getPageNumbers(pagination.currentPage, pagination.totalPages)"
                     [class.active]="page === pagination.currentPage" [disabled]="page === '...'"
-                    (click)="page !== '...' ? onPageChange(page) : null">
+                    [disabled]="page === '...'" (click)="page !== '...' ? onPageChange(page as number) : null">
                     {{ page }}
                 </button>
             </div>
@@ -170,5 +175,17 @@
                 Last
             </button>
         </div>
+        </ng-container>
     </div>
-</div>
+    <!-- Task Details Panel -->
+    <app-task-details-panel *ngIf="selectedTaskForDetails" [task]="selectedTaskForDetails"
+        [visible]="showTaskDetailsPanel" (close)="onTaskDetailsPanelClose()" (minimize)="onTaskDetailsPanelMinimize()"
+        (taskUpdate)="onTaskDetailsPanelUpdate($event)">
+    </app-task-details-panel>
+    <!-- Bulk Action Toolbar -->
+    <app-bulk-action-toolbar [selectedTasks]="(selectedTasks$ | async) ? Array.from((selectedTasks$ | async).values()).map(id => 
+            (tasks$ | async)?.find(task => task.id === id)
+        ).filter(task => task !== undefined) : []" [visible]="showBulkActionToolbar"
+        (tasksUpdated)="onBulkActionToolbarTasksUpdate($event)"
+        (selectionCleared)="onBulkActionToolbarSelectionClear()">
+    </app-bulk-action-toolbar>

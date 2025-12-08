@@ -8,7 +8,7 @@ export interface Task {
     board_id?: number;
     title: string;
     description?: string;
-    status: 'todo' | 'in_progress' | 'completed' | 'cancelled';
+    status: 'todo' | 'in_progress' | 'review' | 'done' | 'archived';
     priority: 'low' | 'medium' | 'high' | 'urgent';
     assignee_id?: number;
     creator_id: number;
@@ -132,7 +132,7 @@ export interface TaskSort {
 export interface TaskCreate {
     title: string;
     description?: string;
-    status?: 'todo' | 'in_progress' | 'completed' | 'cancelled';
+    status?: 'todo' | 'in_progress' | 'review' | 'done' | 'archived';
     priority?: 'low' | 'medium' | 'high' | 'urgent';
     assignee_id?: number;
     board_id?: number;
@@ -153,7 +153,7 @@ export interface TaskCreate {
 export interface TaskUpdate {
     title?: string;
     description?: string;
-    status?: 'todo' | 'in_progress' | 'completed' | 'cancelled';
+    status?: 'todo' | 'in_progress' | 'review' | 'done' | 'archived';
     priority?: 'low' | 'medium' | 'high' | 'urgent';
     assignee_id?: number;
     board_id?: number;
@@ -174,7 +174,7 @@ export interface TaskUpdate {
 export interface TaskPositionUpdate {
     position: number;
     board_id?: number;
-    status?: 'todo' | 'in_progress' | 'completed' | 'cancelled';
+    status?: 'todo' | 'in_progress' | 'review' | 'done' | 'archived';
 }
 
 /**

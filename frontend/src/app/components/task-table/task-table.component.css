@@ -528,12 +528,17 @@
     color: var(--info-600, #0891b2);
 }
 
-.status-completed {
+.status-review {
+    background: var(--warning-50, #fffbeb);
+    color: var(--warning-600, #d97706);
+}
+
+.status-done {
     background: var(--success-50, #f0fdf4);
     color: var(--success-600, #16a34a);
 }
 
-.status-cancelled {
+.status-archived {
     background: var(--error-50, #fff1f2);
     color: var(--error-600, #e11d48);
 }

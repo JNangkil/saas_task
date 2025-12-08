@@ -7,6 +7,8 @@ import { FormsModule } from '@angular/forms';
 import { TaskService } from '../../services/task.service';
 import { WorkspaceContextService } from '../../services/workspace-context.service';
 import { TaskRowComponent } from '../task-row/task-row.component';
+import { TaskDetailsPanelComponent } from './task-details-panel.component';
+import { BulkActionToolbarComponent } from './bulk-action-toolbar.component';
 import {
     Task,
     TaskFilters,
@@ -75,7 +77,9 @@ const DEFAULT_CONFIG: TaskTableConfig = {
     imports: [
         CommonModule,
         FormsModule,
-        TaskRowComponent
+        TaskRowComponent,
+        TaskDetailsPanelComponent,
+        BulkActionToolbarComponent
     ],
     templateUrl: './task-table.component.html',
     styleUrls: ['./task-table.component.css'],
@@ -92,6 +96,8 @@ export class TaskTableComponent implements OnInit, OnDestroy {
     @Output() taskSelected = new EventEmitter<Task>();
     @Output() tasksSelected = new EventEmitter<Task[]>();
     @Output() taskDoubleClicked = new EventEmitter<Task>();
+    @Output() taskUpdate = new EventEmitter<Task>();
+    @Output() selectionCleared = new EventEmitter<void>();
 
     // Public properties
     tasks$!: Observable<Task[]>;
@@ -130,6 +136,13 @@ export class TaskTableComponent implements OnInit, OnDestroy {
     private destroy$ = new Subject<void>();
     private refreshTrigger$ = new Subject<void>();
     showColumnMenu = false;
+
+    // Task details panel state
+    selectedTaskForDetails: Task | null = null;
+    showTaskDetailsPanel = false;
+
+    // Bulk action toolbar state
+    showBulkActionToolbar = false;
 
     constructor(
         private taskService: TaskService,
@@ -329,6 +342,9 @@ export class TaskTableComponent implements OnInit, OnDestroy {
         this.selectedTasks$.next(currentSelected);
         this.taskSelected.emit(task);
 
+        // Show/hide bulk action toolbar based on selection
+        this.showBulkActionToolbar = currentSelected.size > 0;
+
         // Emit all selected tasks
         this.tasks$.subscribe(tasks => {
             const selectedTasks = tasks.filter(task => currentSelected.has(task.id));
@@ -344,6 +360,9 @@ export class TaskTableComponent implements OnInit, OnDestroy {
             const newSelected = selected ? new Set(tasks.map(task => task.id)) : new Set<number>();
             this.selectedTasks$.next(newSelected);
 
+            // Show/hide bulk action toolbar based on selection
+            this.showBulkActionToolbar = newSelected.size > 0;
+
             const selectedTasks = selected ? [...tasks] : [];
             this.tasksSelected.emit(selectedTasks);
         });
@@ -353,7 +372,93 @@ export class TaskTableComponent implements OnInit, OnDestroy {
      * Handle task double click
      */
     onTaskDoubleClick(task: Task): void {
+        this.selectedTaskForDetails = task;
+        this.showTaskDetailsPanel = true;
         this.taskDoubleClicked.emit(task);
+    }
+
+    /**
+     * Handle task details panel close
+     */
+    onTaskDetailsPanelClose(): void {
+        this.showTaskDetailsPanel = false;
+        this.selectedTaskForDetails = null;
+    }
+
+    /**
+     * Handle task details panel minimize
+     */
+    onTaskDetailsPanelMinimize(): void {
+        // TODO: Implement minimize functionality
+        this.showTaskDetailsPanel = false;
+    }
+
+    /**
+     * Handle task update from details panel
+     */
+    onTaskDetailsPanelUpdate(updatedTask: Task): void {
+        // Update the task in the current tasks observable
+        this.tasks$.pipe(
+            takeUntil(this.destroy$)
+        ).subscribe(currentTasks => {
+            const updatedTasks = currentTasks.map(task =>
+                task.id === updatedTask.id ? updatedTask : task
+            );
+
+            // Create a new observable with the updated tasks
+            this.tasks$ = of(updatedTasks);
+        });
+
+        this.taskUpdate.emit(updatedTask);
+    }
+
+    /**
+     * Handle bulk action toolbar selection clear
+     */
+    onBulkActionToolbarSelectionClear(): void {
+        this.selectedTasks$.next(new Set());
+        this.showBulkActionToolbar = false;
+        this.selectionCleared.emit();
+    }
+
+    /**
+     * Handle bulk action toolbar tasks update
+     */
+    onBulkActionToolbarTasksUpdate(updatedTasks: Task[]): void {
+        // Update the task in the current tasks observable
+        this.tasks$.pipe(
+            takeUntil(this.destroy$)
+        ).subscribe(currentTasks => {
+            const mergedTasks = currentTasks.map(task => {
+                const updatedTask = updatedTasks.find(ut => ut.id === task.id);
+                return updatedTask || task;
+            });
+
+            // Create a new observable with the updated tasks
+            this.tasks$ = of(mergedTasks);
+        });
+
+        // Emit task updates
+        updatedTasks.forEach(updatedTask => {
+            this.taskUpdate.emit(updatedTask);
+        });
+    }
+
+    /**
+     * Handle task update from inline editing
+     */
+    onTaskUpdate(updatedTask: Task): void {
+        // Update the task in the current tasks observable
+        this.tasks$.pipe(
+            takeUntil(this.destroy$)
+        ).subscribe(currentTasks => {
+            const updatedTasks = currentTasks.map(task =>
+                task.id === updatedTask.id ? updatedTask : task
+            );
+
+            // Create a new observable with the updated tasks
+            this.tasks$ = of(updatedTasks);
+        });
     }
 
     /**
@@ -365,10 +470,12 @@ export class TaskTableComponent implements OnInit, OnDestroy {
                 return 'status-todo';
             case 'in_progress':
                 return 'status-in-progress';
-            case 'completed':
-                return 'status-completed';
-            case 'cancelled':
-                return 'status-cancelled';
+            case 'review':
+                return 'status-review';
+            case 'done':
+                return 'status-done';
+            case 'archived':
+                return 'status-archived';
             default:
                 return 'status-default';
         }
