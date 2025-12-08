@@ -22,7 +22,7 @@ export class TenantService {
      */
     getTenants(): Observable<ITenant[]> {
         return this.http.get<ITenant[]>(this.apiUrl).pipe(
-            map(response => response.data || []),
+            map(response => response || []),
             catchError(error => {
                 console.error('Error fetching tenants:', error);
                 return throwError(() => new Error('Failed to fetch tenants'));
@@ -35,7 +35,7 @@ export class TenantService {
      */
     getTenant(id: string): Observable<ITenant> {
         return this.http.get<ITenant>(`${this.apiUrl}/${id}`).pipe(
-            map(response => response.data),
+            map(response => response),
             catchError(error => {
                 console.error(`Error fetching tenant ${id}:`, error);
                 return throwError(() => new Error(`Failed to fetch tenant ${id}`));
@@ -48,7 +48,7 @@ export class TenantService {
      */
     createTenant(tenantData: Partial<ITenant>): Observable<ITenant> {
         return this.http.post<ITenant>(this.apiUrl, tenantData, this.httpOptions).pipe(
-            map(response => response.data),
+            map(response => response),
             catchError(error => {
                 console.error('Error creating tenant:', error);
                 return throwError(() => new Error('Failed to create tenant'));
@@ -61,7 +61,7 @@ export class TenantService {
      */
     updateTenant(id: string, tenantData: Partial<ITenant>): Observable<ITenant> {
         return this.http.put<ITenant>(`${this.apiUrl}/${id}`, tenantData, this.httpOptions).pipe(
-            map(response => response.data),
+            map(response => response),
             catchError(error => {
                 console.error(`Error updating tenant ${id}:`, error);
                 return throwError(() => new Error(`Failed to update tenant ${id}`));
@@ -73,7 +73,7 @@ export class TenantService {
      * Archive/deactivate a tenant.
      */
     archiveTenant(id: string): Observable<any> {
-        return this.http.post(`${this.apiUrl}/${id}/archive`).pipe(
+        return this.http.post(`${this.apiUrl}/${id}/archive`, null).pipe(
             catchError(error => {
                 console.error(`Error archiving tenant ${id}:`, error);
                 return throwError(() => new Error(`Failed to archive tenant ${id}`));
@@ -85,7 +85,7 @@ export class TenantService {
      * Reactivate a tenant.
      */
     reactivateTenant(id: string): Observable<any> {
-        return this.http.post(`${this.apiUrl}/${id}/reactivate`).pipe(
+        return this.http.post(`${this.apiUrl}/${id}/reactivate`, null).pipe(
             catchError(error => {
                 console.error(`Error reactivating tenant ${id}:`, error);
                 return throwError(() => new Error(`Failed to reactivate tenant ${id}`));
@@ -109,8 +109,8 @@ export class TenantService {
      * Get tenant members.
      */
     getTenantMembers(id: string): Observable<any[]> {
-        return this.http.get(`${this.apiUrl}/${id}/members`).pipe(
-            map(response => response.data || []),
+        return this.http.get<any[]>(`${this.apiUrl}/${id}/members`).pipe(
+            map(response => response || []),
             catchError(error => {
                 console.error(`Error fetching tenant members for ${id}:`, error);
                 return throwError(() => new Error(`Failed to fetch tenant members for ${id}`));
@@ -123,7 +123,7 @@ export class TenantService {
      */
     addTenantMember(tenantId: string, memberData: { email: string; role: string }): Observable<any> {
         return this.http.post(`${this.apiUrl}/${tenantId}/members`, memberData).pipe(
-            map(response => response.data),
+            map(response => response),
             catchError(error => {
                 console.error(`Error adding member to tenant ${tenantId}:`, error);
                 return throwError(() => new Error(`Failed to add member to tenant ${tenantId}`));
@@ -136,7 +136,7 @@ export class TenantService {
      */
     updateTenantMemberRole(tenantId: string, userId: string, role: string): Observable<any> {
         return this.http.put(`${this.apiUrl}/${tenantId}/members/${userId}`, { role }).pipe(
-            map(response => response.data),
+            map(response => response),
             catchError(error => {
                 console.error(`Error updating member role in tenant ${tenantId}:`, error);
                 return throwError(() => new Error(`Failed to update member role in tenant ${tenantId}`));
@@ -161,7 +161,7 @@ export class TenantService {
      */
     getTenantSettings(id: string): Observable<any> {
         return this.http.get(`${this.apiUrl}/${id}/settings`).pipe(
-            map(response => response.data),
+            map(response => response),
             catchError(error => {
                 console.error(`Error fetching tenant settings for ${id}:`, error);
                 return throwError(() => new Error(`Failed to fetch tenant settings for ${id}`));
@@ -174,7 +174,7 @@ export class TenantService {
      */
     updateTenantSettings(id: string, settings: Record<string, any>): Observable<any> {
         return this.http.put(`${this.apiUrl}/${id}/settings`, { settings }).pipe(
-            map(response => response.data),
+            map(response => response),
             catchError(error => {
                 console.error(`Error updating tenant settings for ${id}:`, error);
                 return throwError(() => new Error(`Failed to update tenant settings for ${id}`));

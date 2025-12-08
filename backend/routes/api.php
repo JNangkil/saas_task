@@ -16,6 +16,11 @@ use Illuminate\Support\Facades\Route;
 */
 
 Route::middleware(['auth:sanctum'])->group(function () {
+    // Authentication routes
+    Route::post('/login', [AuthController::class, 'login']);
+    Route::post('/logout', [AuthController::class, 'logout'])->middleware('auth:sanctum');
+    Route::get('/me', [AuthController::class, 'me'])->middleware('auth:sanctum');
+    
     // Tenant routes
     Route::prefix('tenants')->group(function () {
         Route::get('/', [TenantController::class, 'index'])->name('tenants.index');

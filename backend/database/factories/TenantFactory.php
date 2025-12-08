@@ -2,6 +2,8 @@
 
 namespace Database\Factories;
 
+use App\Models\Tenant;
+use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
@@ -10,39 +12,36 @@ use Illuminate\Database\Eloquent\Factories\Factory;
 class TenantFactory extends Factory
 {
     /**
+     * The name of the factory's corresponding model.
+     *
+     * @var string
+     */
+    protected $model = Tenant::class;
+
+    /**
      * Define the model's default state.
      *
      * @return array<string, mixed>
      */
     public function definition(): array
     {
-        $name = $this->faker->company();
-        $slug = strtolower(str_replace(' ', '-', $name));
+        $name = fake()->company();
+        $slug = strtolower(str_replace(' ', '-', $name)) . '-' . fake()->unique()->randomNumber(4);
         
         return [
             'name' => $name,
-            'slug' => $slug . '-' . $this->faker->unique()->randomNumber(4),
-            'logo_url' => $this->faker->optional(0.7)->imageUrl(200, 200, 'business'),
-            'billing_email' => $this->faker->optional(0.8)->companyEmail(),
+            'slug' => $slug,
+            'logo_url' => fake()->optional(0.3)->imageUrl(100, 100, 'business'),
+            'billing_email' => fake()->optional(0.7)->companyEmail(),
             'settings' => [
-                'theme' => $this->faker->randomElement(['light', 'dark']),
-                'timezone' => $this->faker->timezone(),
-                'locale' => $this->faker->randomElement(['en_US', 'en_GB', 'es_ES', 'fr_FR']),
+                'theme' => fake()->randomElement(['light', 'dark']),
+                'timezone' => fake()->timezone(),
+                'locale' => fake()->randomElement(['en', 'es', 'fr', 'de']),
             ],
-            'status' => $this->faker->randomElement(['active', 'suspended', 'deactivated']),
-            'locale' => $this->faker->randomElement(['en_US', 'en_GB', 'es_ES', 'fr_FR']),
-            'timezone' => $this->faker->timezone(),
-        ];
-    }
-
-    /**
-     * Indicate that the tenant is active.
-     */
-    public function active(): static
-    {
-        return $this->state(fn (array $attributes) => [
             'status' => 'active',
-        ]);
+            'locale' => fake()->randomElement(['en', 'es', 'fr', 'de']),
+            'timezone' => fake()->timezone(),
+        ];
     }
 
     /**
@@ -66,25 +65,15 @@ class TenantFactory extends Factory
     }
 
     /**
-     * Create a tenant with a specific slug.
+     * Indicate that the tenant has an owner.
      */
-    public function withSlug(string $slug): static
+    public function withOwner(User $owner): static
     {
-        return $this->state(fn (array $attributes) => [
-            'slug' => $slug,
-        ]);
-    }
-
-    /**
-     * Create a tenant with a specific name.
-     */
-    public function withName(string $name): static
-    {
-        $slug = strtolower(str_replace(' ', '-', $name));
-        
-        return $this->state(fn (array $attributes) => [
-            'name' => $name,
-            'slug' => $slug,
-        ]);
+        return $this->afterCreating(function (Tenant $tenant) use ($owner) {
+            $tenant->users()->attach($owner, [
+                'role' => 'owner',
+                'joined_at' => now(),
+            ]);
+        });
     }
 }

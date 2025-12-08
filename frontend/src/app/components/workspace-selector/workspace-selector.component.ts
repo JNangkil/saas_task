@@ -7,10 +7,10 @@ import { WorkspaceContextService } from '../../services/workspace-context.servic
 import { WorkspaceService } from '../../services/workspace.service';
 
 @Component({
-    selector: 'app-workspace-selector',
-    standalone: true,
-    imports: [CommonModule],
-    template: `
+  selector: 'app-workspace-selector',
+  standalone: true,
+  imports: [CommonModule],
+  template: `
     <div class="workspace-selector" *ngIf="context$ | async as context">
       <div class="current-workspace" (click)="toggleDropdown()">
         <div class="workspace-info">
@@ -19,12 +19,12 @@ import { WorkspaceService } from '../../services/workspace.service';
           </div>
           <div class="workspace-details">
             <span class="workspace-name">{{ context.currentWorkspace?.name || 'Select Workspace' }}</span>
-            <span class="workspace-count" *ngIf="context.userWorkspaces?.length > 1">
-              ({{ context.userWorkspaces?.length || 0 }} workspaces)
+            <span class="workspace-count" *ngIf="context.userWorkspaces && context.userWorkspaces.length > 1">
+              ({{ context.userWorkspaces.length || 0 }} workspaces)
             </span>
           </div>
         </div>
-        <div class="dropdown-arrow" *ngIf="context.userWorkspaces?.length > 1">▼</div>
+        <div class="dropdown-arrow" *ngIf="context.userWorkspaces && context.userWorkspaces.length > 1">▼</div>
       </div>
       
       <div class="dropdown-menu" *ngIf="isDropdownOpen">
@@ -54,7 +54,7 @@ import { WorkspaceService } from '../../services/workspace.service';
       </div>
     </div>
   `,
-    styles: [`
+  styles: [`
     .workspace-selector {
       position: relative;
       display: inline-block;
@@ -196,56 +196,56 @@ import { WorkspaceService } from '../../services/workspace.service';
   `]
 })
 export class WorkspaceSelectorComponent implements OnInit, OnDestroy {
-    context$: Observable<IWorkspaceContext>;
-    isDropdownOpen = false;
-    private destroy$ = new Subject<void>();
+  context$: Observable<IWorkspaceContext>;
+  isDropdownOpen = false;
+  private destroy$ = new Subject<void>();
 
-    constructor(
-        private workspaceContextService: WorkspaceContextService,
-        private workspaceService: WorkspaceService,
-        private router: Router
-    ) {
-        this.context$ = this.workspaceContextService.context$;
-    }
+  constructor(
+    private workspaceContextService: WorkspaceContextService,
+    private workspaceService: WorkspaceService,
+    private router: Router
+  ) {
+    this.context$ = this.workspaceContextService.context$;
+  }
 
-    ngOnInit(): void {
-        // Load user's workspaces
-        this.loadUserWorkspaces();
-    }
+  ngOnInit(): void {
+    // Load user's workspaces
+    this.loadUserWorkspaces();
+  }
 
-    ngOnDestroy(): void {
-        this.destroy$.next();
-    }
+  ngOnDestroy(): void {
+    this.destroy$.next();
+  }
 
-    toggleDropdown(): void {
-        this.isDropdownOpen = !this.isDropdownOpen;
-    }
+  toggleDropdown(): void {
+    this.isDropdownOpen = !this.isDropdownOpen;
+  }
 
-    selectWorkspace(workspace: IWorkspace): void {
-        this.workspaceContextService.setCurrentWorkspace(workspace);
-        this.isDropdownOpen = false;
-    }
+  selectWorkspace(workspace: IWorkspace): void {
+    this.workspaceContextService.setCurrentWorkspace(workspace);
+    this.isDropdownOpen = false;
+  }
 
-    goToWorkspaceManagement(): void {
-        this.router.navigate(['/workspaces']);
-    }
+  goToWorkspaceManagement(): void {
+    this.router.navigate(['/workspaces']);
+  }
 
-    private loadUserWorkspaces(): void {
-        // This would typically get the current tenant and then load workspaces
-        // For now, we'll use a placeholder implementation
-        this.workspaceService.getCurrentTenantWorkspaces().subscribe({
-            next: (workspaces) => {
-                this.workspaceContextService.setUserWorkspaces(workspaces || []);
+  private loadUserWorkspaces(): void {
+    // This would typically get the current tenant and then load workspaces
+    // For now, we'll use a placeholder implementation
+    this.workspaceService.getCurrentTenantWorkspaces().subscribe({
+      next: (workspaces) => {
+        this.workspaceContextService.setUserWorkspaces(workspaces || []);
 
-                // Set current workspace if none is selected
-                if (!this.workspaceContextService.context?.currentWorkspace && workspaces && workspaces.length > 0) {
-                    this.workspaceContextService.setCurrentWorkspace(workspaces[0]);
-                }
-            },
-            error: (error) => {
-                console.error('Error loading workspaces:', error);
-                this.workspaceContextService.setError('Failed to load workspaces');
-            }
-        });
-    }
+        // Set current workspace if none is selected
+        if (!this.workspaceContextService.context?.currentWorkspace && workspaces && workspaces.length > 0) {
+          this.workspaceContextService.setCurrentWorkspace(workspaces[0]);
+        }
+      },
+      error: (error) => {
+        console.error('Error loading workspaces:', error);
+        this.workspaceContextService.setError('Failed to load workspaces');
+      }
+    });
+  }
 }

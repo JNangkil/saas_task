@@ -121,7 +121,7 @@ class WorkspacePolicy
      */
     public function createBoards(User $user, Workspace $workspace): bool
     {
-        return $workspace->canUserCreateBoardsInWorkspace($user);
+        return $workspace->canUserCreateBoards($user);
     }
 
     /**

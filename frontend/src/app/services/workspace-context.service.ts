@@ -57,8 +57,12 @@ export class WorkspaceContextService {
     /**
      * Set the current workspace.
      */
-    setCurrentWorkspace(workspace: IWorkspace): void {
-        localStorage.setItem(this.localStorageKey, workspace.id);
+    setCurrentWorkspace(workspace: IWorkspace | null): void {
+        if (workspace) {
+            localStorage.setItem(this.localStorageKey, workspace.id);
+        } else {
+            localStorage.removeItem(this.localStorageKey);
+        }
 
         this.contextSubject.next({
             ...this.contextSubject.value,
