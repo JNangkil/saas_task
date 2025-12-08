@@ -230,4 +230,31 @@ class Subscription extends Model
     {
         return $query->whereIn('status', [self::STATUS_ACTIVE, self::STATUS_TRIALING]);
     }
+
+    /**
+     * Log warning if metadata column is missing from database
+     */
+    protected static function boot()
+    {
+        parent::boot();
+        
+        static::retrieved(function ($subscription) {
+            // Check if metadata property exists (would fail if column doesn't exist)
+            try {
+                $metadata = $subscription->metadata;
+                if ($metadata === null && !is_array($metadata)) {
+                    \Log::warning('Subscription metadata may be missing from database', [
+                        'subscription_id' => $subscription->id,
+                        'issue' => 'metadata column may be missing from subscriptions table'
+                    ]);
+                }
+            } catch (\Exception $e) {
+                \Log::error('Error accessing subscription metadata', [
+                    'subscription_id' => $subscription->id,
+                    'error' => $e->getMessage(),
+                    'issue' => 'metadata column may be missing from subscriptions table'
+                ]);
+            }
+        });
+    }
 }

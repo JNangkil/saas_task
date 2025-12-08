@@ -626,7 +626,13 @@ describe('UpgradePromptComponent', () => {
 
         it('should return savings when plan is cheaper', () => {
             const plan = { ...mockPlans[0], price: '9' }; // Cheaper than Professional
-            component.currentSubscription = mockPlans[1]; // Professional
+            // Create a mock subscription for Professional plan to test comparison
+            const professionalSubscription: ISubscription = {
+                ...mockSubscription,
+                plan_id: 2,
+                plan: mockPlans[1] // Professional plan
+            };
+            component.currentSubscription = professionalSubscription;
 
             expect(component.getPlanComparisonText(plan)).toBe('$20.00/month savings');
         });

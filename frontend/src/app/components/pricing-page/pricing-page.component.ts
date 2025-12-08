@@ -169,7 +169,7 @@ export class PricingPageComponent implements OnInit, OnDestroy {
     /**
      * Load all pricing plans and related data
      */
-    private loadPricingData(): void {
+    loadPricingData(): void {
         this.isLoading = true;
         this.error = null;
 

@@ -23,11 +23,11 @@
                         </div>
                         <div class="usage-details">
                             <span class="current-usage">
-                                {{ usageStatistics.current_usage[feature.toLowerCase().replace(/\s+/g, '_')] || 0 }}
+                                {{ getCurrentUsage(feature) }}
                             </span>
                             <span class="limit-separator">/</span>
                             <span class="limit-value">
-                                {{ usageStatistics.limits[feature.toLowerCase().replace(/\s+/g, '_')] || '∞' }}
+                                {{ getFeatureLimit(feature) }}
                             </span>
                         </div>
                     </div>

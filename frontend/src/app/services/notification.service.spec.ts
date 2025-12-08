@@ -160,10 +160,6 @@ describe('NotificationService', () => {
         billingSpy.currentSubscription$ = subscriptionSubject.asObservable();
         billingSpy.loading$ = loadingSubject.asObservable();
 
-        // Store references for test manipulation
-        (billingServiceSpy as any)._subscriptionSubject = subscriptionSubject;
-        (billingServiceSpy as any)._loadingSubject = loadingSubject;
-
         TestBed.configureTestingModule({
             providers: [
                 NotificationService,
@@ -173,6 +169,11 @@ describe('NotificationService', () => {
 
         service = TestBed.inject(NotificationService);
         billingServiceSpy = TestBed.inject(BillingService) as jasmine.SpyObj<BillingService>;
+
+        // Store references for test manipulation after service is created
+        (service as any).billingService = billingSpy;
+        // Store the subject for direct manipulation in tests
+        (service as any).subscriptionSubject = subscriptionSubject;
     });
 
     afterEach(() => {
@@ -237,7 +238,7 @@ describe('NotificationService', () => {
         });
 
         it('should show trial notification for active trial', () => {
-            (billingServiceSpy as any)._subscriptionSubject.next(mockTrialSubscription);
+            (service as any).subscriptionSubject.next(mockTrialSubscription);
 
             service.getCurrentNotificationState().subscribe(state => {
                 expect(state.type).toBe('trial');
@@ -248,7 +249,7 @@ describe('NotificationService', () => {
 
         it('should hide trial notification if dismissed', () => {
             sessionStorage.setItem('trial_banner_dismissed', 'true');
-            (billingServiceSpy as any)._subscriptionSubject.next(mockTrialSubscription);
+            (service as any).subscriptionSubject.next(mockTrialSubscription);
 
             service.getCurrentNotificationState().subscribe(state => {
                 expect(state.type).toBe('none');
@@ -261,7 +262,7 @@ describe('NotificationService', () => {
                 ...mockTrialSubscription,
                 trial_days_remaining: 2
             };
-            (billingServiceSpy as any)._subscriptionSubject.next(urgentTrial);
+            (service as any).subscriptionSubject.next(urgentTrial);
 
             service.getCurrentNotificationState().subscribe(state => {
                 expect(state.type).toBe('trial');
@@ -274,7 +275,7 @@ describe('NotificationService', () => {
                 ...mockTrialSubscription,
                 trial_days_remaining: 0
             };
-            (billingServiceSpy as any)._subscriptionSubject.next(zeroDayTrial);
+            (service as any).subscriptionSubject.next(zeroDayTrial);
 
             service.getCurrentNotificationState().subscribe(state => {
                 expect(state.message).toBe('Your trial expires today!');
@@ -282,7 +283,7 @@ describe('NotificationService', () => {
         });
 
         it('should hide trial banner', () => {
-            (billingServiceSpy as any)._subscriptionSubject.next(mockTrialSubscription);
+            (service as any).subscriptionSubject.next(mockTrialSubscription);
             service.hideTrialBanner();
 
             service.getCurrentNotificationState().subscribe(state => {
@@ -298,7 +299,7 @@ describe('NotificationService', () => {
         });
 
         it('should show past due notification for past due subscription', () => {
-            (billingServiceSpy as any)._subscriptionSubject.next(mockPastDueSubscription);
+            (service as any).subscriptionSubject.next(mockPastDueSubscription);
 
             service.getCurrentNotificationState().subscribe(state => {
                 expect(state.type).toBe('past_due');
@@ -309,7 +310,7 @@ describe('NotificationService', () => {
 
         it('should hide past due notification if dismissed', () => {
             sessionStorage.setItem('past_due_banner_dismissed', 'true');
-            (billingServiceSpy as any)._subscriptionSubject.next(mockPastDueSubscription);
+            (service as any).subscriptionSubject.next(mockPastDueSubscription);
 
             service.getCurrentNotificationState().subscribe(state => {
                 expect(state.type).toBe('none');
@@ -322,7 +323,7 @@ describe('NotificationService', () => {
                 ...mockPastDueSubscription,
                 ends_at: new Date(Date.now() + 1 * 24 * 60 * 60 * 1000).toISOString()
             };
-            (billingServiceSpy as any)._subscriptionSubject.next(urgentPastDue);
+            (service as any).subscriptionSubject.next(urgentPastDue);
 
             service.getCurrentNotificationState().subscribe(state => {
                 expect(state.type).toBe('past_due');
@@ -331,7 +332,7 @@ describe('NotificationService', () => {
         });
 
         it('should hide past due banner', () => {
-            (billingServiceSpy as any)._subscriptionSubject.next(mockPastDueSubscription);
+            (service as any).subscriptionSubject.next(mockPastDueSubscription);
             service.hidePastDueBanner();
 
             service.getCurrentNotificationState().subscribe(state => {
@@ -402,7 +403,7 @@ describe('NotificationService', () => {
         });
 
         it('should dismiss current notification', () => {
-            (billingServiceSpy as any)._subscriptionSubject.next(mockTrialSubscription);
+            (service as any).subscriptionSubject.next(mockTrialSubscription);
             service.dismissCurrentNotification();
 
             service.getCurrentNotificationState().subscribe(state => {
@@ -421,7 +422,7 @@ describe('NotificationService', () => {
 
         it('should re-evaluate notification after reset', () => {
             sessionStorage.setItem('trial_banner_dismissed', 'true');
-            (billingServiceSpy as any)._subscriptionSubject.next(mockTrialSubscription);
+            (service as any).subscriptionSubject.next(mockTrialSubscription);
 
             service.resetDismissal('trial');
 
@@ -438,7 +439,7 @@ describe('NotificationService', () => {
         });
 
         it('should check if notification type is active', () => {
-            (billingServiceSpy as any)._subscriptionSubject.next(mockTrialSubscription);
+            (service as any).subscriptionSubject.next(mockTrialSubscription);
 
             expect(service.isNotificationActive('trial')).toBe(true);
             expect(service.isNotificationActive('past_due')).toBe(false);
@@ -462,7 +463,7 @@ describe('NotificationService', () => {
                 ...mockTrialSubscription,
                 trial_days_remaining: 1
             };
-            (billingServiceSpy as any)._subscriptionSubject.next(oneDayTrial);
+            (service as any).subscriptionSubject.next(oneDayTrial);
 
             service.getCurrentNotificationState().subscribe(state => {
                 expect(state.message).toBe('Your trial expires tomorrow!');
@@ -474,7 +475,7 @@ describe('NotificationService', () => {
                 ...mockPastDueSubscription,
                 ends_at: new Date(Date.now() + 1 * 24 * 60 * 60 * 1000).toISOString()
             };
-            (billingServiceSpy as any)._subscriptionSubject.next(oneDayPastDue);
+            (service as any).subscriptionSubject.next(oneDayPastDue);
 
             service.getCurrentNotificationState().subscribe(state => {
                 expect(state.message).toBe('Your grace period expires tomorrow! Update your payment method now.');
@@ -505,7 +506,7 @@ describe('NotificationService', () => {
         });
 
         it('should handle missing subscription', () => {
-            (billingServiceSpy as any)._subscriptionSubject.next(null);
+            (service as any).subscriptionSubject.next(null);
 
             service.getCurrentNotificationState().subscribe(state => {
                 expect(state.type).toBe('none');
@@ -518,7 +519,7 @@ describe('NotificationService', () => {
                 ...mockPastDueSubscription,
                 ends_at: undefined
             };
-            (billingServiceSpy as any)._subscriptionSubject.next(noEndDate);
+            (service as any).subscriptionSubject.next(noEndDate);
 
             service.getCurrentNotificationState().subscribe(state => {
                 expect(state.type).toBe('past_due');

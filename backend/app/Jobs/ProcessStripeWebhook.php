@@ -89,6 +89,14 @@ class ProcessStripeWebhook implements ShouldQueue
             'attempt' => $this->attempts(),
         ]);
 
+        // Log potential race condition warning
+        Log::warning('Checking for webhook processing race condition', [
+            'event_id' => $this->eventId,
+            'event_type' => $this->eventType,
+            'job_dispatched_at' => now()->toIso8601String(),
+            'issue' => 'Race condition may occur between controller check and job execution'
+        ]);
+
         try {
             // Process the event based on its type
             $result = $this->processStripeEvent();

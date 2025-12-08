@@ -259,4 +259,42 @@ export class TrialBannerComponent implements OnInit, OnDestroy {
         this.isVisible = true;
         this.updateTrialInfo();
     }
+
+    /**
+     * Calculate trial completion percentage
+     */
+    getTrialCompletionPercentage(): number {
+        console.log('DEBUG: Calculating trial completion with', {
+            trialDaysRemaining: this.subscription?.trial_days_remaining,
+            planTrialDays: this.subscription?.plan?.trial_days
+        });
+
+        if (!this.subscription?.trial_days_remaining || !this.subscription?.plan?.trial_days) {
+            console.log('DEBUG: Missing trial data, returning 0');
+            return 0;
+        }
+
+        const percentage = 100 - (this.subscription.trial_days_remaining / this.subscription.plan.trial_days * 100);
+        console.log('DEBUG: Calculated trial completion percentage:', percentage);
+        return percentage;
+    }
+
+    /**
+     * Calculate trial progress bar width
+     */
+    getTrialProgressBarWidth(): number {
+        console.log('DEBUG: Calculating trial progress bar width with', {
+            trialDaysRemaining: this.subscription?.trial_days_remaining,
+            planTrialDays: this.subscription?.plan?.trial_days
+        });
+
+        if (!this.subscription?.trial_days_remaining) {
+            console.log('DEBUG: No trial days remaining, returning 0');
+            return 0;
+        }
+
+        const width = 100 - (this.subscription.trial_days_remaining / (this.subscription?.plan?.trial_days || 14) * 100);
+        console.log('DEBUG: Calculated trial progress bar width:', width);
+        return width;
+    }
 }

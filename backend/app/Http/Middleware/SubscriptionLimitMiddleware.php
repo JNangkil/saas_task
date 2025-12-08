@@ -458,6 +458,8 @@ class SubscriptionLimitMiddleware
      */
     private function getCurrentStorageUsage(Tenant $tenant): float
     {
+        $startTime = microtime(true);
+        
         $disk = Config::get('billing.limits.storage.disk', 'public');
         $pathPattern = Config::get('billing.limits.storage.path_pattern', 'tenant_{tenant}');
         $path = str_replace('{tenant}', $tenant->id, $pathPattern);
@@ -465,9 +467,22 @@ class SubscriptionLimitMiddleware
         try {
             $totalSize = 0;
             $files = Storage::disk($disk)->allFiles($path);
+            $fileCount = count($files);
             
             foreach ($files as $file) {
                 $totalSize += Storage::disk($disk)->size($file);
+            }
+            
+            $executionTime = (microtime(true) - $startTime) * 1000; // Convert to milliseconds
+            
+            // Log performance warning if calculation takes too long
+            if ($executionTime > 100) { // More than 100ms
+                Log::warning('Storage calculation performance issue detected', [
+                    'tenant_id' => $tenant->id,
+                    'file_count' => $fileCount,
+                    'execution_time_ms' => round($executionTime, 2),
+                    'issue' => 'Storage calculation is slow and may impact performance'
+                ]);
             }
             
             return $totalSize / (1024 * 1024); // Convert to MB

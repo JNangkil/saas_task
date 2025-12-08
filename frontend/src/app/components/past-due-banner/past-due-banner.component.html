@@ -26,7 +26,7 @@
                     <div class="progress-bar">
                         <div class="progress-fill" [class.progress-critical]="isCritical"
                             [class.progress-urgent]="isUrgent && !isCritical"
-                            [style.width.%]="daysRemaining ? Math.max(10, (daysRemaining / 7) * 100) : 0">
+                            [style.width.%]="getGracePeriodProgress()">
                         </div>
                     </div>
                 </div>

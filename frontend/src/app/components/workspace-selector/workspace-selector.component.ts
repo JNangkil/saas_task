@@ -43,7 +43,7 @@ import { WorkspaceService } from '../../services/workspace.service';
       <div class="dropdown-panel" *ngIf="isDropdownOpen">
         <div class="dropdown-header">
           <span class="header-label">Workspaces</span>
-          <span class="header-count">{{ context.userWorkspaces?.length || 0 }}</span>
+          <span class="header-count">{{ context.userWorkspaces.length || 0 }}</span>
         </div>
         
         <div class="dropdown-body">

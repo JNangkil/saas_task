@@ -5,7 +5,6 @@ import { WorkspaceListComponent } from '../../components/workspace-list/workspac
 import { WorkspaceFormComponent } from '../../components/workspace-form/workspace-form.component';
 import { WorkspaceMembersComponent } from '../../components/workspace-members/workspace-members.component';
 import { InviteMemberModalComponent } from '../../components/invite-member-modal/invite-member-modal.component';
-import { HasPermissionDirective } from '../../directives/has-permission.directive';
 import { IWorkspace } from '../../interfaces/workspace.interface';
 import { IWorkspaceMember } from '../../interfaces/workspace-member.interface';
 import { IInvitation } from '../../interfaces/invitation.interface';
@@ -20,8 +19,7 @@ import { ToastService } from '../../services/toast.service';
     WorkspaceListComponent,
     WorkspaceFormComponent,
     WorkspaceMembersComponent,
-    InviteMemberModalComponent,
-    HasPermissionDirective
+    InviteMemberModalComponent
   ],
   template: `
   <div class="workspace-management-container">

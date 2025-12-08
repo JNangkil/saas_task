@@ -119,6 +119,7 @@ describe('PastDueBannerComponent', () => {
 
         it('should show banner and update past due info if not dismissed', () => {
             sessionStorage.removeItem('past_due_banner_dismissed');
+            component.subscription = mockSubscription;
 
             component['initializeBanner']();
 
@@ -449,6 +450,7 @@ describe('PastDueBannerComponent', () => {
         it('should reset dismissal state and show banner', () => {
             spyOn(sessionStorage, 'removeItem');
             component.isVisible = false;
+            component.subscription = mockSubscription;
 
             component.resetDismissal();
 

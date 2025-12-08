@@ -86,7 +86,9 @@ describe('TrialBannerComponent', () => {
     });
 
     it('should initialize with default values', () => {
-        expect(component.isVisible).toBe(true);
+        // After ngOnInit is called, initializeBanner() will set visibility based on subscription
+        // Since no subscription is set, isVisible should be false
+        expect(component.isVisible).toBe(false);
         expect(component.isUrgent).toBe(false);
         expect(component.showUpgradeButton).toBe(true);
         expect(component.autoHide).toBe(true);
@@ -117,6 +119,7 @@ describe('TrialBannerComponent', () => {
 
         it('should show banner and update trial info if not dismissed', () => {
             sessionStorage.removeItem('trial_banner_dismissed');
+            component.subscription = mockSubscription; // Set subscription for visibility
 
             component['initializeBanner']();
 
@@ -413,6 +416,7 @@ describe('TrialBannerComponent', () => {
         it('should reset dismissal state and show banner', () => {
             spyOn(sessionStorage, 'removeItem');
             component.isVisible = false;
+            component.subscription = mockSubscription; // Set subscription for visibility
 
             component.resetDismissal();
 

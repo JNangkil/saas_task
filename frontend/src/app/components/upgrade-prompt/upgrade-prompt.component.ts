@@ -377,4 +377,35 @@ export class UpgradePromptComponent implements OnInit, OnDestroy {
     getPlanHighlights(plan: IPlanModel): string[] {
         return plan.feature_highlights.slice(0, 3); // Show top 3 features
     }
+
+    // Helper methods for template expressions to avoid regex in templates
+    /**
+     * Get feature key for accessing usage statistics
+     */
+    getFeatureKey(feature: string): string {
+        console.log('DEBUG: Getting feature key for:', feature);
+        const key = feature.toLowerCase().replace(/\s+/g, '_');
+        console.log('DEBUG: Transformed key:', key);
+        return key;
+    }
+
+    /**
+     * Get current usage for a feature
+     */
+    getCurrentUsage(feature: string): number {
+        const key = this.getFeatureKey(feature);
+        const usage = this.usageStatistics?.current_usage?.[key] || 0;
+        console.log('DEBUG: Current usage for', key, ':', usage);
+        return usage;
+    }
+
+    /**
+     * Get limit for a feature
+     */
+    getFeatureLimit(feature: string): string | number {
+        const key = this.getFeatureKey(feature);
+        const limit = this.usageStatistics?.limits?.[key] || '∞';
+        console.log('DEBUG: Limit for', key, ':', limit);
+        return limit;
+    }
 }

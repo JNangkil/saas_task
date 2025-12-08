@@ -299,4 +299,22 @@ export class PastDueBannerComponent implements OnInit, OnDestroy {
     isInGracePeriod(): boolean {
         return this.subscription?.is_within_grace_period === true;
     }
+
+    /**
+     * Get maximum value (wrapper for Math.max for template access)
+     */
+    max(a: number, b: number): number {
+        console.log('DEBUG: Math.max called with', a, b);
+        return Math.max(a, b);
+    }
+
+    /**
+     * Calculate progress percentage for grace period
+     */
+    getGracePeriodProgress(): number {
+        console.log('DEBUG: Calculating grace period progress with daysRemaining:', this.daysRemaining);
+        const progress = this.daysRemaining ? this.max(10, (this.daysRemaining / 7) * 100) : 0;
+        console.log('DEBUG: Calculated progress:', progress);
+        return progress;
+    }
 }

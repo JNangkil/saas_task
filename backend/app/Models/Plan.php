@@ -115,6 +115,24 @@ class Plan extends Model
     }
 
     /**
+     * Log warning if stripe_price_id is missing from database
+     */
+    protected static function boot()
+    {
+        parent::boot();
+        
+        static::retrieved(function ($plan) {
+            if (!$plan->stripe_price_id) {
+                \Log::warning('Plan missing stripe_price_id', [
+                    'plan_id' => $plan->id,
+                    'plan_slug' => $plan->slug,
+                    'issue' => 'stripe_price_id column may be missing from database'
+                ]);
+            }
+        });
+    }
+
+    /**
      * Scope a query to only include monthly plans.
      */
     public function scopeMonthly($query)

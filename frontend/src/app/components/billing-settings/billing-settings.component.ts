@@ -130,7 +130,7 @@ export class BillingSettingsComponent implements OnInit, OnDestroy {
     /**
      * Load all billing-related data
      */
-    private loadBillingData(): void {
+    loadBillingData(): void {
         this.isLoading = true;
         this.error = null;
 
@@ -530,12 +530,19 @@ export class BillingSettingsComponent implements OnInit, OnDestroy {
     /**
      * Format date for display
      */
-    formatDate(dateString: string): string {
-        return new Date(dateString).toLocaleDateString('en-US', {
+    formatDate(dateString: string | undefined): string {
+        console.log('DEBUG: formatDate called with:', dateString);
+        if (!dateString) {
+            console.log('DEBUG: dateString is undefined, returning N/A');
+            return 'N/A';
+        }
+        const formatted = new Date(dateString).toLocaleDateString('en-US', {
             year: 'numeric',
             month: 'long',
             day: 'numeric'
         });
+        console.log('DEBUG: Formatted date:', formatted);
+        return formatted;
     }
 
     /**

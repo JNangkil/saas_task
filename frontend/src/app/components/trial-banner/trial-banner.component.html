@@ -21,10 +21,9 @@
 
                 <!-- Progress Bar -->
                 <div class="trial-progress" *ngIf="subscription?.trial_days_remaining !== undefined"
-                    [attr.aria-label]="`Trial progress: ${100 - (subscription.trial_days_remaining / subscription.plan?.trial_days * 100)}% complete`">
+                    [attr.aria-label]="`Trial progress: ${getTrialCompletionPercentage()}% complete`">
                     <div class="progress-bar">
-                        <div class="progress-fill"
-                            [style.width.%]="subscription.trial_days_remaining ? 100 - (subscription.trial_days_remaining / (subscription.plan?.trial_days || 14) * 100) : 0">
+                        <div class="progress-fill" [style.width.%]="getTrialProgressBarWidth()">
                         </div>
                     </div>
                 </div>
