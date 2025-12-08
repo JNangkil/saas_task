@@ -3,13 +3,18 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\TaskIndexRequest;
+use App\Http\Requests\TaskIndexWithFilterRequest;
 use App\Http\Requests\TaskRequest;
 use App\Http\Requests\TaskPositionRequest;
 use App\Http\Resources\TaskCollection;
 use App\Http\Resources\TaskResource;
+use App\Http\Resources\SavedFilterResource;
 use App\Models\Board;
 use App\Models\Task;
 use App\Models\TaskCustomValue;
+use App\Models\SavedFilter;
+use App\Services\FilterBuilder;
+use App\Services\TaskFilterService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -17,6 +22,31 @@ use Illuminate\Support\Facades\DB;
 
 class TaskController extends Controller
 {
+    /**
+     * Task filter service instance
+     *
+     * @var TaskFilterService
+     */
+    protected TaskFilterService $taskFilterService;
+
+    /**
+     * Filter builder instance
+     *
+     * @var FilterBuilder
+     */
+    protected FilterBuilder $filterBuilder;
+
+    /**
+     * Constructor
+     *
+     * @param TaskFilterService $taskFilterService
+     * @param FilterBuilder $filterBuilder
+     */
+    public function __construct(TaskFilterService $taskFilterService, FilterBuilder $filterBuilder)
+    {
+        $this->taskFilterService = $taskFilterService;
+        $this->filterBuilder = $filterBuilder;
+    }
     /**
      * Display a listing of tasks for a board or workspace.
      */
@@ -146,6 +176,354 @@ class TaskController extends Controller
         }
 
         return new TaskCollection($tasks);
+    }
+
+    /**
+     * Filter tasks in a board using GET request.
+     */
+    public function filter(TaskIndexWithFilterRequest $request, $tenantId, $workspaceId, $boardId): JsonResponse
+    {
+        $user = Auth::user();
+        
+        // Verify user belongs to tenant
+        $tenant = $user->tenants()->find($tenantId);
+        if (!$tenant) {
+            return response()->json(['error' => 'Tenant not found'], 404);
+        }
+
+        // Verify user belongs to workspace
+        $workspace = $tenant->workspaces()->find($workspaceId);
+        if (!$workspace) {
+            return response()->json(['error' => 'Workspace not found'], 404);
+        }
+
+        // Verify board exists
+        $board = $workspace->boards()->find($boardId);
+        if (!$board) {
+            return response()->json(['error' => 'Board not found'], 404);
+        }
+
+        // Build the base query
+        $query = Task::where('workspace_id', $workspaceId)
+            ->where('tenant_id', $tenantId)
+            ->where('board_id', $boardId);
+
+        // Apply dynamic filters
+        $filters = $request->getFilters();
+        if (!empty($filters)) {
+            $query = $this->taskFilterService->applyFilters($query, $board, $filters);
+        }
+
+        // Apply standard filters (search, status, etc.)
+        $this->applyStandardFilters($query, $request);
+
+        // Optimize query
+        $query = $this->taskFilterService->optimizeQuery($query, $board);
+
+        // Apply sorting
+        $sortingParams = $request->getSortingParams();
+        $query = $this->taskFilterService->applySorting($query, $board, $sortingParams['sort_by'], $sortingParams['sort_order']);
+
+        // Include relationships
+        $this->applyIncludes($query, $request->getIncludeParams());
+
+        // Apply pagination
+        $paginationParams = $request->getPaginationParams();
+        if ($paginationParams['cursor']) {
+            $tasks = $this->taskFilterService->applyCursorPagination($query, $paginationParams['per_page'], $paginationParams['cursor']);
+        } else {
+            $tasks = $this->taskFilterService->applyPagination($query, $paginationParams['per_page'], $paginationParams['page']);
+        }
+
+        // Handle filter saving
+        if ($request->shouldSaveFilter()) {
+            $this->saveCurrentFilter($request, $user, $board, $filters);
+        }
+
+        return response()->json([
+            'data' => TaskFilterResource::collection($tasks),
+            'meta' => [
+                'filter_statistics' => $this->taskFilterService->getFilterStatistics($board, $filters),
+                'available_columns' => $this->taskFilterService->getAvailableFilterColumns($board),
+                'filter_validation' => $this->taskFilterService->validateFilterCombinations($filters),
+            ],
+        ]);
+    }
+
+    /**
+     * Filter tasks in a board using POST request (advanced filtering).
+     */
+    public function filterAdvanced(TaskIndexWithFilterRequest $request, $tenantId, $workspaceId, $boardId): JsonResponse
+    {
+        // Same logic as GET filter method
+        return $this->filter($request, $tenantId, $workspaceId, $boardId);
+    }
+
+    /**
+     * Get saved filters for a board.
+     */
+    public function savedFilters(Request $request, $tenantId, $workspaceId, $boardId): JsonResponse
+    {
+        $user = Auth::user();
+        
+        // Verify user belongs to tenant and workspace
+        $tenant = $user->tenants()->find($tenantId);
+        if (!$tenant) {
+            return response()->json(['error' => 'Tenant not found'], 404);
+        }
+
+        $workspace = $tenant->workspaces()->find($workspaceId);
+        if (!$workspace) {
+            return response()->json(['error' => 'Workspace not found'], 404);
+        }
+
+        // Verify board exists
+        $board = $workspace->boards()->find($boardId);
+        if (!$board) {
+            return response()->json(['error' => 'Board not found'], 404);
+        }
+
+        // Get saved filters
+        $filters = SavedFilter::where('board_id', $boardId)
+            ->accessibleBy($user)
+            ->with(['user', 'board'])
+            ->orderBy('is_default', 'desc')
+            ->orderBy('name', 'asc')
+            ->paginate(20);
+
+        return SavedFilterResource::collection($filters);
+    }
+
+    /**
+     * Save a filter for a board.
+     */
+    public function saveFilter(Request $request, $tenantId, $workspaceId, $boardId): JsonResponse
+    {
+        $user = Auth::user();
+        
+        // Verify user belongs to tenant and workspace
+        $tenant = $user->tenants()->find($tenantId);
+        if (!$tenant) {
+            return response()->json(['error' => 'Tenant not found'], 404);
+        }
+
+        $workspace = $tenant->workspaces()->find($workspaceId);
+        if (!$workspace) {
+            return response()->json(['error' => 'Workspace not found'], 404);
+        }
+
+        // Verify board exists
+        $board = $workspace->boards()->find($boardId);
+        if (!$board) {
+            return response()->json(['error' => 'Board not found'], 404);
+        }
+
+        $validated = $request->validate([
+            'name' => 'required|string|max:255',
+            'description' => 'nullable|string|max:1000',
+            'filter_definition' => 'required|array',
+            'is_public' => 'boolean',
+            'is_default' => 'boolean',
+        ]);
+
+        return DB::transaction(function () use ($validated, $user, $board) {
+            // If setting as default, remove default from other filters
+            if ($validated['is_default'] ?? false) {
+                SavedFilter::where('user_id', $user->id)
+                    ->where('board_id', $board->id)
+                    ->update(['is_default' => false]);
+            }
+
+            $savedFilter = SavedFilter::create([
+                'user_id' => $user->id,
+                'tenant_id' => $board->tenant_id,
+                'board_id' => $board->id,
+                'name' => $validated['name'],
+                'description' => $validated['description'] ?? null,
+                'filter_definition' => $validated['filter_definition'],
+                'is_public' => $validated['is_public'] ?? false,
+                'is_default' => $validated['is_default'] ?? false,
+            ]);
+
+            return new SavedFilterResource($savedFilter);
+        });
+    }
+
+    /**
+     * Delete a saved filter.
+     */
+    public function deleteFilter(Request $request, $tenantId, $workspaceId, $boardId, $filter): JsonResponse
+    {
+        $user = Auth::user();
+        
+        // Verify user belongs to tenant and workspace
+        $tenant = $user->tenants()->find($tenantId);
+        if (!$tenant) {
+            return response()->json(['error' => 'Tenant not found'], 404);
+        }
+
+        $workspace = $tenant->workspaces()->find($workspaceId);
+        if (!$workspace) {
+            return response()->json(['error' => 'Workspace not found'], 404);
+        }
+
+        // Verify board exists
+        $board = $workspace->boards()->find($boardId);
+        if (!$board) {
+            return response()->json(['error' => 'Board not found'], 404);
+        }
+
+        // Find and verify ownership of saved filter
+        $savedFilter = SavedFilter::find($filter);
+        if (!$savedFilter || !$savedFilter->isAccessibleBy($user)) {
+            return response()->json(['error' => 'Saved filter not found or access denied'], 404);
+        }
+
+        $savedFilter->delete();
+
+        return response()->json(['message' => 'Saved filter deleted successfully']);
+    }
+
+    /**
+     * Apply standard filters to query
+     *
+     * @param Builder $query
+     * @param TaskIndexWithFilterRequest $request
+     */
+    protected function applyStandardFilters($query, TaskIndexWithFilterRequest $request): void
+    {
+        $params = $request->getAllParams();
+
+        // Apply search
+        if (!empty($params['search'])) {
+            $query->where(function ($query) use ($params) {
+                $query->where('title', 'like', "%{$params['search']}%")
+                      ->orWhere('description', 'like', "%{$params['search']}%");
+            });
+        }
+
+        // Apply standard filters
+        $query->when(!empty($params['status']), function ($query, $statuses) {
+            $query->whereIn('status', $statuses);
+        });
+
+        $query->when(!empty($params['priority']), function ($query, $priorities) {
+            $query->whereIn('priority', $priorities);
+        });
+
+        $query->when(!empty($params['assignee_id']), function ($query, $assigneeIds) {
+            $query->whereIn('assignee_id', $assigneeIds);
+        });
+
+        $query->when(!empty($params['creator_id']), function ($query, $creatorIds) {
+            $query->whereIn('creator_id', $creatorIds);
+        });
+
+        $query->when(!empty($params['due_date_from']), function ($query, $date) {
+            $query->whereDate('due_date', '>=', $date);
+        });
+
+        $query->when(!empty($params['due_date_to']), function ($query, $date) {
+            $query->whereDate('due_date', '<=', $date);
+        });
+
+        $query->when(!empty($params['start_date_from']), function ($query, $date) {
+            $query->whereDate('start_date', '>=', $date);
+        });
+
+        $query->when(!empty($params['start_date_to']), function ($query, $date) {
+            $query->whereDate('start_date', '<=', $date);
+        });
+
+        $query->when(!empty($params['created_at_from']), function ($query, $date) {
+            $query->whereDate('created_at', '>=', $date);
+        });
+
+        $query->when(!empty($params['created_at_to']), function ($query, $date) {
+            $query->whereDate('created_at', '<=', $date);
+        });
+
+        // Filter by labels
+        $query->when(!empty($params['labels']), function ($query, $labelIds) {
+            $query->whereHas('labels', function ($query) use ($labelIds) {
+                $query->whereIn('labels.id', $labelIds);
+            });
+        });
+
+        // Include archived or not
+        if (!($params['include_archived'] ?? false)) {
+            $query->whereNull('archived_at');
+        }
+    }
+
+    /**
+     * Apply includes to query
+     *
+     * @param Builder $query
+     * @param array $includes
+     */
+    protected function applyIncludes($query, array $includes): void
+    {
+        if (in_array('labels', $includes)) {
+            $query->with('labels');
+        }
+        if (in_array('custom_values', $includes)) {
+            $query->with('customValues');
+        }
+        if (in_array('assignee', $includes)) {
+            $query->with('assignee');
+        }
+        if (in_array('creator', $includes)) {
+            $query->with('creator');
+        }
+        if (in_array('board', $includes)) {
+            $query->with('board');
+        }
+        if (in_array('workspace', $includes)) {
+            $query->with('workspace');
+        }
+        if (in_array('comments', $includes)) {
+            $query->with('comments');
+        }
+    }
+
+    /**
+     * Save current filter
+     *
+     * @param TaskIndexWithFilterRequest $request
+     * @param User $user
+     * @param Board $board
+     * @param array $filters
+     */
+    protected function saveCurrentFilter(TaskIndexWithFilterRequest $request, $user, Board $board, array $filters): void
+    {
+        $saveParams = $request->getFilterSaveParams();
+        
+        if (!$saveParams['save_filter'] || empty($saveParams['filter_name'])) {
+            return;
+        }
+
+        // If setting as default, remove default from other filters
+        if ($saveParams['is_default'] ?? false) {
+            SavedFilter::where('user_id', $user->id)
+                ->where('board_id', $board->id)
+                ->update(['is_default' => false]);
+        }
+
+        SavedFilter::updateOrCreate(
+            [
+                'user_id' => $user->id,
+                'board_id' => $board->id,
+                'name' => $saveParams['filter_name'],
+            ],
+            [
+                'tenant_id' => $board->tenant_id,
+                'description' => null,
+                'filter_definition' => $filters,
+                'is_public' => $saveParams['is_public'] ?? false,
+                'is_default' => $saveParams['is_default'] ?? false,
+            ]
+        );
     }
 
     /**

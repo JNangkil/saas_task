@@ -126,6 +126,21 @@ class Task extends Model
     }
 
     /**
+     * Get the task field values for the task.
+     */
+    public function taskFieldValues(): HasMany
+    {
+        return $this->hasMany(TaskFieldValue::class);
+    }
+    /**
+     * Get field values for the task.
+     */
+    public function fieldValues(): HasMany
+    {
+        return $this->hasMany(TaskFieldValue::class);
+    }
+
+    /**
      * Scope a query to only include tasks with a specific status.
      */
     public function scopeWithStatus($query, $status)

@@ -1,11 +1,15 @@
 <?php
 
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\BoardColumnController;
 use App\Http\Controllers\InvitationController;
 use App\Http\Controllers\PlanController;
 use App\Http\Controllers\SubscriptionController;
+use App\Http\Controllers\TaskBulkOperationController;
 use App\Http\Controllers\TaskController;
+use App\Http\Controllers\TaskFieldValueController;
 use App\Http\Controllers\TenantController;
+use App\Http\Controllers\UserBoardPreferenceController;
 use App\Http\Controllers\WebhookController;
 use App\Http\Controllers\WorkspaceController;
 use App\Http\Controllers\WorkspaceMemberController;
@@ -87,6 +91,11 @@ Route::middleware(['auth:sanctum'])->group(function () {
         
         Route::prefix('tenants/{tenant}/workspaces/{workspace}/boards/{board}/tasks')->group(function () {
             Route::get('/', [TaskController::class, 'index'])->name('boards.tasks.index');
+            Route::get('/filter', [TaskController::class, 'filter'])->name('boards.tasks.filter');
+            Route::post('/filter', [TaskController::class, 'filterAdvanced'])->name('boards.tasks.filter.advanced');
+            Route::get('/filters/saved', [TaskController::class, 'savedFilters'])->name('boards.tasks.filters.saved');
+            Route::post('/filters/save', [TaskController::class, 'saveFilter'])->name('boards.tasks.filters.save');
+            Route::delete('/filters/{filter}', [TaskController::class, 'deleteFilter'])->name('boards.tasks.filters.delete');
         });
         
         Route::prefix('tenants/{tenant}/workspaces/{workspace}/tasks')->group(function () {
@@ -98,6 +107,72 @@ Route::middleware(['auth:sanctum'])->group(function () {
             Route::post('/{task}/duplicate', [TaskController::class, 'duplicate'])->name('tasks.duplicate');
             Route::put('/{task}/position', [TaskController::class, 'updatePosition'])->name('tasks.position.update');
         });
+        
+        // Board column routes
+        Route::prefix('tenants/{tenant}/workspaces/{workspace}/boards/{board}/columns')->group(function () {
+            Route::get('/', [BoardColumnController::class, 'index'])->name('boards.columns.index');
+            Route::post('/', [BoardColumnController::class, 'store'])->name('boards.columns.store');
+            Route::post('/reorder', [BoardColumnController::class, 'reorder'])->name('boards.columns.reorder');
+        });
+        
+        Route::prefix('tenants/{tenant}/workspaces/{workspace}/boards/{board}/columns/{column}')->group(function () {
+            Route::get('/', [BoardColumnController::class, 'show'])->name('boards.columns.show');
+            Route::put('/', [BoardColumnController::class, 'update'])->name('boards.columns.update');
+            Route::delete('/', [BoardColumnController::class, 'destroy'])->name('boards.columns.destroy');
+            Route::post('/duplicate', [BoardColumnController::class, 'duplicate'])->name('boards.columns.duplicate');
+            Route::post('/toggle-pin', [BoardColumnController::class, 'togglePin'])->name('boards.columns.toggle-pin');
+            Route::post('/toggle-required', [BoardColumnController::class, 'toggleRequired'])->name('boards.columns.toggle-required');
+            Route::get('/statistics', [BoardColumnController::class, 'getStatistics'])->name('boards.columns.statistics');
+        });
+        
+        // Task field value routes
+        Route::prefix('tenants/{tenant}/workspaces/{workspace}/tasks/{task}/field-values')->group(function () {
+            Route::get('/', [TaskFieldValueController::class, 'index'])->name('tasks.field-values.index');
+            Route::post('/', [TaskFieldValueController::class, 'store'])->name('tasks.field-values.store');
+            Route::delete('/clear', [TaskFieldValueController::class, 'clearAll'])->name('tasks.field-values.clear');
+        });
+        
+        Route::prefix('tenants/{tenant}/workspaces/{workspace}/tasks/{task}/field-values/{fieldValue}')->group(function () {
+            Route::get('/', [TaskFieldValueController::class, 'show'])->name('tasks.field-values.show');
+            Route::put('/', [TaskFieldValueController::class, 'update'])->name('tasks.field-values.update');
+            Route::delete('/', [TaskFieldValueController::class, 'destroy'])->name('tasks.field-values.destroy');
+        });
+        
+        // User board preference routes
+        Route::prefix('tenants/{tenant}/workspaces/{workspace}/boards/{board}/preferences')->group(function () {
+            Route::get('/', [UserBoardPreferenceController::class, 'index'])->name('boards.preferences.index');
+            Route::put('/', [UserBoardPreferenceController::class, 'update'])->name('boards.preferences.update');
+            Route::post('/reset', [UserBoardPreferenceController::class, 'reset'])->name('boards.preferences.reset');
+            Route::put('/visibility', [UserBoardPreferenceController::class, 'updateVisibility'])->name('boards.preferences.visibility');
+            Route::put('/widths', [UserBoardPreferenceController::class, 'updateWidths'])->name('boards.preferences.widths');
+            Route::put('/positions', [UserBoardPreferenceController::class, 'updatePositions'])->name('boards.preferences.positions');
+            Route::get('/visible-columns', [UserBoardPreferenceController::class, 'getVisibleColumns'])->name('boards.preferences.visible-columns');
+            Route::get('/hidden-columns', [UserBoardPreferenceController::class, 'getHiddenColumns'])->name('boards.preferences.hidden-columns');
+            Route::put('/reset-column', [UserBoardPreferenceController::class, 'resetColumn'])->name('boards.preferences.reset-column');
+        });
+    });
+    
+    // Column types route (global)
+    Route::get('/columns/types', [BoardColumnController::class, 'getTypes'])->name('columns.types');
+    
+    // Bulk field value operations
+    Route::post('/tasks/bulk-field-values', [TaskFieldValueController::class, 'bulkUpdate'])->name('tasks.field-values.bulk-update');
+    Route::delete('/tasks/bulk-field-values', [TaskFieldValueController::class, 'bulkDelete'])->name('tasks.field-values.bulk-delete');
+    Route::get('/tasks/column-values', [TaskFieldValueController::class, 'getColumnValues'])->name('tasks.field-values.column-values');
+    Route::get('/tasks/field-values/statistics', [TaskFieldValueController::class, 'getStatistics'])->name('tasks.field-values.statistics');
+    
+    // Bulk task operations
+    Route::prefix('tasks')->group(function () {
+        Route::post('/bulk-update', [TaskBulkOperationController::class, 'bulkUpdate'])->name('tasks.bulk-update');
+        Route::post('/bulk-move', [TaskBulkOperationController::class, 'bulkMove'])->name('tasks.bulk-move');
+        Route::post('/bulk-archive', [TaskBulkOperationController::class, 'bulkArchive'])->name('tasks.bulk-archive');
+        Route::post('/bulk-delete', [TaskBulkOperationController::class, 'bulkDelete'])->name('tasks.bulk-delete');
+        Route::post('/bulk-assign', [TaskBulkOperationController::class, 'bulkAssign'])->name('tasks.bulk-assign');
+        Route::post('/bulk-set-status', [TaskBulkOperationController::class, 'bulkSetStatus'])->name('tasks.bulk-set-status');
+        Route::post('/bulk-set-priority', [TaskBulkOperationController::class, 'bulkSetPriority'])->name('tasks.bulk-set-priority');
+        Route::post('/bulk-add-labels', [TaskBulkOperationController::class, 'bulkAddLabels'])->name('tasks.bulk-add-labels');
+        Route::post('/bulk-remove-labels', [TaskBulkOperationController::class, 'bulkRemoveLabels'])->name('tasks.bulk-remove-labels');
+        Route::post('/bulk-set-due-date', [TaskBulkOperationController::class, 'bulkSetDueDate'])->name('tasks.bulk-set-due-date');
     });
 });
 

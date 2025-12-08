@@ -66,6 +66,22 @@ class Board extends Model
     }
 
     /**
+     * Get the columns for the board.
+     */
+    public function columns(): HasMany
+    {
+        return $this->hasMany(BoardColumn::class);
+    }
+
+    /**
+     * Get the user board preferences for the board.
+     */
+    public function userBoardPreferences(): HasMany
+    {
+        return $this->hasMany(UserBoardPreference::class);
+    }
+
+    /**
      * Get the active (not archived) tasks for the board.
      */
     public function activeTasks(): HasMany

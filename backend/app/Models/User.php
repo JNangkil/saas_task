@@ -5,6 +5,7 @@ namespace App\Models;
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 
@@ -65,6 +66,14 @@ class User extends Authenticatable
         return $this->belongsToMany(Workspace::class, 'workspace_user')
             ->withPivot('role', 'joined_at')
             ->withTimestamps();
+    }
+
+    /**
+     * Get the user board preferences for the user.
+     */
+    public function userBoardPreferences(): HasMany
+    {
+        return $this->hasMany(UserBoardPreference::class);
     }
 
     /**
