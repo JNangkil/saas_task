@@ -2,9 +2,11 @@
 
 namespace App\Providers;
 
+use App\Models\Invitation;
 use App\Models\Tenant;
 use App\Models\User;
 use App\Models\Workspace;
+use App\Policies\InvitationPolicy;
 use App\Policies\TenantPolicy;
 use App\Policies\WorkspacePolicy;
 use App\Services\JWTService;
@@ -19,6 +21,7 @@ class AuthServiceProvider extends ServiceProvider
      * @var array<class-string, class-string>
      */
     protected $policies = [
+        Invitation::class => InvitationPolicy::class,
         Tenant::class => TenantPolicy::class,
         Workspace::class => WorkspacePolicy::class,
     ];

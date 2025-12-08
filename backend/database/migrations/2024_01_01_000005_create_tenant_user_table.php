@@ -17,6 +17,7 @@ return new class extends Migration
             $table->enum('role', ['owner', 'admin', 'member'])->default('member');
             $table->timestamp('invited_at')->nullable();
             $table->timestamp('joined_at')->nullable();
+            $table->timestamps(); // Add created_at and updated_at columns
             
             // Primary key combination
             $table->primary(['tenant_id', 'user_id']);

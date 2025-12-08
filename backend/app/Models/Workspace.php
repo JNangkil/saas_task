@@ -101,7 +101,7 @@ class Workspace extends Model
     public function canUserManage(User $user): bool
     {
         $role = $this->getUserRole($user);
-        return in_array($role, ['admin']);
+        return in_array($role, ['owner', 'admin']);
     }
 
     /**
@@ -110,7 +110,7 @@ class Workspace extends Model
     public function canUserCreateBoards(User $user): bool
     {
         $role = $this->getUserRole($user);
-        return in_array($role, ['admin', 'member']);
+        return in_array($role, ['owner', 'admin', 'member']);
     }
 
     /**
@@ -119,7 +119,7 @@ class Workspace extends Model
     public function canUserView(User $user): bool
     {
         $role = $this->getUserRole($user);
-        return in_array($role, ['admin', 'member', 'viewer']);
+        return in_array($role, ['owner', 'admin', 'member', 'viewer']);
     }
 
     /**

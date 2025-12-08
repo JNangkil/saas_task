@@ -1,443 +1,410 @@
-import { Component, OnInit, Input, Output, EventEmitter } from '@angular/core';
+import { Component, OnInit, Input, Output, EventEmitter, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormsModule } from '@angular/forms';
-import { IWorkspace, IWorkspaceMember } from '../../interfaces/workspace.interface';
-import { WorkspaceService } from '../../services/workspace.service';
+import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
+import { Subject, takeUntil } from 'rxjs';
+import {
+  IWorkspaceMember,
+  IUserPermissions,
+  IMemberListResponse
+} from '../../interfaces/workspace-member.interface';
+import {
+  IInvitation,
+  IInvitationListResponse,
+  ICreateInvitationRequest
+} from '../../interfaces/invitation.interface';
+import { IWorkspace } from '../../interfaces/workspace.interface';
+import { WorkspaceMemberService } from '../../services/workspace-member.service';
+import { InvitationService } from '../../services/invitation.service';
 
 @Component({
   selector: 'app-workspace-members',
   standalone: true,
-  imports: [CommonModule, FormsModule],
-  template: `
-    <div class="workspace-members-container">
-      <div class="members-header">
-        <h3>Workspace Members</h3>
-        <button class="add-member-btn" (click)="showAddMemberForm = !showAddMemberForm">
-          <span class="icon">+</span>
-          Add Member
-        </button>
-      </div>
-
-      <!-- Add Member Form -->
-      <div class="add-member-form" *ngIf="showAddMemberForm">
-        <div class="form-group">
-          <label for="member-email">Email Address</label>
-          <input 
-            id="member-email" 
-            type="email" 
-            [(ngModel)]="newMemberEmail" 
-            placeholder="Enter email address"
-          />
-        </div>
-        
-        <div class="form-group">
-          <label for="member-role">Role</label>
-          <select id="member-role" [(ngModel)]="newMemberRole">
-            <option value="member">Member</option>
-            <option value="viewer">Viewer</option>
-            <option value="admin">Admin</option>
-          </select>
-        </div>
-        
-        <div class="form-actions">
-          <button class="save-btn" (click)="addMember()" [disabled]="!newMemberEmail">
-            Add Member
-          </button>
-          <button class="cancel-btn" (click)="showAddMemberForm = false">
-            Cancel
-          </button>
-        </div>
-      </div>
-
-      <!-- Members List -->
-      <div class="members-list" *ngIf="!isLoading && !error">
-        <div class="member-item" *ngFor="let member of members">
-          <div class="member-info">
-            <div class="member-avatar">
-              {{ member.name.charAt(0).toUpperCase() }}
-            </div>
-            <div class="member-details">
-              <div class="member-name">{{ member.name }}</div>
-              <div class="member-email">{{ member.email }}</div>
-            </div>
-          </div>
-          
-          <div class="member-role">
-            <span class="role-badge" [class.admin]="member.role === 'admin'" 
-                                     [class.member]="member.role === 'member'" 
-                                     [class.viewer]="member.role === 'viewer'">
-              {{ member.role }}
-            </span>
-          </div>
-          
-          <div class="member-actions" *ngIf="canManageMembers">
-            <button class="role-btn" (click)="editMemberRole(member)">
-              Change Role
-            </button>
-            <button class="remove-btn" (click)="removeMember(member)">
-              Remove
-            </button>
-          </div>
-        </div>
-      </div>
-
-      <!-- Loading State -->
-      <div class="loading-state" *ngIf="isLoading">
-        <div class="loading-spinner">Loading members...</div>
-      </div>
-
-      <!-- Error State -->
-      <div class="error-state" *ngIf="error">
-        <div class="error-message">
-          <span class="icon">⚠️</span>
-          {{ error }}
-        </div>
-      </div>
-
-      <!-- Empty State -->
-      <div class="empty-state" *ngIf="!isLoading && !error && members.length === 0">
-        <div class="empty-icon">👥</div>
-        <h4>No Members Yet</h4>
-        <p>Add team members to collaborate on this workspace.</p>
-      </div>
-    </div>
-  `,
-  styles: [`
-    .workspace-members-container {
-      padding: 20px;
-      max-width: 800px;
-      margin: 0 auto;
-    }
-    
-    .members-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 20px;
-    }
-    
-    .members-header h3 {
-      margin: 0;
-      font-size: 20px;
-      font-weight: 600;
-      color: #374151;
-    }
-    
-    .add-member-btn {
-      background: #3b82f6;
-      color: white;
-      border: none;
-      padding: 8px 16px;
-      border-radius: 6px;
-      font-weight: 500;
-      cursor: pointer;
-      transition: background-color 0.2s ease;
-    }
-    
-    .add-member-btn:hover {
-      background: #2563eb;
-    }
-    
-    .add-member-form {
-      background: #f9fafb;
-      border: 1px solid #e5e7eb;
-      border-radius: 8px;
-      padding: 20px;
-      margin-bottom: 20px;
-    }
-    
-    .form-group {
-      margin-bottom: 16px;
-    }
-    
-    .form-group label {
-      display: block;
-      font-weight: 500;
-      margin-bottom: 8px;
-      color: #374151;
-      font-size: 14px;
-    }
-    
-    .form-group input,
-    .form-group select {
-      width: 100%;
-      padding: 10px 12px;
-      border: 1px solid #d1d5db;
-      border-radius: 6px;
-      font-size: 14px;
-    }
-    
-    .form-actions {
-      display: flex;
-      gap: 12px;
-    }
-    
-    .save-btn {
-      background: #3b82f6;
-      color: white;
-      border: none;
-      padding: 10px 16px;
-      border-radius: 6px;
-      font-weight: 500;
-      cursor: pointer;
-    }
-    
-    .save-btn:disabled {
-      background: #9ca3af;
-      cursor: not-allowed;
-    }
-    
-    .cancel-btn {
-      background: #f3f4f6;
-      color: #374151;
-      border: 1px solid #d1d5db;
-      padding: 10px 16px;
-      border-radius: 6px;
-      font-weight: 500;
-      cursor: pointer;
-    }
-    
-    .members-list {
-      display: flex;
-      flex-direction: column;
-      gap: 12px;
-    }
-    
-    .member-item {
-      display: flex;
-      align-items: center;
-      padding: 16px;
-      background: white;
-      border: 1px solid #e5e7eb;
-      border-radius: 8px;
-      transition: box-shadow 0.2s ease;
-    }
-    
-    .member-item:hover {
-      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-    }
-    
-    .member-info {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      flex: 1;
-    }
-    
-    .member-avatar {
-      width: 40px;
-      height: 40px;
-      border-radius: 50%;
-      background: #e5e7eb;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-weight: 600;
-      color: #6b7280;
-    }
-    
-    .member-details {
-      flex: 1;
-    }
-    
-    .member-name {
-      font-weight: 600;
-      color: #374151;
-    }
-    
-    .member-email {
-      font-size: 14px;
-      color: #6b7280;
-    }
-    
-    .member-role {
-      margin-right: 16px;
-    }
-    
-    .role-badge {
-      padding: 4px 8px;
-      border-radius: 12px;
-      font-size: 12px;
-      font-weight: 500;
-      text-transform: uppercase;
-    }
-    
-    .role-badge.admin {
-      background: #fef3c7;
-      color: #92400e;
-    }
-    
-    .role-badge.member {
-      background: #dbeafe;
-      color: #1e40af;
-    }
-    
-    .role-badge.viewer {
-      background: #f3f4f6;
-      color: #6b7280;
-    }
-    
-    .member-actions {
-      display: flex;
-      gap: 8px;
-    }
-    
-    .role-btn,
-    .remove-btn {
-      padding: 6px 12px;
-      border-radius: 4px;
-      font-size: 12px;
-      cursor: pointer;
-      border: none;
-    }
-    
-    .role-btn {
-      background: #f3f4f6;
-      color: #374151;
-    }
-    
-    .remove-btn {
-      background: #fee2e2;
-      color: #dc2626;
-    }
-    
-    .loading-state,
-    .error-state,
-    .empty-state {
-      text-align: center;
-      padding: 40px 20px;
-    }
-    
-    .loading-spinner {
-      color: #6b7280;
-      font-size: 16px;
-    }
-    
-    .error-message {
-      background: #fef2f2;
-      border: 1px solid #fecaca;
-      color: #dc2626;
-      padding: 16px;
-      border-radius: 8px;
-    }
-    
-    .empty-icon {
-      font-size: 48px;
-      margin-bottom: 16px;
-    }
-    
-    .empty-state h4 {
-      font-size: 18px;
-      font-weight: 600;
-      color: #374151;
-      margin: 0 0 8px;
-    }
-    
-    .empty-state p {
-      color: #6b7280;
-      font-size: 14px;
-      margin: 0;
-    }
-  `]
+  imports: [CommonModule, FormsModule, ReactiveFormsModule],
+  templateUrl: './workspace-members.component.html',
+  styleUrls: ['./workspace-members.component.css']
 })
-export class WorkspaceMembersComponent implements OnInit {
+export class WorkspaceMembersComponent implements OnInit, OnDestroy {
   @Input() workspace: IWorkspace | null = null;
   @Output() memberAdded = new EventEmitter<IWorkspaceMember>();
   @Output() memberRemoved = new EventEmitter<string>();
   @Output() memberRoleUpdated = new EventEmitter<{ userId: string, role: string }>();
 
+  // Component state
   members: IWorkspaceMember[] = [];
+  invitations: IInvitation[] = [];
+  userPermissions: IUserPermissions | null = null;
   isLoading = false;
+  isLoadingInvitations = false;
   error: string | null = null;
-  showAddMemberForm = false;
-  newMemberEmail = '';
-  newMemberRole = 'member';
-  canManageMembers = false;
 
-  constructor(private workspaceService: WorkspaceService) { }
+  // UI state
+  showInviteModal = false;
+  showRoleDropdown: { [userId: string]: boolean } = {};
+  showConfirmDialog = false;
+  confirmDialogData: {
+    title: string;
+    message: string;
+    action: () => void;
+  } | null = null;
 
-  ngOnInit(): void {
-    this.loadMembers();
-    this.checkPermissions();
+  // Forms
+  inviteForm: FormGroup;
+  roleUpdateForm: FormGroup;
+
+  // Search/filter
+  searchTerm = '';
+  filterRole = 'all';
+
+  // Unsubscribe subject
+  private destroy$ = new Subject<void>();
+
+  constructor(
+    private workspaceMemberService: WorkspaceMemberService,
+    private invitationService: InvitationService,
+    private fb: FormBuilder
+  ) {
+    // Initialize forms
+    this.inviteForm = this.fb.group({
+      email: ['', [Validators.required, Validators.email]],
+      role: ['member', Validators.required],
+      message: ['']
+    });
+
+    this.roleUpdateForm = this.fb.group({
+      role: ['member', Validators.required]
+    });
   }
 
+  ngOnInit(): void {
+    if (this.workspace) {
+      this.loadMembers();
+      this.loadInvitations();
+      this.loadUserPermissions();
+    }
+  }
+
+  ngOnDestroy(): void {
+    this.destroy$.next();
+    this.destroy$.complete();
+  }
+
+  // Load data methods
   loadMembers(): void {
     if (!this.workspace) return;
 
     this.isLoading = true;
     this.error = null;
 
-    this.workspaceService.getWorkspaceMembers(this.workspace.id).subscribe({
-      next: (members) => {
-        this.members = members || [];
-        this.isLoading = false;
-      },
-      error: (error) => {
-        this.error = 'Failed to load workspace members';
-        this.isLoading = false;
-      }
-    });
-  }
-
-  checkPermissions(): void {
-    // Check if current user can manage members
-    // This would typically come from the workspace context or user role
-    this.canManageMembers = this.workspace?.user_role === 'admin';
-  }
-
-  addMember(): void {
-    if (!this.workspace || !this.newMemberEmail) return;
-
-    this.workspaceService.addWorkspaceMember(this.workspace.id, {
-      email: this.newMemberEmail,
-      role: this.newMemberRole
-    }).subscribe({
-      next: (response) => {
-        this.memberAdded.emit(response.user);
-        this.loadMembers();
-        this.resetForm();
-      },
-      error: (error) => {
-        this.error = 'Failed to add member';
-      }
-    });
-  }
-
-  removeMember(member: IWorkspaceMember): void {
-    if (!this.workspace) return;
-
-    if (confirm(`Are you sure you want to remove ${member.name} from this workspace?`)) {
-      this.workspaceService.removeWorkspaceMember(this.workspace.id, member.id).subscribe({
-        next: () => {
-          this.memberRemoved.emit(member.id);
-          this.loadMembers();
+    this.workspaceMemberService.getMembers(+this.workspace.id)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (response: IMemberListResponse) => {
+          this.members = response.members || [];
+          this.isLoading = false;
         },
         error: (error) => {
-          this.error = 'Failed to remove member';
+          this.error = 'Failed to load workspace members';
+          this.isLoading = false;
+          console.error('Error loading members:', error);
         }
       });
-    }
   }
 
-  editMemberRole(member: IWorkspaceMember): void {
-    const newRole = prompt(`Change role for ${member.name}:`, member.role);
+  loadInvitations(): void {
+    if (!this.workspace) return;
 
-    if (newRole && newRole !== member.role && ['admin', 'member', 'viewer'].includes(newRole)) {
-      this.workspaceService.updateWorkspaceMemberRole(this.workspace!.id, member.id, newRole).subscribe({
+    this.isLoadingInvitations = true;
+
+    this.invitationService.getInvitations(+this.workspace.id)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (response: IInvitationListResponse) => {
+          this.invitations = response.invitations || [];
+          this.isLoadingInvitations = false;
+        },
+        error: (error) => {
+          console.error('Error loading invitations:', error);
+          this.isLoadingInvitations = false;
+        }
+      });
+  }
+
+  loadUserPermissions(): void {
+    if (!this.workspace) return;
+
+    this.workspaceMemberService.getPermissions(+this.workspace.id)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (permissions: IUserPermissions) => {
+          this.userPermissions = permissions;
+        },
+        error: (error) => {
+          console.error('Error loading user permissions:', error);
+        }
+      });
+  }
+
+  // Permission checks
+  get canManageMembers(): boolean {
+    return this.userPermissions?.permissions?.can_manage_members || false;
+  }
+
+  get canInviteMembers(): boolean {
+    return this.userPermissions?.permissions?.can_invite_members || false;
+  }
+
+  get canTransferOwnership(): boolean {
+    return this.userPermissions?.permissions?.can_transfer_ownership || false;
+  }
+
+  get isOwner(): boolean {
+    return this.userPermissions?.role === 'owner';
+  }
+
+  get isAdmin(): boolean {
+    return this.userPermissions?.role === 'admin';
+  }
+
+  // Member management methods
+  openInviteModal(): void {
+    this.showInviteModal = true;
+    this.inviteForm.reset({
+      email: '',
+      role: 'member',
+      message: ''
+    });
+  }
+
+  closeInviteModal(): void {
+    this.showInviteModal = false;
+  }
+
+  sendInvitation(): void {
+    if (!this.workspace || this.inviteForm.invalid) return;
+
+    const invitationData: ICreateInvitationRequest = this.inviteForm.value;
+
+    this.invitationService.createInvitation(+this.workspace.id, invitationData)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (invitation: IInvitation) => {
+          this.loadInvitations();
+          this.closeInviteModal();
+          // Show success message
+        },
+        error: (error) => {
+          this.error = 'Failed to send invitation';
+          console.error('Error sending invitation:', error);
+        }
+      });
+  }
+
+  cancelInvitation(invitationId: string): void {
+    if (!this.workspace) return;
+
+    this.showConfirmDialog = true;
+    this.confirmDialogData = {
+      title: 'Cancel Invitation',
+      message: 'Are you sure you want to cancel this invitation?',
+      action: () => {
+        this.invitationService.cancelInvitation(+this.workspace!.id, +invitationId)
+          .pipe(takeUntil(this.destroy$))
+          .subscribe({
+            next: () => {
+              this.loadInvitations();
+              this.closeConfirmDialog();
+            },
+            error: (error) => {
+              this.error = 'Failed to cancel invitation';
+              console.error('Error canceling invitation:', error);
+              this.closeConfirmDialog();
+            }
+          });
+      }
+    };
+  }
+
+  resendInvitation(invitationId: string): void {
+    if (!this.workspace) return;
+
+    this.invitationService.resendInvitation(+this.workspace.id, +invitationId)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
         next: () => {
-          this.memberRoleUpdated.emit({ userId: member.id, role: newRole });
-          this.loadMembers();
+          // Show success message
+        },
+        error: (error) => {
+          this.error = 'Failed to resend invitation';
+          console.error('Error resending invitation:', error);
+        }
+      });
+  }
+
+  toggleRoleDropdown(userId: string): void {
+    // Close all other dropdowns
+    Object.keys(this.showRoleDropdown).forEach(id => {
+      if (id !== userId) {
+        this.showRoleDropdown[id] = false;
+      }
+    });
+
+    // Toggle current dropdown
+    this.showRoleDropdown[userId] = !this.showRoleDropdown[userId];
+  }
+
+  updateMemberRole(member: IWorkspaceMember): void {
+    if (!this.workspace || !this.roleUpdateForm.valid) return;
+
+    const newRole = this.roleUpdateForm.get('role')?.value;
+
+    if (newRole === member.role) {
+      this.toggleRoleDropdown(member.user_id);
+      return;
+    }
+
+    this.workspaceMemberService.updateMemberRole(+this.workspace.id, +member.user_id, newRole)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (updatedMember: IWorkspaceMember) => {
+          // Update member in list
+          const index = this.members.findIndex(m => m.user_id === member.user_id);
+          if (index !== -1) {
+            this.members[index] = updatedMember;
+          }
+
+          this.memberRoleUpdated.emit({ userId: member.user_id, role: newRole });
+          this.toggleRoleDropdown(member.user_id);
         },
         error: (error) => {
           this.error = 'Failed to update member role';
+          console.error('Error updating member role:', error);
         }
       });
+  }
+
+  removeMember(member: IWorkspaceMember): void {
+    this.showConfirmDialog = true;
+    this.confirmDialogData = {
+      title: 'Remove Member',
+      message: `Are you sure you want to remove ${member.name} from this workspace?`,
+      action: () => {
+        if (!this.workspace) return;
+
+        this.workspaceMemberService.removeMember(+this.workspace.id, +member.user_id)
+          .pipe(takeUntil(this.destroy$))
+          .subscribe({
+            next: () => {
+              this.members = this.members.filter(m => m.user_id !== member.user_id);
+              this.memberRemoved.emit(member.user_id);
+              this.closeConfirmDialog();
+            },
+            error: (error) => {
+              this.error = 'Failed to remove member';
+              console.error('Error removing member:', error);
+              this.closeConfirmDialog();
+            }
+          });
+      }
+    };
+  }
+
+  transferOwnership(member: IWorkspaceMember): void {
+    this.showConfirmDialog = true;
+    this.confirmDialogData = {
+      title: 'Transfer Ownership',
+      message: `Are you sure you want to transfer ownership of this workspace to ${member.name}? You will become an admin after the transfer.`,
+      action: () => {
+        if (!this.workspace) return;
+
+        this.workspaceMemberService.transferOwnership(+this.workspace.id, +member.user_id)
+          .pipe(takeUntil(this.destroy$))
+          .subscribe({
+            next: () => {
+              this.loadMembers();
+              this.loadUserPermissions();
+              this.closeConfirmDialog();
+            },
+            error: (error) => {
+              this.error = 'Failed to transfer ownership';
+              console.error('Error transferring ownership:', error);
+              this.closeConfirmDialog();
+            }
+          });
+      }
+    };
+  }
+
+  closeConfirmDialog(): void {
+    this.showConfirmDialog = false;
+    this.confirmDialogData = null;
+  }
+
+  // Filter and search methods
+  get filteredMembers(): IWorkspaceMember[] {
+    let filtered = this.members;
+
+    // Filter by search term
+    if (this.searchTerm) {
+      const term = this.searchTerm.toLowerCase();
+      filtered = filtered.filter(member =>
+        member.name.toLowerCase().includes(term) ||
+        member.email.toLowerCase().includes(term)
+      );
+    }
+
+    // Filter by role
+    if (this.filterRole !== 'all') {
+      filtered = filtered.filter(member => member.role === this.filterRole);
+    }
+
+    return filtered;
+  }
+
+  get filteredInvitations(): IInvitation[] {
+    let filtered = this.invitations;
+
+    // Filter by search term
+    if (this.searchTerm) {
+      const term = this.searchTerm.toLowerCase();
+      filtered = filtered.filter(invitation =>
+        invitation.email.toLowerCase().includes(term)
+      );
+    }
+
+    return filtered;
+  }
+
+  // Utility methods
+  getRoleBadgeClass(role: string): string {
+    switch (role) {
+      case 'owner': return 'badge-owner';
+      case 'admin': return 'badge-admin';
+      case 'member': return 'badge-member';
+      case 'viewer': return 'badge-viewer';
+      default: return 'badge-default';
     }
   }
 
-  resetForm(): void {
-    this.newMemberEmail = '';
-    this.newMemberRole = 'member';
-    this.showAddMemberForm = false;
+  formatDate(dateString: string): string {
+    const date = new Date(dateString);
+    return date.toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric'
+    });
+  }
+
+  getInitials(name: string): string {
+    return name.split(' ')
+      .map(word => word.charAt(0))
+      .join('')
+      .toUpperCase()
+      .substring(0, 2);
+  }
+
+  // Reset methods
+  resetFilters(): void {
+    this.searchTerm = '';
+    this.filterRole = 'all';
   }
 }

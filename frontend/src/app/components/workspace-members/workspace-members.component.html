@@ -1,0 +1,277 @@
+<div class="workspace-members-container">
+    <!-- User Permissions Display -->
+    <div class="permissions-display" *ngIf="userPermissions">
+        <h3>Your Permissions</h3>
+        <div class="permission-badges">
+            <span class="permission-badge role-badge" [class]="getRoleBadgeClass(userPermissions.role)">
+                {{ userPermissions.role }}
+            </span>
+            <span class="permission-badge" *ngIf="userPermissions.permissions.can_manage_members">
+                Can Manage Members
+            </span>
+            <span class="permission-badge" *ngIf="userPermissions.permissions.can_invite_members">
+                Can Invite Members
+            </span>
+            <span class="permission-badge" *ngIf="userPermissions.permissions.can_transfer_ownership">
+                Can Transfer Ownership
+            </span>
+        </div>
+    </div>
+
+    <!-- Header with Search and Actions -->
+    <div class="members-header">
+        <h3>Workspace Members</h3>
+        <div class="header-actions">
+            <div class="search-filter">
+                <input type="text" placeholder="Search members..." [(ngModel)]="searchTerm" class="search-input" />
+                <select [(ngModel)]="filterRole" class="filter-select">
+                    <option value="all">All Roles</option>
+                    <option value="owner">Owner</option>
+                    <option value="admin">Admin</option>
+                    <option value="member">Member</option>
+                    <option value="viewer">Viewer</option>
+                </select>
+            </div>
+            <button class="invite-btn" (click)="openInviteModal()" *ngIf="canInviteMembers">
+                <span class="icon">+</span>
+                Invite Member
+            </button>
+        </div>
+    </div>
+
+    <!-- Members List -->
+    <div class="members-section">
+        <h4>Members ({{ filteredMembers.length }})</h4>
+
+        <!-- Loading State -->
+        <div class="loading-state" *ngIf="isLoading">
+            <div class="loading-spinner"></div>
+            <p>Loading members...</p>
+        </div>
+
+        <!-- Error State -->
+        <div class="error-state" *ngIf="error">
+            <div class="error-message">
+                <span class="icon">⚠️</span>
+                {{ error }}
+            </div>
+        </div>
+
+        <!-- Members Table -->
+        <div class="members-table-container" *ngIf="!isLoading && !error">
+            <table class="members-table" *ngIf="filteredMembers.length > 0">
+                <thead>
+                    <tr>
+                        <th>Member</th>
+                        <th>Role</th>
+                        <th>Joined</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr *ngFor="let member of filteredMembers" class="member-row">
+                        <td class="member-info">
+                            <div class="member-avatar">
+                                {{ getInitials(member.name) }}
+                            </div>
+                            <div class="member-details">
+                                <div class="member-name">{{ member.name }}</div>
+                                <div class="member-email">{{ member.email }}</div>
+                            </div>
+                        </td>
+                        <td class="role-cell">
+                            <span class="role-badge" [class]="getRoleBadgeClass(member.role)">
+                                {{ member.role }}
+                            </span>
+                        </td>
+                        <td class="joined-cell">
+                            {{ formatDate(member.joined_at) }}
+                        </td>
+                        <td class="actions-cell">
+                            <div class="action-buttons" *ngIf="canManageMembers">
+                                <!-- Role Dropdown -->
+                                <div class="role-dropdown" [class.show]="showRoleDropdown[member.user_id]">
+                                    <button class="action-btn dropdown-toggle"
+                                        (click)="toggleRoleDropdown(member.user_id)">
+                                        <span class="icon">⚙️</span>
+                                    </button>
+                                    <div class="dropdown-menu">
+                                        <form [formGroup]="roleUpdateForm" (ngSubmit)="updateMemberRole(member)">
+                                            <select formControlName="role" class="role-select">
+                                                <option value="admin" [disabled]="member.role === 'admin'">Admin
+                                                </option>
+                                                <option value="member" [disabled]="member.role === 'member'">Member
+                                                </option>
+                                                <option value="viewer" [disabled]="member.role === 'viewer'">Viewer
+                                                </option>
+                                            </select>
+                                            <button type="submit" class="update-btn">Update</button>
+                                        </form>
+                                    </div>
+                                </div>
+
+                                <!-- Transfer Ownership (only for owners) -->
+                                <button class="action-btn transfer-btn" (click)="transferOwnership(member)"
+                                    *ngIf="canTransferOwnership && member.role !== 'owner'" title="Transfer Ownership">
+                                    <span class="icon">👑</span>
+                                </button>
+
+                                <!-- Remove Member -->
+                                <button class="action-btn remove-btn" (click)="removeMember(member)"
+                                    *ngIf="member.role !== 'owner'" title="Remove Member">
+                                    <span class="icon">🗑️</span>
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <!-- Empty State -->
+            <div class="empty-state" *ngIf="filteredMembers.length === 0">
+                <div class="empty-icon">👥</div>
+                <h4>No Members Found</h4>
+                <p *ngIf="searchTerm || filterRole !== 'all'">
+                    Try adjusting your search or filter criteria.
+                </p>
+                <p *ngIf="!searchTerm && filterRole === 'all'">
+                    No members have been added to this workspace yet.
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Pending Invitations -->
+    <div class="invitations-section" *ngIf="canManageMembers">
+        <h4>Pending Invitations ({{ filteredInvitations.length }})</h4>
+
+        <!-- Loading State -->
+        <div class="loading-state" *ngIf="isLoadingInvitations">
+            <div class="loading-spinner"></div>
+            <p>Loading invitations...</p>
+        </div>
+
+        <!-- Invitations Table -->
+        <div class="invitations-table-container" *ngIf="!isLoadingInvitations">
+            <table class="invitations-table" *ngIf="filteredInvitations.length > 0">
+                <thead>
+                    <tr>
+                        <th>Email</th>
+                        <th>Role</th>
+                        <th>Invited By</th>
+                        <th>Expires</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr *ngFor="let invitation of filteredInvitations" class="invitation-row">
+                        <td class="invitation-email">{{ invitation.email }}</td>
+                        <td class="invitation-role">
+                            <span class="role-badge" [class]="getRoleBadgeClass(invitation.role)">
+                                {{ invitation.role }}
+                            </span>
+                        </td>
+                        <td class="invitation-invited-by">
+                            {{ invitation.invited_by_user?.name || 'Unknown' }}
+                        </td>
+                        <td class="invitation-expires">
+                            {{ formatDate(invitation.expires_at) }}
+                        </td>
+                        <td class="invitation-actions">
+                            <div class="action-buttons">
+                                <button class="action-btn resend-btn" (click)="resendInvitation(invitation.id)"
+                                    title="Resend Invitation">
+                                    <span class="icon">📧</span>
+                                </button>
+                                <button class="action-btn cancel-btn" (click)="cancelInvitation(invitation.id)"
+                                    title="Cancel Invitation">
+                                    <span class="icon">❌</span>
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <!-- Empty State -->
+            <div class="empty-state" *ngIf="filteredInvitations.length === 0">
+                <div class="empty-icon">📬</div>
+                <h4>No Pending Invitations</h4>
+                <p *ngIf="searchTerm">
+                    No invitations match your search criteria.
+                </p>
+                <p *ngIf="!searchTerm">
+                    There are no pending invitations for this workspace.
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Invite Member Modal -->
+    <div class="modal-overlay" *ngIf="showInviteModal" (click)="closeInviteModal()">
+        <div class="modal-content" (click)="$event.stopPropagation()">
+            <div class="modal-header">
+                <h3>Invite Member</h3>
+                <button class="close-btn" (click)="closeInviteModal()">×</button>
+            </div>
+            <div class="modal-body">
+                <form [formGroup]="inviteForm" (ngSubmit)="sendInvitation()">
+                    <div class="form-group">
+                        <label for="email">Email Address</label>
+                        <input id="email" type="email" formControlName="email" placeholder="Enter email address"
+                            class="form-input" />
+                        <div class="error-message"
+                            *ngIf="inviteForm.get('email')?.invalid && inviteForm.get('email')?.touched">
+                            Please enter a valid email address
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="role">Role</label>
+                        <select id="role" formControlName="role" class="form-select">
+                            <option value="member">Member</option>
+                            <option value="viewer">Viewer</option>
+                            <option value="admin" *ngIf="isAdmin || isOwner">Admin</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="message">Message (Optional)</label>
+                        <textarea id="message" formControlName="message"
+                            placeholder="Add a personal message to the invitation" class="form-textarea"
+                            rows="3"></textarea>
+                    </div>
+
+                    <div class="form-actions">
+                        <button type="submit" class="submit-btn" [disabled]="inviteForm.invalid">
+                            Send Invitation
+                        </button>
+                        <button type="button" class="cancel-btn" (click)="closeInviteModal()">
+                            Cancel
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Confirmation Dialog -->
+    <div class="modal-overlay" *ngIf="showConfirmDialog" (click)="closeConfirmDialog()">
+        <div class="modal-content confirm-dialog" (click)="$event.stopPropagation()">
+            <div class="modal-header">
+                <h3>{{ confirmDialogData?.title }}</h3>
+            </div>
+            <div class="modal-body">
+                <p>{{ confirmDialogData?.message }}</p>
+            </div>
+            <div class="modal-footer">
+                <button class="confirm-btn" (click)="confirmDialogData?.action()">
+                    Confirm
+                </button>
+                <button class="cancel-btn" (click)="closeConfirmDialog()">
+                    Cancel
+                </button>
+            </div>
+        </div>
+    </div>
+</div>

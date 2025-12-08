@@ -16,6 +16,7 @@ return new class extends Migration
             $table->foreignId('user_id')->constrained()->onDelete('cascade');
             $table->enum('role', ['admin', 'member', 'viewer'])->default('member');
             $table->timestamp('joined_at')->nullable();
+            $table->timestamps(); // Add created_at and updated_at columns
             
             // Primary key combination
             $table->primary(['workspace_id', 'user_id']);

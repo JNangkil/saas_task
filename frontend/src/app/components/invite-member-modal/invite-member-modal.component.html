@@ -1,0 +1,77 @@
+<div class="modal-overlay" *ngIf="isVisible" (click)="onOverlayClick($event)">
+    <div class="modal-content" (click)="$event.stopPropagation()">
+        <div class="modal-header">
+            <h3>Invite Members</h3>
+            <button class="close-btn" (click)="closeModal()" aria-label="Close modal">×</button>
+        </div>
+
+        <div class="modal-body">
+            <!-- Error Message -->
+            <div class="error-message" *ngIf="errorMessage">
+                <span class="icon">⚠️</span>
+                {{ errorMessage }}
+            </div>
+
+            <!-- Success Message -->
+            <div class="success-message" *ngIf="successMessage">
+                <span class="icon">✓</span>
+                {{ successMessage }}
+            </div>
+
+            <!-- Invitation Form -->
+            <form [formGroup]="inviteForm" (ngSubmit)="sendInvitations()" *ngIf="!successMessage">
+                <!-- Email Input -->
+                <div class="form-group">
+                    <label for="emails">Email Addresses</label>
+                    <textarea id="emails" formControlName="emails"
+                        placeholder="Enter email addresses separated by commas" class="form-textarea" rows="3"
+                        [disabled]="isLoading">
+          </textarea>
+                    <div class="form-help">
+                        You can invite multiple people by separating their email addresses with commas.
+                    </div>
+                    <div class="error-message"
+                        *ngIf="inviteForm.get('emails')?.invalid && inviteForm.get('emails')?.touched">
+                        {{ emailsErrorMessage }}
+                    </div>
+                </div>
+
+                <!-- Role Selection -->
+                <div class="form-group">
+                    <label for="role">Role</label>
+                    <select id="role" formControlName="role" class="form-select" [disabled]="isLoading">
+                        <option value="admin">Admin</option>
+                        <option value="member">Member</option>
+                        <option value="viewer">Viewer</option>
+                    </select>
+                    <div class="role-description">
+                        {{ currentRoleDescription }}
+                    </div>
+                </div>
+
+                <!-- Optional Message -->
+                <div class="form-group">
+                    <label for="message">Personal Message (Optional)</label>
+                    <textarea id="message" formControlName="message"
+                        placeholder="Add a personal message to the invitation" class="form-textarea" rows="3"
+                        [disabled]="isLoading">
+          </textarea>
+                </div>
+
+                <!-- Form Actions -->
+                <div class="form-actions">
+                    <button type="submit" class="submit-btn" [disabled]="inviteForm.invalid || isLoading">
+                        <span *ngIf="!isLoading">Send Invitations</span>
+                        <span *ngIf="isLoading" class="loading-text">
+                            <span class="spinner"></span>
+                            Sending...
+                        </span>
+                    </button>
+                    <button type="button" class="cancel-btn" (click)="closeModal()" [disabled]="isLoading">
+                        Cancel
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>

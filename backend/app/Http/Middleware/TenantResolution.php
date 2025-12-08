@@ -20,7 +20,7 @@ class TenantResolution
         $tenant = null;
 
         // Priority 1: Resolve from subdomain
-        if ($request->hasHost() && $host = $request->getHost()) {
+        if ($host = $request->getHost()) {
             $subdomain = explode('.', $host)[0] ?? null;
             if ($subdomain && $subdomain !== 'www' && $subdomain !== 'app') {
                 $tenant = Tenant::where('slug', $subdomain)->first();

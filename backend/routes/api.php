@@ -1,7 +1,10 @@
 <?php
 
+use App\Http\Controllers\AuthController;
+use App\Http\Controllers\InvitationController;
 use App\Http\Controllers\TenantController;
 use App\Http\Controllers\WorkspaceController;
+use App\Http\Controllers\WorkspaceMemberController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -56,13 +59,27 @@ Route::middleware(['auth:sanctum'])->group(function () {
         Route::delete('/{workspace}', [WorkspaceController::class, 'destroy'])->name('workspaces.destroy');
         
         // Workspace member management
-        Route::get('/{workspace}/members', [WorkspaceController::class, 'members'])->name('workspaces.members');
-        Route::post('/{workspace}/members', [WorkspaceController::class, 'addMember'])->name('workspaces.members.add');
-        Route::put('/{workspace}/members/{user}', [WorkspaceController::class, 'updateMemberRole'])->name('workspaces.members.update');
-        Route::delete('/{workspace}/members/{user}', [WorkspaceController::class, 'removeMember'])->name('workspaces.members.remove');
+        Route::get('/{workspace}/members', [WorkspaceMemberController::class, 'index'])->name('workspaces.members');
+        Route::put('/{workspace}/members/{user}', [WorkspaceMemberController::class, 'update'])->name('workspaces.members.update');
+        Route::delete('/{workspace}/members/{user}', [WorkspaceMemberController::class, 'destroy'])->name('workspaces.members.remove');
+        Route::get('/{workspace}/permissions', [WorkspaceMemberController::class, 'permissions'])->name('workspaces.permissions');
+        Route::post('/{workspace}/transfer-ownership/{user}', [WorkspaceMemberController::class, 'transferOwnership'])->name('workspaces.transfer-ownership');
         
         // Workspace settings
         Route::get('/{workspace}/settings', [WorkspaceController::class, 'settings'])->name('workspaces.settings');
         Route::put('/{workspace}/settings', [WorkspaceController::class, 'updateSettings'])->name('workspaces.settings.update');
+        
+        // Workspace invitations
+        Route::get('/{workspace}/invitations', [InvitationController::class, 'index'])->name('workspaces.invitations.index');
+        Route::post('/{workspace}/invitations', [InvitationController::class, 'store'])->name('workspaces.invitations.store');
+        Route::delete('/{workspace}/invitations/{invitation}', [InvitationController::class, 'destroy'])->name('workspaces.invitations.destroy');
+        Route::post('/{workspace}/invitations/{invitation}/resend', [InvitationController::class, 'resend'])->name('workspaces.invitations.resend');
     });
+});
+
+// Public invitation routes (no auth required)
+Route::prefix('invitations')->group(function () {
+    Route::get('/{token}', [InvitationController::class, 'show'])->name('invitations.show');
+    Route::post('/{token}/accept', [InvitationController::class, 'accept'])->name('invitations.accept');
+    Route::post('/{token}/decline', [InvitationController::class, 'decline'])->name('invitations.decline');
 });
