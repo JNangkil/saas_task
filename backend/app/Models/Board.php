@@ -42,19 +42,19 @@ class Board extends Model
     }
 
     /**
-     * Get the tenant that owns the board.
-     */
-    public function tenant(): BelongsTo
-    {
-        return $this->belongsTo(Tenant::class);
-    }
-
-    /**
      * Get the workspace that owns the board.
      */
     public function workspace(): BelongsTo
     {
         return $this->belongsTo(Workspace::class);
+    }
+
+    /**
+     * Get the tenant that owns the board.
+     */
+    public function tenant(): BelongsTo
+    {
+        return $this->belongsTo(Tenant::class);
     }
 
     /**
@@ -66,11 +66,11 @@ class Board extends Model
     }
 
     /**
-     * Get the active (non-archived) tasks for the board.
+     * Get the active (not archived) tasks for the board.
      */
     public function activeTasks(): HasMany
     {
-        return $this->tasks()->where('is_archived', false);
+        return $this->tasks()->whereNull('archived_at');
     }
 
     /**

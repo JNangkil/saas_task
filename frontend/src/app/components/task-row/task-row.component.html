@@ -1,0 +1,75 @@
+<tr class="task-row" [class.selected]="selected" (click)="onRowClick($event)" (dblclick)="onRowDoubleClick()">
+
+    <!-- Selection Checkbox -->
+    <td class="select-cell" *ngIf="showCheckbox">
+        <input type="checkbox" [checked]="selected" (change)="onCheckboxChange($event)" class="task-checkbox"
+            [disabled]="!selectable">
+    </td>
+
+    <!-- Task Title -->
+    <td class="title-cell">
+        <div class="task-content">
+            <div class="task-title">{{ task.title }}</div>
+            <div class="task-description" *ngIf="task.description">
+                {{ task.description }}
+            </div>
+        </div>
+    </td>
+
+    <!-- Status -->
+    <td class="status-cell">
+        <span class="status-badge" [class]="getStatusBadgeClass(task.status)">
+            {{ formatStatus(task.status) }}
+        </span>
+    </td>
+
+    <!-- Priority -->
+    <td class="priority-cell">
+        <span class="priority-badge" [class]="getPriorityBadgeClass(task.priority)">
+            {{ formatPriority(task.priority) }}
+        </span>
+    </td>
+
+    <!-- Assignee -->
+    <td class="assignee-cell">
+        <div class="assignee-info" *ngIf="task.assignee; else noAssignee">
+            <div class="assignee-avatar" [style.background-color]="getAvatarColor(task.assignee.email)">
+                {{ getUserInitials(task.assignee) }}
+            </div>
+            <div class="assignee-details">
+                <div class="assignee-name">{{ task.assignee.name }}</div>
+                <div class="assignee-email">{{ task.assignee.email }}</div>
+            </div>
+        </div>
+        <ng-template #noAssignee>
+            <span class="no-assignee">Unassigned</span>
+        </ng-template>
+    </td>
+
+    <!-- Due Date -->
+    <td class="due-date-cell">
+        <span class="due-date" [class.overdue]="isOverdue(task.due_date)" *ngIf="task.due_date; else noDueDate">
+            {{ formatDate(task.due_date) }}
+        </span>
+        <ng-template #noDueDate>
+            <span class="no-due-date">No due date</span>
+        </ng-template>
+    </td>
+
+    <!-- Labels -->
+    <td class="labels-cell">
+        <div class="task-labels" *ngIf="getVisibleLabels().length > 0; else noLabels">
+            <span class="task-label" *ngFor="let label of getVisibleLabels()"
+                [style.background-color]="label.color + '20'" [style.color]="label.color" [title]="label.name">
+                {{ label.name }}
+            </span>
+            <span class="more-labels" *ngIf="getHiddenLabelsCount() > 0"
+                [title]="'+' + getHiddenLabelsCount() + ' more labels'">
+                +{{ getHiddenLabelsCount() }}
+            </span>
+        </div>
+        <ng-template #noLabels>
+            <span class="no-labels">No labels</span>
+        </ng-template>
+    </td>
+</tr>

@@ -1,0 +1,128 @@
+<div class="task-table-example">
+    <div class="example-header">
+        <h1>Task Table Component Example</h1>
+        <p class="example-description">
+            This example demonstrates the Monday.com-style task table component with filtering, sorting, pagination, and
+            selection capabilities.
+        </p>
+    </div>
+
+    <!-- Workspace Context Info -->
+    <div class="workspace-info" *ngIf="workspaceInfo | async as context">
+        <h3>Current Context</h3>
+        <div class="context-details">
+            <div class="context-item">
+                <strong>Tenant:</strong> {{ context.currentTenant?.name || 'Not selected' }}
+            </div>
+            <div class="context-item">
+                <strong>Workspace:</strong> {{ context.currentWorkspace?.name || 'Not selected' }}
+            </div>
+        </div>
+    </div>
+
+    <!-- Task Table Component -->
+    <div class="table-section">
+        <h3>Task Table</h3>
+        <app-task-table [config]="tableConfig" [initialFilters]="initialFilters" (taskSelected)="onTaskSelected($event)"
+            (tasksSelected)="onTasksSelected($event)" (taskDoubleClicked)="onTaskDoubleClicked($event)">
+        </app-task-table>
+    </div>
+
+    <!-- Selected Tasks Actions -->
+    <div class="selected-actions" *ngIf="hasSelectedTasks()">
+        <h3>Selected Tasks ({{ selectedTasksCount }})</h3>
+        <div class="action-buttons">
+            <button class="action-btn complete-btn" (click)="onMarkAsComplete()"
+                title="Mark selected tasks as complete">
+                <span class="icon">✓</span>
+                Mark Complete
+            </button>
+
+            <button class="action-btn assign-btn" (click)="onAssignToUser()" title="Assign selected tasks to user">
+                <span class="icon">👤</span>
+                Assign
+            </button>
+
+            <button class="action-btn delete-btn" (click)="onDeleteSelected()" title="Delete selected tasks">
+                <span class="icon">🗑️</span>
+                Delete
+            </button>
+        </div>
+    </div>
+
+    <!-- Current Task Details -->
+    <div class="current-task" *ngIf="currentTask">
+        <h3>Current Task</h3>
+        <div class="task-details">
+            <div class="task-item">
+                <strong>Title:</strong> {{ currentTask.title }}
+            </div>
+            <div class="task-item">
+                <strong>Status:</strong>
+                <span class="status-badge" [class]="'status-' + currentTask.status">
+                    {{ currentTask.status.replace(/_/g, ' ') }}
+                </span>
+            </div>
+            <div class="task-item">
+                <strong>Priority:</strong>
+                <span class="priority-badge" [class]="'priority-' + currentTask.priority">
+                    {{ currentTask.priority }}
+                </span>
+            </div>
+            <div class="task-item" *ngIf="currentTask.assignee">
+                <strong>Assignee:</strong> {{ currentTask.assignee.name }}
+            </div>
+            <div class="task-item" *ngIf="currentTask.due_date">
+                <strong>Due Date:</strong> {{ currentTask.due_date | date:'shortDate' }}
+            </div>
+            <div class="task-item" *ngIf="currentTask.description">
+                <strong>Description:</strong> {{ currentTask.description }}
+            </div>
+        </div>
+    </div>
+
+    <!-- Usage Instructions -->
+    <div class="usage-instructions">
+        <h3>Usage Instructions</h3>
+        <div class="instructions">
+            <div class="instruction-item">
+                <h4>Basic Usage:</h4>
+                <pre><code><app-task-table></app-task-table></code></pre>
+            </div>
+
+            <div class="instruction-item">
+                <h4>With Configuration:</h4>
+                <pre><code><app-task-table [config]="tableConfig"></app-task-table></code></pre>
+            </div>
+
+            <div class="instruction-item">
+                <h4>With Initial Filters:</h4>
+                <pre><code><app-task-table [initialFilters]="initialFilters"></app-task-table></code></pre>
+            </div>
+
+            <div class="instruction-item">
+                <h4>Event Handling:</h4>
+                <pre><code><app-task-table (taskSelected)="onTaskSelected($event)"></app-task-table></code></pre>
+            </div>
+        </div>
+
+        <div class="features-list">
+            <h4>Features Demonstrated:</h4>
+            <ul>
+                <li>✅ Monday.com-style table design</li>
+                <li>✅ Responsive layout</li>
+                <li>✅ Column visibility toggles</li>
+                <li>✅ Status and priority badges</li>
+                <li>✅ Assignee avatars</li>
+                <li>✅ Due date formatting</li>
+                <li>✅ Task labels display</li>
+                <li>✅ Search and filtering</li>
+                <li>✅ Sorting capabilities</li>
+                <li>✅ Pagination controls</li>
+                <li>✅ Row selection</li>
+                <li>✅ Loading and error states</li>
+                <li>✅ Empty state handling</li>
+            </ul>
+        </div>
+    </div>
+</div>

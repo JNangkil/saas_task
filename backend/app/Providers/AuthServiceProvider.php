@@ -3,10 +3,12 @@
 namespace App\Providers;
 
 use App\Models\Invitation;
+use App\Models\Task;
 use App\Models\Tenant;
 use App\Models\User;
 use App\Models\Workspace;
 use App\Policies\InvitationPolicy;
+use App\Policies\TaskPolicy;
 use App\Policies\TenantPolicy;
 use App\Policies\WorkspacePolicy;
 use App\Services\JWTService;
@@ -22,6 +24,7 @@ class AuthServiceProvider extends ServiceProvider
      */
     protected $policies = [
         Invitation::class => InvitationPolicy::class,
+        Task::class => TaskPolicy::class,
         Tenant::class => TenantPolicy::class,
         Workspace::class => WorkspacePolicy::class,
     ];

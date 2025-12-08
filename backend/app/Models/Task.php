@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 
 class Task extends Model
 {
@@ -18,15 +19,20 @@ class Task extends Model
      * @var array<int, string>
      */
     protected $fillable = [
-        'tenant_id',
         'board_id',
+        'workspace_id',
+        'tenant_id',
         'title',
         'description',
         'status',
         'priority',
-        'assigned_to',
+        'assignee_id',
+        'creator_id',
         'due_date',
-        'is_archived',
+        'start_date',
+        'completed_at',
+        'archived_at',
+        'position',
     ];
 
     /**
@@ -37,23 +43,18 @@ class Task extends Model
     protected function casts(): array
     {
         return [
-            'is_archived' => 'boolean',
             'due_date' => 'datetime',
+            'start_date' => 'datetime',
+            'completed_at' => 'datetime',
+            'archived_at' => 'datetime',
+            'position' => 'decimal:4',
             'created_at' => 'datetime',
             'updated_at' => 'datetime',
         ];
     }
 
     /**
-     * Get tenant that owns the task.
-     */
-    public function tenant(): BelongsTo
-    {
-        return $this->belongsTo(Tenant::class);
-    }
-
-    /**
-     * Get board that owns the task.
+     * Get the board that owns the task.
      */
     public function board(): BelongsTo
     {
@@ -61,11 +62,59 @@ class Task extends Model
     }
 
     /**
-     * Get user assigned to the task.
+     * Get the workspace that owns the task.
      */
-    public function assignedUser(): BelongsTo
+    public function workspace(): BelongsTo
     {
-        return $this->belongsTo(User::class, 'assigned_to');
+        return $this->belongsTo(Workspace::class);
+    }
+
+    /**
+     * Get the tenant that owns the task.
+     */
+    public function tenant(): BelongsTo
+    {
+        return $this->belongsTo(Tenant::class);
+    }
+
+    /**
+     * Get the user assigned to the task.
+     */
+    public function assignee(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'assignee_id');
+    }
+
+    /**
+     * Get the user who created the task.
+     */
+    public function creator(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'creator_id');
+    }
+
+    /**
+     * Get the labels associated with the task.
+     */
+    public function labels(): BelongsToMany
+    {
+        return $this->belongsToMany(Label::class, 'task_labels');
+    }
+
+    /**
+     * Get the custom values for the task.
+     */
+    public function customValues(): HasMany
+    {
+        return $this->hasMany(TaskCustomValue::class);
+    }
+
+    /**
+     * Get the task custom values for the task.
+     */
+    public function taskCustomValues(): HasMany
+    {
+        return $this->hasMany(TaskCustomValue::class);
     }
 
     /**
@@ -74,64 +123,6 @@ class Task extends Model
     public function comments(): HasMany
     {
         return $this->hasMany(TaskComment::class);
-    }
-
-    /**
-     * Check if task is archived.
-     */
-    public function isArchived(): bool
-    {
-        return $this->is_archived;
-    }
-
-    /**
-     * Check if task is active (not archived).
-     */
-    public function isActive(): bool
-    {
-        return !$this->is_archived;
-    }
-
-    /**
-     * Archive the task.
-     */
-    public function archive(): void
-    {
-        $this->is_archived = true;
-        $this->save();
-    }
-
-    /**
-     * Restore the task from archive.
-     */
-    public function restore(): void
-    {
-        $this->is_archived = false;
-        $this->save();
-    }
-
-    /**
-     * Scope a query to only include active tasks.
-     */
-    public function scopeActive($query)
-    {
-        return $query->where('is_archived', false);
-    }
-
-    /**
-     * Scope a query to only include archived tasks.
-     */
-    public function scopeArchived($query)
-    {
-        return $query->where('is_archived', true);
-    }
-
-    /**
-     * Scope a query to only include tasks in a specific board.
-     */
-    public function scopeInBoard($query, $boardId)
-    {
-        return $query->where('board_id', $boardId);
     }
 
     /**
@@ -148,5 +139,65 @@ class Task extends Model
     public function scopeWithPriority($query, $priority)
     {
         return $query->where('priority', $priority);
+    }
+
+    /**
+     * Scope a query to only include tasks assigned to a specific user.
+     */
+    public function scopeAssignedTo($query, $userId)
+    {
+        return $query->where('assignee_id', $userId);
+    }
+
+    /**
+     * Scope a query to only include tasks in a specific board.
+     */
+    public function scopeInBoard($query, $boardId)
+    {
+        return $query->where('board_id', $boardId);
+    }
+
+    /**
+     * Scope a query to only include active (not archived) tasks.
+     */
+    public function scopeActive($query)
+    {
+        return $query->whereNull('archived_at');
+    }
+
+    /**
+     * Scope a query to only include archived tasks.
+     */
+    public function scopeArchived($query)
+    {
+        return $query->whereNotNull('archived_at');
+    }
+
+    /**
+     * Scope a query to only include completed tasks.
+     */
+    public function scopeCompleted($query)
+    {
+        return $query->where('status', 'done');
+    }
+
+    /**
+     * Mark the task as completed.
+     */
+    public function markAsCompleted(): void
+    {
+        $this->status = 'done';
+        $this->completed_at = now();
+        $this->save();
+    }
+
+    /**
+     * Archive the task.
+     */
+    public function archive(): void
+    {
+        $this->status = 'archived';
+        $this->archived_at = now();
+        $this->save();
     }
 }

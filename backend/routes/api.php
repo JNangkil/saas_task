@@ -4,6 +4,7 @@ use App\Http\Controllers\AuthController;
 use App\Http\Controllers\InvitationController;
 use App\Http\Controllers\PlanController;
 use App\Http\Controllers\SubscriptionController;
+use App\Http\Controllers\TaskController;
 use App\Http\Controllers\TenantController;
 use App\Http\Controllers\WebhookController;
 use App\Http\Controllers\WorkspaceController;
@@ -77,6 +78,26 @@ Route::middleware(['auth:sanctum'])->group(function () {
         Route::post('/{workspace}/invitations', [InvitationController::class, 'store'])->name('workspaces.invitations.store');
         Route::delete('/{workspace}/invitations/{invitation}', [InvitationController::class, 'destroy'])->name('workspaces.invitations.destroy');
         Route::post('/{workspace}/invitations/{invitation}/resend', [InvitationController::class, 'resend'])->name('workspaces.invitations.resend');
+        
+        // Task routes
+        Route::prefix('tenants/{tenant}/workspaces/{workspace}/tasks')->group(function () {
+            Route::get('/', [TaskController::class, 'index'])->name('tasks.index');
+            Route::post('/', [TaskController::class, 'store'])->name('tasks.store');
+        });
+        
+        Route::prefix('tenants/{tenant}/workspaces/{workspace}/boards/{board}/tasks')->group(function () {
+            Route::get('/', [TaskController::class, 'index'])->name('boards.tasks.index');
+        });
+        
+        Route::prefix('tenants/{tenant}/workspaces/{workspace}/tasks')->group(function () {
+            Route::get('/{task}', [TaskController::class, 'show'])->name('tasks.show');
+            Route::put('/{task}', [TaskController::class, 'update'])->name('tasks.update');
+            Route::delete('/{task}', [TaskController::class, 'destroy'])->name('tasks.destroy');
+            Route::post('/{task}/archive', [TaskController::class, 'archive'])->name('tasks.archive');
+            Route::post('/{task}/restore', [TaskController::class, 'restore'])->name('tasks.restore');
+            Route::post('/{task}/duplicate', [TaskController::class, 'duplicate'])->name('tasks.duplicate');
+            Route::put('/{task}/position', [TaskController::class, 'updatePosition'])->name('tasks.position.update');
+        });
     });
 });
 
