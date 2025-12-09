@@ -318,6 +318,67 @@ export class TaskService {
     }
 
     /**
+     * Get comments for a task
+     */
+    getComments(
+        tenantId: number,
+        workspaceId: number,
+        taskId: number
+    ): Observable<TaskComment[]> {
+        const endpoint = `tenants/${tenantId}/workspaces/${workspaceId}/tasks/${taskId}/comments`;
+        return this.apiService.get<TasksPaginatedResponse>(endpoint).pipe(
+            map(response => response.data as any[] as TaskComment[]),
+            catchError(error => this.handleError(error))
+        );
+    }
+
+    /**
+     * Add a comment to a task
+     */
+    addComment(
+        tenantId: number,
+        workspaceId: number,
+        taskId: number,
+        content: string
+    ): Observable<TaskComment> {
+        const endpoint = `tenants/${tenantId}/workspaces/${workspaceId}/tasks/${taskId}/comments`;
+        return this.apiService.post<TaskComment>(endpoint, { content }).pipe(
+            catchError(error => this.handleError(error))
+        );
+    }
+
+    /**
+     * Update a comment
+     */
+    updateComment(
+        tenantId: number,
+        workspaceId: number,
+        taskId: number,
+        commentId: number,
+        content: string
+    ): Observable<TaskComment> {
+        const endpoint = `tenants/${tenantId}/workspaces/${workspaceId}/tasks/${taskId}/comments/${commentId}`;
+        return this.apiService.put<TaskComment>(endpoint, { content }).pipe(
+            catchError(error => this.handleError(error))
+        );
+    }
+
+    /**
+     * Delete a comment
+     */
+    deleteComment(
+        tenantId: number,
+        workspaceId: number,
+        taskId: number,
+        commentId: number
+    ): Observable<any> {
+        const endpoint = `tenants/${tenantId}/workspaces/${workspaceId}/tasks/${taskId}/comments/${commentId}`;
+        return this.apiService.delete(endpoint).pipe(
+            catchError(error => this.handleError(error))
+        );
+    }
+
+    /**
      * Get current tasks from the local cache
      * 
      * @returns Task[] Current tasks

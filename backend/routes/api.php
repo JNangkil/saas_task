@@ -1,13 +1,16 @@
 <?php
 
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\BoardController;
 use App\Http\Controllers\BoardColumnController;
 use App\Http\Controllers\InvitationController;
 use App\Http\Controllers\PlanController;
 use App\Http\Controllers\SubscriptionController;
 use App\Http\Controllers\TaskBulkOperationController;
+use App\Http\Controllers\RealtimeController;
 use App\Http\Controllers\TaskController;
 use App\Http\Controllers\TaskFieldValueController;
+use App\Http\Controllers\TaskCommentController;
 use App\Http\Controllers\TenantController;
 use App\Http\Controllers\UserBoardPreferenceController;
 use App\Http\Controllers\WebhookController;
@@ -51,6 +54,9 @@ Route::middleware(['auth:sanctum'])->group(function () {
         // Tenant settings
         Route::get('/{tenant}/settings', [TenantController::class, 'settings'])->name('tenants.settings');
         Route::put('/{tenant}/settings', [TenantController::class, 'updateSettings'])->name('tenants.settings.update');
+        
+        // Realtime Status
+        Route::get('/{tenant}/realtime/status', [RealtimeController::class, 'status'])->name('tenants.realtime.status');
     });
 
     // Workspace routes
@@ -106,6 +112,14 @@ Route::middleware(['auth:sanctum'])->group(function () {
             Route::post('/{task}/restore', [TaskController::class, 'restore'])->name('tasks.restore');
             Route::post('/{task}/duplicate', [TaskController::class, 'duplicate'])->name('tasks.duplicate');
             Route::put('/{task}/position', [TaskController::class, 'updatePosition'])->name('tasks.position.update');
+
+            // Task comments
+            Route::prefix('/{task}/comments')->group(function () {
+                Route::get('/', [TaskCommentController::class, 'index'])->name('tasks.comments.index');
+                Route::post('/', [TaskCommentController::class, 'store'])->name('tasks.comments.store');
+                Route::put('/{comment}', [TaskCommentController::class, 'update'])->name('tasks.comments.update');
+                Route::delete('/{comment}', [TaskCommentController::class, 'destroy'])->name('tasks.comments.destroy');
+            });
         });
         
         // Board column routes
@@ -125,6 +139,9 @@ Route::middleware(['auth:sanctum'])->group(function () {
             Route::get('/statistics', [BoardColumnController::class, 'getStatistics'])->name('boards.columns.statistics');
         });
         
+        // Board updates (polling fallback)
+        Route::get('tenants/{tenant}/workspaces/{workspace}/boards/{board}/updates', [BoardController::class, 'updates'])->name('boards.updates');
+
         // Task field value routes
         Route::prefix('tenants/{tenant}/workspaces/{workspace}/tasks/{task}/field-values')->group(function () {
             Route::get('/', [TaskFieldValueController::class, 'index'])->name('tasks.field-values.index');

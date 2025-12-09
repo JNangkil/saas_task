@@ -277,4 +277,33 @@ class Tenant extends Model
     {
         return $query->with(['subscription', 'activeSubscription']);
     }
+
+
+    /**
+     * Check if realtime features are enabled for this tenant.
+     */
+    public function isRealtimeEnabled(): bool
+    {
+        // 1. Check system-level flag
+        if (!config('app.realtime_enabled')) {
+            return false;
+        }
+
+        // 2. Check tenant settings (if explicitly disabled)
+        $settings = $this->settings ?? [];
+        if (isset($settings['realtime_enabled']) && $settings['realtime_enabled'] === false) {
+            return false;
+        }
+
+        // 3. Check subscription feature (if applicable)
+        // If the plan system enforces realtime as a premium feature
+        if ($this->hasActiveSubscription()) {
+            return $this->canUseFeature('realtime');
+        }
+
+        // Default to true if system is enabled and no specific restrictions
+        // Or false if no subscription and features are locked? 
+        // For now, let's assume free tier has realtime unless restricted.
+        return true; 
+    }
 }

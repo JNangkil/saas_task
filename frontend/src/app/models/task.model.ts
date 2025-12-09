@@ -97,6 +97,7 @@ export interface TaskComment {
     content: string;
     created_at: string;
     updated_at: string;
+    user?: User;
 }
 
 /**

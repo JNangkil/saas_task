@@ -116,6 +116,8 @@ return [
 
     'jwt_secret' => env('JWT_SECRET', 'your-secret-key-change-in-production'),
 
+    'realtime_enabled' => env('REALTIME_ENABLED', true),
+
     /*
     |--------------------------------------------------------------------------
     | Maintenance Mode Driver

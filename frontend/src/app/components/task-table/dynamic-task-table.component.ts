@@ -94,8 +94,20 @@ export class DynamicTaskTableComponent implements OnInit, OnDestroy {
 
     // Filter and sort state
     search$ = new BehaviorSubject<string>('');
+    statusFilter$ = new BehaviorSubject<string[]>([]);
+    priorityFilter$ = new BehaviorSubject<string[]>([]);
+    assigneeFilter$ = new BehaviorSubject<number[]>([]);
+    sort$ = new BehaviorSubject<TaskSort>({ sort_by: 'created_at', sort_order: 'desc' });
+    currentPage$ = new BehaviorSubject<number>(1);
+    refreshTrigger$ = new Subject<void>();
+    selectedTasks$ = new BehaviorSubject<Set<number>>(new Set());
+
     showColumnMenu = false;
     private fieldValues$ = new BehaviorSubject<Map<number, TaskFieldValue[]>>(new Map<number, TaskFieldValue[]>());
+    private destroy$ = new Subject<void>();
+
+    // Presence
+    usersPresent$: Observable<any[]> | undefined;
 
     // Task details panel state
     selectedTaskForDetails: Task | null = null;
@@ -396,6 +408,32 @@ export class DynamicTaskTableComponent implements OnInit, OnDestroy {
             .pipe(takeUntil(this.destroy$))
             .subscribe(() => {
                 this.loadColumns();
+            });
+
+        // Polled Updates (Fallback)
+        this.boardStateService.polledUpdates$
+            .pipe(takeUntil(this.destroy$))
+            .subscribe(updates => {
+                if (updates.tasks && updates.tasks.length > 0) {
+                    // Merge tasks
+                    const currentTasks = this.tasks$ as BehaviorSubject<Task[]>;
+                    const tasks = [...currentTasks.value];
+
+                    updates.tasks.forEach(updatedTask => {
+                        const index = tasks.findIndex(t => t.id === updatedTask.id);
+                        if (index !== -1) {
+                            tasks[index] = updatedTask;
+                        } else {
+                            tasks.unshift(updatedTask);
+                        }
+                    });
+
+                    currentTasks.next(tasks);
+                }
+
+                if (updates.columns && updates.columns.length > 0) {
+                    this.loadColumns();
+                }
             });
     }
 

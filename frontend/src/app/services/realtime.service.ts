@@ -16,6 +16,7 @@ declare global {
 export class RealtimeService {
     private echo: Echo<any> | null = null;
     private connectionStatus = new Subject<boolean>();
+    public connectionStatus$ = this.connectionStatus.asObservable();
 
     // Configuration - In a real app, these should be in environment files
     private config = {

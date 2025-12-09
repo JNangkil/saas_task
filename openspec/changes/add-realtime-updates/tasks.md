@@ -30,7 +30,7 @@
 - [x] 4.1 Create CommentAdded event
 - [x] 4.2 Create CommentUpdated event
 - [x] 4.3 Create CommentDeleted event
-- [ ] 4.4 Fire events from comment operations
+- [x] 4.4 Fire events from comment operations
 
 ## 5. Column Events
 
@@ -43,7 +43,7 @@
 ## 6. Presence System
 
 - [x] 6.1 Create presence channel for board viewers
-- [ ] 6.2 Track user join/leave events
+- [x] 6.2 Track user join/leave events
 - [x] 6.3 Create UserPresence model/DTO with avatar, name
 - [x] 6.4 Implement presence heartbeat mechanism
 
@@ -66,25 +66,25 @@
 ## 9. Presence UI
 
 - [x] 9.1 Create BoardPresenceComponent (avatar row)
-- [ ] 9.2 Display list of users currently viewing board
+- [x] 9.2 Display list of users currently viewing board
 - [x] 9.3 Show user name on hover
 - [ ] 9.4 Animate user join/leave transitions
 - [x] 9.5 Limit display to N users + "+X more"
 
 ## 10. Configuration & Feature Flags
 
-- [ ] 10.1 Add system-level realtime enabled flag
-- [ ] 10.2 Add tenant-level realtime enabled flag
-- [ ] 10.3 Add subscription plan check for realtime feature
-- [ ] 10.4 Create API endpoint to check realtime availability
+- [x] 10.1 Add system-level realtime enabled flag
+- [x] 10.2 Add tenant-level realtime enabled flag
+- [x] 10.3 Add subscription plan check for realtime feature
+- [x] 10.4 Create API endpoint to check realtime availability
 
 ## 11. Polling Fallback
 
-- [ ] 11.1 Detect WebSocket connection failure
-- [ ] 11.2 Implement polling service with configurable interval
-- [ ] 11.3 GET /api/boards/{board}/updates?since={timestamp}
-- [ ] 11.4 Merge polled updates with local state
-- [ ] 11.5 Disable polling when WebSocket reconnects
+- [x] 11.1 Detect WebSocket connection failure
+- [x] 11.2 Implement polling service with configurable interval
+- [x] 11.3 GET /api/boards/{board}/updates?since={timestamp}
+- [x] 11.4 Merge polled updates with local state
+- [x] 11.5 Disable polling when WebSocket reconnects
 
 ## 12. Testing & Validation
 

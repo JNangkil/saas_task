@@ -6,6 +6,7 @@ import { catchError, takeUntil } from 'rxjs/operators';
 import { Task, TaskComment, TaskUpdate, User, Label } from '../../models';
 import { TaskService } from '../../services/task.service';
 import { WorkspaceContextService } from '../../services/workspace-context.service';
+import { BoardStateService } from '../../services/board-state.service';
 
 /**
  * TaskDetailsPanelComponent - Full task viewing and editing panel
@@ -80,7 +81,8 @@ export class TaskDetailsPanelComponent implements OnInit, OnDestroy {
 
     constructor(
         private taskService: TaskService,
-        private workspaceContextService: WorkspaceContextService
+        private workspaceContextService: WorkspaceContextService,
+        private boardStateService: BoardStateService
     ) { }
 
     /**
@@ -89,6 +91,7 @@ export class TaskDetailsPanelComponent implements OnInit, OnDestroy {
     ngOnInit(): void {
         this.initializeEditedTask();
         this.generateActivityLog();
+        this.subscribeToRealtimeEvents();
     }
 
     /**
@@ -241,41 +244,37 @@ export class TaskDetailsPanelComponent implements OnInit, OnDestroy {
         this.loading = true;
         this.error = null;
 
-        // TODO: Implement comment creation via TaskService
-        // For now, just simulate adding a comment
-        setTimeout(() => {
-            const comment: TaskComment = {
-                id: Date.now(),
-                task_id: this.task.id,
-                user_id: 1, // TODO: Get current user ID
-                content: this.newComment,
-                created_at: new Date().toISOString(),
-                updated_at: new Date().toISOString()
-            };
-
-            if (!this.task.comments) {
-                this.task.comments = [];
+        this.workspaceContextService.context$.pipe(
+            takeUntil(this.destroy$)
+        ).subscribe(context => {
+            if (!context.currentTenant || !context.currentWorkspace) {
+                this.error = 'No tenant or workspace context';
+                this.loading = false;
+                return;
             }
-            this.task.comments.unshift(comment);
 
-            this.newComment = '';
-            this.loading = false;
-
-            // Add to activity log
-            this.activityLog.unshift({
-                id: Date.now(),
-                type: 'comment',
-                message: `Comment added`,
-                timestamp: comment.created_at,
-                user: {
-                    id: 1,
-                    name: 'Current User',
-                    email: 'user@example.com',
-                    created_at: '',
-                    updated_at: ''
-                } as User
+            this.taskService.addComment(
+                parseInt(context.currentTenant.id, 10),
+                parseInt(context.currentWorkspace.id, 10),
+                this.task.id,
+                this.newComment
+            ).pipe(
+                takeUntil(this.destroy$),
+                catchError(error => {
+                    this.error = error.message || 'Failed to add comment';
+                    this.loading = false;
+                    return of(null);
+                })
+            ).subscribe(comment => {
+                this.loading = false;
+                if (comment) {
+                    // Update local state is handled by real-time event, but we can do it optimistically here too
+                    // or just wait for the event.
+                    // For better UX, let's clear input immediately.
+                    this.newComment = '';
+                }
             });
-        }, 500);
+        });
     }
 
     /**
@@ -418,6 +417,100 @@ export class TaskDetailsPanelComponent implements OnInit, OnDestroy {
      */
     getHiddenLabelsCount(): number {
         return Math.max(0, (this.task.labels?.length || 0) - 5);
+    }
+    private subscribeToRealtimeEvents(): void {
+        // Comment Added
+        this.boardStateService.commentAdded$
+            .pipe(takeUntil(this.destroy$))
+            .subscribe(comment => {
+                if (comment.task_id === this.task.id) {
+                    if (!this.task.comments) {
+                        this.task.comments = [];
+                    }
+                    // Check if comment already exists (optimistic update prevention)
+                    if (!this.task.comments.find(c => c.id === comment.id)) {
+                        this.task.comments.unshift(comment);
+
+                        // Add to activity log
+                        this.activityLog.unshift({
+                            id: comment.id,
+                            type: 'comment',
+                            message: 'Comment added',
+                            timestamp: comment.created_at,
+                            user: comment.user
+                        });
+
+                        // Re-sort activity log
+                        this.activityLog.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
+                    }
+                }
+            });
+
+        // Comment Updated
+        this.boardStateService.commentUpdated$
+            .pipe(takeUntil(this.destroy$))
+            .subscribe(updatedComment => {
+                if (updatedComment.task_id === this.task.id) {
+                    if (this.task.comments) {
+                        const index = this.task.comments.findIndex(c => c.id === updatedComment.id);
+                        if (index !== -1) {
+                            this.task.comments[index] = updatedComment;
+                        }
+                    }
+                }
+            });
+
+        // Comment Deleted
+        this.boardStateService.commentDeleted$
+            .pipe(takeUntil(this.destroy$))
+            .subscribe(({ commentId, taskId }) => {
+                if (taskId === this.task.id) {
+                    if (this.task.comments) {
+                        this.task.comments = this.task.comments.filter(c => c.id !== commentId);
+
+                        // Also remove from activity log
+                        this.activityLog = this.activityLog.filter(item => item.id !== commentId || item.type !== 'comment');
+                    }
+                }
+            });
+
+        // Polled Updates (Fallback)
+        this.boardStateService.polledUpdates$
+            .pipe(takeUntil(this.destroy$))
+            .subscribe(updates => {
+                if (updates.comments && updates.comments.length > 0) {
+                    let activityLogUpdated = false;
+                    updates.comments.forEach(comment => {
+                        if (comment.task_id === this.task.id) {
+                            if (!this.task.comments) {
+                                this.task.comments = [];
+                            }
+                            const index = this.task.comments.findIndex(c => c.id === comment.id);
+                            if (index !== -1) {
+                                // Update existing
+                                this.task.comments[index] = comment;
+                            } else {
+                                // Add new
+                                this.task.comments.unshift(comment);
+
+                                // Add to activity log
+                                this.activityLog.unshift({
+                                    id: comment.id,
+                                    type: 'comment',
+                                    message: 'Comment added',
+                                    timestamp: comment.created_at,
+                                    user: comment.user
+                                });
+                                activityLogUpdated = true;
+                            }
+                        }
+                    });
+
+                    if (activityLogUpdated) {
+                        this.activityLog.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
+                    }
+                }
+            });
     }
 }
 
