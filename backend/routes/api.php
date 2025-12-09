@@ -12,6 +12,7 @@ use App\Http\Controllers\TaskController;
 use App\Http\Controllers\TaskFieldValueController;
 use App\Http\Controllers\TaskCommentController;
 use App\Http\Controllers\TenantController;
+use App\Http\Controllers\BoardViewPreferenceController;
 use App\Http\Controllers\UserBoardPreferenceController;
 use App\Http\Controllers\WebhookController;
 use App\Http\Controllers\WorkspaceController;
@@ -182,6 +183,12 @@ Route::middleware(['auth:sanctum'])->group(function () {
             Route::get('/visible-columns', [UserBoardPreferenceController::class, 'getVisibleColumns'])->name('boards.preferences.visible-columns');
             Route::get('/hidden-columns', [UserBoardPreferenceController::class, 'getHiddenColumns'])->name('boards.preferences.hidden-columns');
             Route::put('/reset-column', [UserBoardPreferenceController::class, 'resetColumn'])->name('boards.preferences.reset-column');
+        });
+
+        // Board View Preference routes
+        Route::prefix('tenants/{tenant}/workspaces/{workspace}/boards/{board}/view-preferences')->group(function () {
+            Route::get('/', [BoardViewPreferenceController::class, 'show'])->name('boards.view-preferences.show');
+            Route::put('/', [BoardViewPreferenceController::class, 'update'])->name('boards.view-preferences.update');
         });
 
         // Board Template routes (Workspace scoped creation)

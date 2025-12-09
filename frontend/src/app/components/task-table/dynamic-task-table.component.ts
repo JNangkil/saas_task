@@ -116,6 +116,8 @@ export class DynamicTaskTableComponent implements OnInit, OnDestroy {
     // Bulk action toolbar state
     showBulkActionToolbar = false;
 
+    protected Math = Math;
+
     constructor(
         private taskService: TaskService,
         private boardColumnService: BoardColumnService,
@@ -510,6 +512,12 @@ export class DynamicTaskTableComponent implements OnInit, OnDestroy {
         this.currentPage$.next(page);
     }
 
+    onPageClick(page: number | string): void {
+        if (typeof page === 'number') {
+            this.onPageChange(page);
+        }
+    }
+
     /**
      * Handle task selection
      */
@@ -695,12 +703,12 @@ export class DynamicTaskTableComponent implements OnInit, OnDestroy {
         this.showColumnMenu = !this.showColumnMenu;
     }
 
-    onColumnVisibilityToggle(columnKey: string): void {
+    onColumnVisibilityToggle(columnKey: number): void {
         // This would need to be implemented based on column visibility management
         console.log('Toggle column visibility:', columnKey);
     }
 
-    getColumnVisibility(columnKey: string): boolean {
+    getColumnVisibility(columnKey: number): boolean {
         // This would need to be implemented based on column visibility management
         return true;
     }

@@ -1,0 +1,9 @@
+<div class="flex items-center space-x-1 bg-gray-100 p-1 rounded-lg">
+    <button *ngFor="let option of options" (click)="switchView(option.value)"
+        [class.bg-white]="currentView === option.value" [class.shadow-sm]="currentView === option.value"
+        [class.text-indigo-600]="currentView === option.value" [class.text-gray-500]="currentView !== option.value"
+        class="flex items-center px-3 py-1.5 text-sm font-medium rounded-md transition-all duration-200 focus:outline-none">
+        <!-- Simple icon placeholder or integration with existing icon system -->
+        <span class="mr-2">{{ option.label }}</span>
+    </button>
+</div>

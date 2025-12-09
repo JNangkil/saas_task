@@ -1,0 +1,4 @@
+<div class="flex h-full overflow-x-auto p-4 space-x-4 bg-gray-50 items-start" cdkDropListGroup>
+    <app-kanban-column *ngFor="let col of columns$ | async" [column]="col"
+        (taskDropped)="drop($event)"></app-kanban-column>
+</div>

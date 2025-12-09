@@ -215,7 +215,7 @@
 
 <!-- Pagination -->
 <div class="pagination-container"
-    *ngIf="tableConfig.showPagination && !(loading$ | async) && !(error$ | async) && (tasks$ | async as tasks) && tasks.length > 0">
+    *ngIf="tableConfig.showPagination && !(loading$ | async) && !(error$ | async) && ((tasks$ | async)?.length ?? 0) > 0">
     <div class="pagination-info" *ngIf="pagination$ | async as pagination">
         Showing {{ (((pagination.currentPage || 1) - 1) * tableConfig.pageSize + 1) }}-{{
         Math.min((pagination.currentPage || 1) * tableConfig.pageSize, pagination.total || 0)
@@ -235,7 +235,7 @@
             <button class="pagination-btn page-number"
                 *ngFor="let page of getPageNumbers(pagination.currentPage, pagination.totalPages)"
                 [class.active]="page === pagination.currentPage" [disabled]="page === '...'"
-                (click)="page !== '...' ? onPageChange(page as number) : null">
+                (click)="onPageClick(page)">
                 {{ page }}
             </button>
         </div>

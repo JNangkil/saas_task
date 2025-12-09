@@ -1,0 +1,37 @@
+<div class="flex flex-col h-full bg-white">
+    <div class="flex items-center justify-between p-4 border-b">
+        <div class="flex items-center space-x-4">
+            <h2 class="text-lg font-semibold">{{ viewDate | date:'MMMM yyyy' }}</h2>
+            <div class="flex space-x-1">
+                <button (click)="previousMonth()" class="p-1 rounded hover:bg-gray-100">
+                    &lt; <!-- Icon placeholder -->
+                </button>
+                <button (click)="nextMonth()" class="p-1 rounded hover:bg-gray-100">
+                    &gt; <!-- Icon placeholder -->
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div class="grid grid-cols-7 gap-px bg-gray-200 flex-1 overflow-y-auto">
+        <!-- Check day headers -->
+        <div *ngFor="let day of ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']"
+            class="bg-gray-50 p-2 text-center text-xs font-medium text-gray-500">
+            {{ day }}
+        </div>
+
+        <!-- Calendar Grid -->
+        <div *ngFor="let day of calendarDays" class="bg-white min-h-[120px] p-2 relative">
+            <div [class.text-blue-600]="day.isToday" [class.font-bold]="day.isToday" class="text-sm mb-1">
+                {{ day.date | date:'d' }}
+            </div>
+
+            <div class="space-y-1">
+                <div *ngFor="let task of day.tasks"
+                    class="text-xs p-1 bg-blue-50 text-blue-700 rounded border border-blue-100 truncate cursor-pointer hover:bg-blue-100">
+                    {{ task.title }}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

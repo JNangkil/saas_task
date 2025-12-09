@@ -1,3 +1,31 @@
-<div class="h-full w-full">
-    <app-dynamic-task-table *ngIf="boardId" [boardId]="boardId"></app-dynamic-task-table>
+<div class="h-full w-full flex flex-col">
+    <!-- Board Header / View Switcher -->
+    <div class="bg-white border-b px-4 py-2 flex items-center justify-between shrink-0">
+        <h1 class="text-xl font-semibold text-gray-800">Board</h1> <!-- TODO: Add Board Title Here -->
+        <app-view-switcher [currentView]="currentView" (viewChange)="onViewChange($event)">
+        </app-view-switcher>
+    </div>
+
+    <!-- Main Content Area -->
+    <div class="flex-1 overflow-hidden relative">
+        <ng-container [ngSwitch]="currentView">
+
+            <!-- Table View -->
+            <app-dynamic-task-table *ngSwitchCase="'table'" [boardId]="boardId">
+            </app-dynamic-task-table>
+
+            <!-- Kanban View -->
+            <div *ngSwitchCase="'kanban'" class="h-full w-full overflow-hidden">
+                <app-kanban-view [boardId]="boardId">
+                </app-kanban-view>
+            </div>
+
+            <!-- Calendar View -->
+            <div *ngSwitchCase="'calendar'" class="h-full w-full overflow-hidden">
+                <app-calendar-view [boardId]="boardId">
+                </app-calendar-view>
+            </div>
+
+        </ng-container>
+    </div>
 </div>

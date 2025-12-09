@@ -398,6 +398,22 @@ class TaskController extends Controller
     {
         $params = $request->getAllParams();
 
+        // View-specific logic
+        if (!empty($params['view'])) {
+            if ($params['view'] === 'calendar' && !empty($params['start']) && !empty($params['end'])) {
+                // Default to due_date for calendar, can be customized later or via explicit params
+                $dateField = $params['date_field'] ?? 'due_date';
+                
+                if ($dateField === 'due_date') {
+                     $query->whereDate('due_date', '>=', $params['start'])
+                           ->whereDate('due_date', '<=', $params['end']);
+                } elseif ($dateField === 'start_date') {
+                     $query->whereDate('start_date', '>=', $params['start'])
+                           ->whereDate('start_date', '<=', $params['end']);
+                }
+            }
+        }
+
         // Apply search
         if (!empty($params['search'])) {
             $query->where(function ($query) use ($params) {
