@@ -14,7 +14,7 @@
 - [x] 2.2 Create Label model with workspace scope
 - [x] 2.3 Create TaskCustomValue model for flexible fields
 - [x] 2.4 Add global scopes for tenant/workspace isolation
-- [ ] 2.5 Create model factories for testing
+- [x] 2.5 Create model factories for testing
 
 ## 3. Task Validation & Form Requests
 
@@ -105,9 +105,9 @@
 
 ## 13. Testing & Validation
 
-- [ ] 13.1 PHPUnit tests for Task CRUD operations
-- [ ] 13.2 PHPUnit tests for filtering and sorting
-- [ ] 13.3 PHPUnit tests for authorization (workspace scope)
+- [x] 13.1 PHPUnit tests for Task CRUD operations
+- [x] 13.2 PHPUnit tests for filtering and sorting
+- [x] 13.3 PHPUnit tests for authorization (workspace scope)
 - [x] 13.4 Angular unit tests for TaskService
 - [x] 13.5 Angular unit tests for TaskTableComponent
 - [ ] 13.6 E2E test: create → edit inline → archive → filter

@@ -6,7 +6,7 @@
 - [x] 1.2 Create `task_field_values` table (id, task_id, column_id, value JSON, created_at, updated_at)
 - [x] 1.3 Create `user_board_preferences` table for per-user column visibility/order
 - [x] 1.4 Add indexes for column lookup and filtering performance
-- [ ] 1.5 Create default columns seeder (Title, Status, Priority, Assignee, Due Date)
+- [x] 1.5 Create default columns seeder (Title, Status, Priority, Assignee, Due Date)
 
 ## 2. Laravel Models & Relationships
 
@@ -14,7 +14,7 @@
 - [x] 2.2 Create TaskFieldValue model with column relationship
 - [x] 2.3 Update Board model with columns relationship
 - [x] 2.4 Update Task model with fieldValues relationship
-- [ ] 2.5 Add model factories for testing
+- [x] 2.5 Add model factories for testing
 
 ## 3. Column Type System
 
@@ -119,9 +119,9 @@
 
 ## 14. Testing & Validation
 
-- [ ] 14.1 PHPUnit tests for BoardColumn CRUD
-- [ ] 14.2 PHPUnit tests for bulk operations
-- [ ] 14.3 PHPUnit tests for dynamic column filtering
-- [ ] 14.4 Angular unit tests for cell renderers
-- [ ] 14.5 Angular unit tests for drag-and-drop
-- [ ] 14.6 E2E test: add column → edit task → filter → bulk update
+- [x] 14.1 PHPUnit tests for BoardColumn CRUD
+- [x] 14.2 PHPUnit tests for bulk operations
+- [x] 14.3 PHPUnit tests for dynamic column filtering
+- [x] 14.4 Angular unit tests for cell renderers
+- [x] 14.5 Angular unit tests for drag-and-drop
+- [x] 14.6 E2E test: add column → edit task → filter → bulk update
