@@ -1,0 +1,163 @@
+.profile-page {
+    padding: 2rem 0;
+    min-height: 100vh;
+    background-color: #f8f9fa;
+
+    .avatar-section {
+        padding-bottom: 1.5rem;
+        border-bottom: 1px solid #dee2e6;
+
+        .avatar-container {
+            position: relative;
+            flex-shrink: 0;
+
+            .avatar-preview {
+                width: 100px;
+                height: 100px;
+                border-radius: 50%;
+                object-fit: cover;
+                border: 3px solid #dee2e6;
+                background-color: #f8f9fa;
+            }
+
+            .avatar-overlay {
+                position: absolute;
+                top: 0;
+                right: 0;
+                background-color: rgba(0, 0, 0, 0.6);
+                border-radius: 50%;
+                width: 30px;
+                height: 30px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                cursor: pointer;
+                transition: background-color 0.2s;
+
+                &:hover {
+                    background-color: rgba(0, 0, 0, 0.8);
+                }
+
+                .btn {
+                    padding: 0;
+                    border: none;
+                    line-height: 1;
+                }
+            }
+        }
+
+        .avatar-actions {
+            flex-grow: 1;
+
+            input[type="file"] {
+                display: inline-block;
+                width: auto;
+                max-width: 300px;
+            }
+        }
+    }
+
+    .account-info {
+        margin-top: 2rem;
+        padding-top: 1rem;
+
+        h5 {
+            color: #495057;
+            font-weight: 600;
+            margin-bottom: 1rem;
+        }
+
+        .row {
+            margin-bottom: 0.5rem;
+
+            .text-muted {
+                font-weight: 500;
+            }
+
+            .badge {
+                font-size: 0.75em;
+            }
+        }
+    }
+
+    .form-label {
+        font-weight: 500;
+        color: #495057;
+    }
+
+    .form-control:focus,
+    .form-select:focus {
+        border-color: #86b7fe;
+        box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
+    }
+
+    .btn {
+        min-width: 100px;
+
+        &:disabled {
+            cursor: not-allowed;
+        }
+    }
+
+    .spinner-border {
+        width: 1rem;
+        height: 1rem;
+        border-width: 0.15em;
+    }
+
+    .invalid-feedback {
+        display: block;
+        font-size: 0.875rem;
+        margin-top: 0.25rem;
+    }
+
+    .form-text {
+        font-size: 0.875rem;
+        color: #6c757d;
+    }
+}
+
+// Responsive adjustments
+@media (max-width: 768px) {
+    .profile-page {
+        padding: 1rem 0;
+
+        .container {
+            padding: 0 1rem;
+        }
+
+        .avatar-section {
+            .d-flex {
+                flex-direction: column;
+                align-items: center !important;
+                text-align: center;
+
+                .avatar-container {
+                    margin-right: 0 !important;
+                    margin-bottom: 1rem;
+                }
+
+                .avatar-actions {
+                    width: 100%;
+
+                    input[type="file"] {
+                        width: 100%;
+                        max-width: none;
+                    }
+
+                    .d-flex {
+                        justify-content: center;
+                    }
+                }
+            }
+        }
+
+        .account-info {
+            .row {
+                .col-sm-4 {
+                    margin-bottom: 0.25rem;
+                }
+            }
+        }
+    }
+}

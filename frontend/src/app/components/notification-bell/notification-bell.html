@@ -1,0 +1,114 @@
+<div class="relative">
+  <!-- Bell Icon -->
+  <button
+    (click)="toggleDropdown()"
+    class="relative p-2 text-gray-600 hover:text-gray-900 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 rounded-lg"
+  >
+    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path
+        stroke-linecap="round"
+        stroke-linejoin="round"
+        stroke-width="2"
+        d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"
+      ></path>
+    </svg>
+
+    <!-- Unread Count Badge -->
+    <span
+      *ngIf="unreadCount > 0"
+      class="absolute top-0 right-0 inline-flex items-center justify-center px-2 py-1 text-xs font-bold leading-none text-white transform translate-x-1/2 -translate-y-1/2 bg-red-500 rounded-full"
+    >
+      {{ unreadCount > 99 ? '99+' : unreadCount }}
+    </span>
+  </button>
+
+  <!-- Dropdown -->
+  <div
+    *ngIf="isOpen"
+    class="absolute right-0 mt-2 w-80 bg-white rounded-lg shadow-lg ring-1 ring-black ring-opacity-5 z-50"
+  >
+    <!-- Header -->
+    <div class="px-4 py-3 border-b border-gray-200">
+      <div class="flex items-center justify-between">
+        <h3 class="text-sm font-medium text-gray-900">Notifications</h3>
+        <button
+          *ngIf="unreadCount > 0"
+          (click)="markAllAsRead()"
+          class="text-sm text-indigo-600 hover:text-indigo-800 font-medium"
+        >
+          Mark all read
+        </button>
+      </div>
+    </div>
+
+    <!-- Notifications List -->
+    <div class="max-h-96 overflow-y-auto">
+      <div *ngIf="isLoading" class="p-4 text-center">
+        <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600 mx-auto"></div>
+      </div>
+
+      <div *ngIf="!isLoading && recentNotifications.length === 0" class="p-4 text-center text-gray-500">
+        No notifications yet
+      </div>
+
+      <div
+        *ngFor="let notification of recentNotifications"
+        class="relative px-4 py-3 hover:bg-gray-50 cursor-pointer transition-colors"
+        [class.bg-indigo-50]="!notification.read_at"
+        (click)="markAsRead(notification)"
+      >
+        <!-- Notification Icon -->
+        <div
+          class="absolute left-4 top-3.5 w-2 h-2 rounded-full"
+          [class.bg-indigo-600]="getNotificationColor(notification) === 'blue'"
+          [class.bg-purple-600]="getNotificationColor(notification) === 'purple'"
+          [class.bg-yellow-500]="getNotificationColor(notification) === 'yellow'"
+          [class.bg-red-500]="getNotificationColor(notification) === 'red'"
+          [class.bg-green-500]="getNotificationColor(notification) === 'green'"
+          [class.bg-gray-500]="getNotificationColor(notification) === 'gray'"
+          *ngIf="!notification.read_at"
+        ></div>
+
+        <!-- Notification Content -->
+        <div [class.pl-8]="!notification.read_at" class="pr-8">
+          <p class="text-sm font-medium text-gray-900">
+            {{ notification.data.title }}
+          </p>
+          <p class="text-sm text-gray-600 mt-0.5">
+            {{ notification.data.body }}
+          </p>
+          <p class="text-xs text-gray-500 mt-1">
+            {{ formatTime(notification.created_at) }}
+          </p>
+        </div>
+
+        <!-- Actions -->
+        <div class="absolute right-4 top-3.5">
+          <button
+            (click)="$event.stopPropagation(); deleteNotification(notification.id)"
+            class="text-gray-400 hover:text-gray-600"
+          >
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M6 18L18 6M6 6l12 12"
+              ></path>
+            </svg>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Footer -->
+    <div class="px-4 py-3 border-t border-gray-200">
+      <button
+        (click)="viewAll()"
+        class="block w-full text-center text-sm font-medium text-indigo-600 hover:text-indigo-800"
+      >
+        View all notifications
+      </button>
+    </div>
+  </div>
+</div>

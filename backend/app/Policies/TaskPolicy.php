@@ -157,8 +157,52 @@ class TaskPolicy
     public function manageLabels(User $user, Task $task): bool
     {
         // User can manage labels on tasks they created, are assigned to, or can manage the workspace
-        return $task->creator_id === $user->id || 
+        return $task->creator_id === $user->id ||
                $task->assignee_id === $user->id ||
                $task->workspace->canUserManage($user);
+    }
+
+    /**
+     * Determine whether the user can assign the task.
+     */
+    public function assign(User $user, Task $task): bool
+    {
+        // User can assign tasks they created or can manage the workspace
+        return $task->creator_id === $user->id ||
+               $task->workspace->canUserManage($user);
+    }
+
+    /**
+     * Determine whether the user can manage watchers on the task.
+     */
+    public function manageWatchers(User $user, Task $task): bool
+    {
+        // User can manage watchers on tasks they created, are assigned to, or can manage the workspace
+        return $task->creator_id === $user->id ||
+               $task->assignee_id === $user->id ||
+               $task->workspace->canUserManage($user);
+    }
+
+    /**
+     * Determine whether the user can add themselves as a watcher.
+     */
+    public function addSelfAsWatcher(User $user, Task $task): bool
+    {
+        // Users in the workspace can add themselves as watchers
+        return $task->workspace->users()->where('users.id', $user->id)->exists();
+    }
+
+    /**
+     * Determine whether the user can remove a watcher from the task.
+     */
+    public function removeWatcher(User $user, Task $task, User $watcher): bool
+    {
+        // User can remove themselves as watcher
+        if ($user->id === $watcher->id) {
+            return true;
+        }
+
+        // Or if they can manage the task
+        return $this->manageWatchers($user, $task);
     }
 }

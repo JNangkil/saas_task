@@ -1,0 +1,206 @@
+.task-activity {
+    .activity-header {
+        margin-bottom: 1.5rem;
+        padding-bottom: 1rem;
+        border-bottom: 1px solid #dee2e6;
+
+        .activity-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: #212529;
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+        }
+
+        .activity-filters {
+            .form-select,
+            .form-control {
+                min-width: 120px;
+            }
+        }
+    }
+
+    .activity-list {
+        min-height: 200px;
+    }
+
+    .empty-state {
+        text-align: center;
+        padding: 3rem 1rem;
+    }
+
+    .activity-timeline {
+        position: relative;
+
+        .activity-item {
+            display: flex;
+            margin-bottom: 2rem;
+            position: relative;
+
+            &:last-child {
+                margin-bottom: 0;
+            }
+
+            .activity-indicator {
+                position: relative;
+                margin-right: 1rem;
+
+                .activity-icon-wrapper {
+                    position: relative;
+                    z-index: 2;
+                    width: 40px;
+                    height: 40px;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    border-radius: 50%;
+                    background-color: #fff;
+                    border: 2px solid #e9ecef;
+
+                    .activity-icon {
+                        font-size: 1rem;
+                        color: #fff;
+                        padding: 0.5rem;
+                        border-radius: 50%;
+
+                        &.bg-success {
+                            background-color: #198754 !important;
+                        }
+
+                        &.bg-primary {
+                            background-color: #0d6efd !important;
+                        }
+
+                        &.bg-danger {
+                            background-color: #dc3545 !important;
+                        }
+
+                        &.bg-warning {
+                            background-color: #ffc107 !important;
+                            color: #000 !important;
+                        }
+
+                        &.bg-info {
+                            background-color: #0dcaf0 !important;
+                        }
+
+                        &.bg-secondary {
+                            background-color: #6c757d !important;
+                        }
+                    }
+                }
+
+                .activity-line {
+                    position: absolute;
+                    top: 40px;
+                    left: 50%;
+                    width: 2px;
+                    height: calc(100% + 1rem);
+                    background-color: #e9ecef;
+                    transform: translateX(-50%);
+                    z-index: 1;
+                }
+            }
+
+            .activity-content {
+                flex: 1;
+                padding-top: 0.25rem;
+
+                .activity-avatar {
+                    border-radius: 50%;
+                    object-fit: cover;
+                    border: 2px solid #fff;
+                    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+                }
+
+                .activity-description {
+                    line-height: 1.5;
+                    margin-bottom: 0.25rem;
+
+                    strong {
+                        color: #212529;
+                    }
+                }
+
+                .activity-timestamp {
+                    font-size: 0.875rem;
+                    margin-bottom: 0.5rem;
+                }
+
+                .activity-changes {
+                    background-color: #f8f9fa;
+                    border-radius: 0.375rem;
+                    padding: 0.75rem;
+                    margin-top: 0.5rem;
+
+                    .change-item {
+                        font-size: 0.875rem;
+                        color: #495057;
+                        margin-bottom: 0.25rem;
+
+                        &:last-child {
+                            margin-bottom: 0;
+                        }
+                    }
+                }
+
+                .activity-metadata {
+                    background-color: #f8f9fa;
+                    border-radius: 0.25rem;
+                    padding: 0.5rem 0.75rem;
+                    font-size: 0.75rem;
+                }
+            }
+        }
+    }
+
+    // Responsive adjustments
+    @media (max-width: 768px) {
+        .activity-header {
+            .activity-filters {
+                .row {
+                    flex-direction: column;
+
+                    .col-auto {
+                        width: 100%;
+
+                        .form-select,
+                        .form-control {
+                            width: 100%;
+                        }
+                    }
+                }
+            }
+        }
+
+        .activity-timeline {
+            .activity-item {
+                .activity-indicator {
+                    margin-right: 0.75rem;
+
+                    .activity-icon-wrapper {
+                        width: 32px;
+                        height: 32px;
+
+                        .activity-icon {
+                            font-size: 0.875rem;
+                            padding: 0.375rem;
+                        }
+                    }
+
+                    .activity-line {
+                        top: 32px;
+                    }
+                }
+
+                .activity-content {
+                    .activity-avatar {
+                        width: 28px;
+                        height: 28px;
+                    }
+                }
+            }
+        }
+    }
+}

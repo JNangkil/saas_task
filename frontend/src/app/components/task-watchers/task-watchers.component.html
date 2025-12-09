@@ -1,0 +1,120 @@
+<div class="task-watchers" (click)="onDocumentClick($event)">
+    <!-- Compact View -->
+    <div *ngIf="compact" class="compact-view">
+        <button class="btn btn-outline-secondary btn-sm"
+                [disabled]="disabled"
+                (click)="toggleDropdown()">
+            <i class="bi bi-eye me-1"></i>
+            {{ watchersDisplayText }}
+            <span class="badge bg-secondary ms-1" *ngIf="watchers.length > 0">{{ watchers.length }}</span>
+        </button>
+    </div>
+
+    <!-- Full View -->
+    <div *ngIf="!compact" class="full-view">
+        <!-- Header -->
+        <div class="watchers-header">
+            <h6 class="mb-0">
+                <i class="bi bi-eye me-2"></i>
+                Watchers
+                <span class="badge bg-secondary ms-2" *ngIf="watchers.length > 0">{{ watchers.length }}</span>
+            </h6>
+            <button class="btn btn-sm btn-outline-primary"
+                    [disabled]="disabled"
+                    (click)="toggleDropdown()">
+                <i class="bi bi-plus-lg"></i>
+                Add
+            </button>
+        </div>
+
+        <!-- Current Watchers -->
+        <div class="watchers-list" *ngIf="watchers.length > 0">
+            <div *ngFor="let watcher of watchers; trackBy: trackByUserId" class="watcher-item">
+                <img [src]="getAvatarUrl(watcher)"
+                     [alt]="watcher.name"
+                     class="avatar"
+                     width="32"
+                     height="32">
+                <div class="watcher-info">
+                    <div class="watcher-name">
+                        {{ watcher.name }}
+                        <span class="badge bg-primary ms-2" *ngIf="watcher.isCurrent">You</span>
+                    </div>
+                    <div class="watcher-email text-muted">{{ watcher.email }}</div>
+                </div>
+                <button type="button"
+                        class="btn btn-sm btn-outline-danger"
+                        [disabled]="disabled"
+                        (click)="removeWatcher(watcher)"
+                        *ngIf="!disabled">
+                    <i class="bi bi-x"></i>
+                </button>
+            </div>
+        </div>
+
+        <!-- Empty State -->
+        <div *ngIf="watchers.length === 0" class="empty-state">
+            <p class="text-muted mb-0">No watchers yet. Add watchers to stay updated on task changes.</p>
+        </div>
+    </div>
+
+    <!-- Dropdown Menu -->
+    <div class="dropdown-menu" [class.show]="isOpen" *ngIf="isOpen">
+        <!-- Search Input -->
+        <div class="dropdown-search">
+            <div class="input-group">
+                <span class="input-group-text">
+                    <i class="bi bi-search"></i>
+                </span>
+                <input type="text"
+                       id="watcher-search-input"
+                       class="form-control"
+                       placeholder="Search users..."
+                       [(ngModel)]="searchQuery"
+                       (input)="onSearchChange()">
+            </div>
+        </div>
+
+        <!-- Loading State -->
+        <div *ngIf="isLoading" class="dropdown-item text-center">
+            <div class="spinner-border spinner-border-sm me-2"></div>
+            Loading...
+        </div>
+
+        <!-- No Available Users -->
+        <div *ngIf="!isLoading && filteredAvailableUsers.length === 0 && searchQuery"
+             class="dropdown-item text-muted text-center">
+            No users found matching "{{ searchQuery }}"
+        </div>
+
+        <div *ngIf="!isLoading && filteredAvailableUsers.length === 0 && !searchQuery"
+             class="dropdown-item text-muted text-center">
+            All workspace members are already watching this task
+        </div>
+
+        <!-- Available Users List -->
+        <ng-container *ngFor="let user of filteredAvailableUsers; trackBy: trackByUserId">
+            <div class="dropdown-item user-option"
+                 (click)="addWatcher(user)">
+                <div class="d-flex align-items-center">
+                    <img [src]="getAvatarUrl(user)"
+                         [alt]="user.name"
+                         class="avatar me-2"
+                         width="32"
+                         height="32">
+                    <div class="user-info flex-grow-1">
+                        <div class="user-name">
+                            {{ user.name }}
+                            <span class="badge bg-primary ms-2" *ngIf="user.isCurrent">You</span>
+                        </div>
+                        <div class="user-email text-muted">{{ user.email }}</div>
+                        <div *ngIf="user.job_title" class="user-role text-muted">
+                            {{ user.job_title }}
+                        </div>
+                    </div>
+                    <i class="bi bi-plus-circle plus-icon text-primary"></i>
+                </div>
+            </div>
+        </ng-container>
+    </div>
+</div>

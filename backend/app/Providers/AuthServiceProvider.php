@@ -11,6 +11,7 @@ use App\Models\Workspace;
 use App\Policies\InvitationPolicy;
 use App\Policies\TaskPolicy;
 use App\Policies\TenantPolicy;
+use App\Policies\UserPolicy;
 use App\Policies\WorkspacePolicy;
 use App\Services\JWTService;
 use Illuminate\Foundation\Support\Providers\AuthServiceProvider as ServiceProvider;
@@ -27,6 +28,7 @@ class AuthServiceProvider extends ServiceProvider
         Invitation::class => InvitationPolicy::class,
         Task::class => TaskPolicy::class,
         Tenant::class => TenantPolicy::class,
+        User::class => UserPolicy::class,
         Workspace::class => WorkspacePolicy::class,
     ];
 
@@ -238,6 +240,47 @@ class AuthServiceProvider extends ServiceProvider
         // Gate to check if user can manage another user in workspace
         Gate::define('workspace.manage-user', function (User $user, Workspace $workspace, User $targetUser) {
             return WorkspacePermissionHelper::canManageUser($user, $workspace, $targetUser);
+        });
+
+        // User management gates
+        Gate::define('manage-users', function (User $user, ?Tenant $tenant = null) {
+            if (!$tenant) {
+                $tenant = tenant();
+            }
+            return $user->can('manageUsers', $tenant ?? new Tenant());
+        });
+
+        Gate::define('update-tenant-role', function (User $user, User $targetUser, Tenant $tenant) {
+            return $user->can('updateTenantRole', [$targetUser, $tenant]);
+        });
+
+        Gate::define('remove-from-tenant', function (User $user, User $targetUser, Tenant $tenant) {
+            return $user->can('removeFromTenant', [$targetUser, $tenant]);
+        });
+
+        Gate::define('upload-avatar', function (User $user, User $targetUser) {
+            return $user->can('uploadAvatar', $targetUser);
+        });
+
+        Gate::define('remove-avatar', function (User $user, User $targetUser) {
+            return $user->can('removeAvatar', $targetUser);
+        });
+
+        // Task assignment and watcher gates
+        Gate::define('assign-task', function (User $user, Task $task) {
+            return $user->can('assign', $task);
+        });
+
+        Gate::define('manage-task-watchers', function (User $user, Task $task) {
+            return $user->can('manageWatchers', $task);
+        });
+
+        Gate::define('add-self-as-watcher', function (User $user, Task $task) {
+            return $user->can('addSelfAsWatcher', $task);
+        });
+
+        Gate::define('remove-watcher', function (User $user, Task $task, User $watcher) {
+            return $user->can('removeWatcher', [$task, $watcher]);
         });
     }
 }

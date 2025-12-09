@@ -132,6 +132,16 @@ class Task extends Model
     {
         return $this->hasMany(TaskFieldValue::class);
     }
+
+    /**
+     * Get the watchers for the task.
+     */
+    public function watchers(): BelongsToMany
+    {
+        return $this->belongsToMany(User::class, 'task_watchers')
+            ->using(TaskWatcher::class)
+            ->withTimestamps();
+    }
     /**
      * Get field values for the task.
      */

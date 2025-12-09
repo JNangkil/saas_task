@@ -4,11 +4,12 @@ import { RouterModule, ActivatedRoute } from '@angular/router';
 import { BoardService } from '../../services/board.service';
 import { Board } from '../../models/board.model';
 import { WorkspaceService } from '../../services/workspace.service';
+import { NotificationBell } from '../notification-bell/notification-bell';
 
 @Component({
   selector: 'app-sidebar',
   standalone: true,
-  imports: [CommonModule, RouterModule],
+  imports: [CommonModule, RouterModule, NotificationBell],
   templateUrl: './sidebar.html',
   styleUrl: './sidebar.css',
 })

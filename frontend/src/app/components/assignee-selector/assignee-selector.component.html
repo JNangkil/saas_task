@@ -1,0 +1,105 @@
+<div class="assignee-selector-container" (click)="onDocumentClick($event)">
+    <div [class]="selectorClasses" (click)="toggleDropdown()">
+        <!-- Selected Assignee Display -->
+        <div class="assignee-display">
+            <!-- No selection -->
+            <span *ngIf="!selectedUser" class="placeholder">
+                <i class="bi bi-person me-2"></i>
+                {{ placeholder }}
+            </span>
+
+            <!-- Selected user -->
+            <div *ngIf="selectedUser" class="selected-user">
+                <img [src]="getAvatarUrl(selectedUser)"
+                     [alt]="selectedUser.name"
+                     class="avatar"
+                     width="24"
+                     height="24">
+                <span class="user-name">{{ selectedUser.name }}</span>
+                <button type="button"
+                        class="btn-clear"
+                        (click)="clearSelection($event)"
+                        *ngIf="!disabled">
+                    <i class="bi bi-x"></i>
+                </button>
+            </div>
+        </div>
+
+        <!-- Dropdown Arrow -->
+        <i class="bi bi-chevron-down dropdown-arrow" *ngIf="!disabled"></i>
+    </div>
+
+    <!-- Dropdown Menu -->
+    <div class="dropdown-menu" [class.show]="isOpen" *ngIf="isOpen">
+        <!-- Search Input -->
+        <div class="dropdown-search">
+            <div class="input-group">
+                <span class="input-group-text">
+                    <i class="bi bi-search"></i>
+                </span>
+                <input type="text"
+                       id="assignee-search-input"
+                       class="form-control"
+                       placeholder="Search users..."
+                       [(ngModel)]="searchQuery"
+                       (input)="onSearchChange()">
+            </div>
+        </div>
+
+        <!-- Loading State -->
+        <div *ngIf="isLoading" class="dropdown-item text-center">
+            <div class="spinner-border spinner-border-sm me-2"></div>
+            Loading...
+        </div>
+
+        <!-- Unassigned Option -->
+        <div class="dropdown-item unassigned-option"
+             *ngIf="showUnassigned && !isLoading"
+             (click)="selectAssignee(null)">
+            <i class="bi bi-dash-circle me-2"></i>
+            <span>Unassigned</span>
+            <i class="bi bi-check float-end" *ngIf="!selectedUserId"></i>
+        </div>
+
+        <!-- Divider (if showing unassigned) -->
+        <div *ngIf="showUnassigned && !isLoading && filteredAssignees.length > 0"
+             class="dropdown-divider"></div>
+
+        <!-- Users List -->
+        <div *ngIf="!isLoading && filteredAssignees.length === 0 && searchQuery"
+             class="dropdown-item text-muted text-center">
+            No users found matching "{{ searchQuery }}"
+        </div>
+
+        <div *ngIf="!isLoading && filteredAssignees.length === 0 && !searchQuery"
+             class="dropdown-item text-muted text-center">
+            No workspace members available
+        </div>
+
+        <ng-container *ngFor="let user of filteredAssignees; trackBy: trackByUserId">
+            <div class="dropdown-item user-option"
+                 [class.active]="selectedUserId === user.id"
+                 (click)="selectAssignee(user)">
+                <div class="d-flex align-items-center">
+                    <img [src]="getAvatarUrl(user)"
+                         [alt]="user.name"
+                         class="avatar me-2"
+                         width="32"
+                         height="32">
+                    <div class="user-info flex-grow-1">
+                        <div class="user-name">
+                            {{ user.name }}
+                            <span class="badge bg-primary ms-2" *ngIf="user.isCurrent">You</span>
+                        </div>
+                        <div class="user-email text-muted">{{ user.email }}</div>
+                        <div *ngIf="user.job_title" class="user-role text-muted">
+                            {{ user.job_title }}
+                        </div>
+                    </div>
+                    <i class="bi bi-check check-icon"
+                       *ngIf="selectedUserId === user.id"></i>
+                </div>
+            </div>
+        </ng-container>
+    </div>
+</div>

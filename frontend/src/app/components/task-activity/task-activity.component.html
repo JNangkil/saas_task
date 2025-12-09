@@ -1,0 +1,162 @@
+<div class="task-activity">
+    <!-- Header with filters -->
+    <div class="activity-header">
+        <h6 class="activity-title">
+            <i class="bi bi-clock-history me-2"></i>
+            Activity History
+            <span class="badge bg-secondary ms-2" *ngIf="totalActivities > 0">{{ totalActivities }}</span>
+        </h6>
+
+        <!-- Filter controls -->
+        <div class="activity-filters">
+            <div class="row g-2">
+                <!-- User filter -->
+                <div class="col-auto">
+                    <select class="form-select form-select-sm"
+                            [value]="filters.user_id || 0"
+                            (change)="onUserFilterChange($any($event.target).valueAsNumber)">
+                        <option *ngFor="let user of userFilters" [value]="user.value">
+                            {{ user.label }}
+                        </option>
+                    </select>
+                </div>
+
+                <!-- Action filter -->
+                <div class="col-auto">
+                    <select class="form-select form-select-sm"
+                            [value]="filters.action || ''"
+                            (change)="onActionFilterChange($any($event.target).value)">
+                        <option *ngFor="let action of actionFilters" [value]="action.value">
+                            {{ action.label }}
+                        </option>
+                    </select>
+                </div>
+
+                <!-- Date range filter -->
+                <div class="col-auto">
+                    <input type="date"
+                           class="form-control form-control-sm"
+                           placeholder="From"
+                           [(ngModel)]="filters.date_from"
+                           (ngModelChange)="onDateRangeChange()">
+                </div>
+
+                <div class="col-auto">
+                    <input type="date"
+                           class="form-control form-control-sm"
+                           placeholder="To"
+                           [(ngModel)]="filters.date_to"
+                           (ngModelChange)="onDateRangeChange()">
+                </div>
+
+                <!-- Clear filters button -->
+                <div class="col-auto" *ngIf="filters.user_id || filters.action || filters.date_from || filters.date_to">
+                    <button class="btn btn-outline-secondary btn-sm"
+                            (click)="clearFilters()"
+                            title="Clear filters">
+                        <i class="bi bi-x-lg"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Loading state -->
+    <div *ngIf="isLoading && activities.length === 0" class="text-center py-4">
+        <div class="spinner-border spinner-border-sm me-2" role="status"></div>
+        Loading activity...
+    </div>
+
+    <!-- Error state -->
+    <div *ngIf="error" class="alert alert-danger">
+        <i class="bi bi-exclamation-triangle me-2"></i>
+        {{ error }}
+    </div>
+
+    <!-- Activity list -->
+    <div class="activity-list" *ngIf="!isLoading || activities.length > 0">
+        <!-- No activities -->
+        <div *ngIf="activities.length === 0 && !error" class="empty-state">
+            <i class="bi bi-clock-history text-muted" style="font-size: 3rem;"></i>
+            <p class="text-muted mt-3 mb-0">No activity recorded for this task yet.</p>
+        </div>
+
+        <!-- Activity items -->
+        <div class="activity-timeline">
+            <div *ngFor="let activity of activities; trackBy: trackByActivityId"
+                 class="activity-item">
+                <!-- Activity icon and line -->
+                <div class="activity-indicator">
+                    <div class="activity-icon-wrapper">
+                        <i class="bi {{ getActivityIcon(activity) }} activity-icon bg-{{ getActivityColor(activity) }}"></i>
+                    </div>
+                    <div class="activity-line" *ngIf="!$last"></div>
+                </div>
+
+                <!-- Activity content -->
+                <div class="activity-content">
+                    <!-- User avatar and info -->
+                    <div class="d-flex align-items-start mb-2">
+                        <img [src]="getAvatarUrl(activity.user)"
+                             [alt]="activity.user?.name || 'System'"
+                             class="activity-avatar me-2"
+                             width="32"
+                             height="32">
+
+                        <div class="flex-grow-1">
+                            <!-- Activity description -->
+                            <div class="activity-description">
+                                <strong *ngIf="activity.user">{{ activity.user.name }}</strong>
+                                <span *ngIf="!activity.user" class="text-muted">System</span>
+                                {{ activityService.formatActivityDescription(activity) }}
+                            </div>
+
+                            <!-- Activity timestamp -->
+                            <div class="activity-timestamp text-muted small">
+                                {{ getRelativeTime(activity.created_at) }}
+                                <span class="ms-2">{{ activity.created_at | date:'short' }}</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Activity changes -->
+                    <div *ngIf="activity.changes" class="activity-changes">
+                        <div *ngFor="let change of getFormattedChanges(activity); trackBy: $index"
+                             class="change-item">
+                            <i class="bi bi-arrow-right text-muted me-1"></i>
+                            {{ change }}
+                        </div>
+                    </div>
+
+                    <!-- Additional metadata -->
+                    <div *ngIf="activity.metadata && (activity.metadata.ip_address || activity.metadata.user_agent)"
+                         class="activity-metadata mt-2">
+                        <small class="text-muted">
+                            <span *ngIf="activity.metadata.ip_address">
+                                <i class="bi bi-geo-alt me-1"></i>
+                                {{ activity.metadata.ip_address }}
+                            </span>
+                            <span *ngIf="activity.metadata.user_agent" class="ms-2">
+                                <i class="bi bi-browser-chrome me-1"></i>
+                                {{ activity.metadata.user_agent }}
+                            </span>
+                        </small>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Load more button -->
+        <div *ngIf="hasMore" class="text-center mt-4">
+            <button class="btn btn-outline-primary"
+                    (click)="loadMore()"
+                    [disabled]="isLoading">
+                <span *ngIf="!isLoading">Load More</span>
+                <span *ngIf="isLoading">
+                    <span class="spinner-border spinner-border-sm me-2"></span>
+                    Loading...
+                </span>
+            </button>
+        </div>
+    </div>
+</div>

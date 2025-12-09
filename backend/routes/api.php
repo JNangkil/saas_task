@@ -17,6 +17,10 @@ use App\Http\Controllers\UserBoardPreferenceController;
 use App\Http\Controllers\WebhookController;
 use App\Http\Controllers\WorkspaceController;
 use App\Http\Controllers\WorkspaceMemberController;
+use App\Http\Controllers\Api\UserController;
+use App\Http\Controllers\Api\NotificationController;
+use App\Http\Controllers\Api\NotificationPreferenceController;
+use App\Http\Controllers\Api\ActivityController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -35,7 +39,34 @@ Route::middleware(['auth:sanctum'])->group(function () {
     Route::post('/login', [AuthController::class, 'login']);
     Route::post('/logout', [AuthController::class, 'logout'])->middleware('auth:sanctum');
     Route::get('/me', [AuthController::class, 'me'])->middleware('auth:sanctum');
-    
+
+    // User profile routes
+    Route::prefix('users')->group(function () {
+        Route::get('/me', [UserController::class, 'me']);
+        Route::patch('/me', [UserController::class, 'updateProfile']);
+        Route::post('/me/avatar', [UserController::class, 'updateAvatar']);
+        Route::delete('/me/avatar', [UserController::class, 'removeAvatar']);
+
+        // Notification preferences
+        Route::get('/me/notification-preferences', [NotificationPreferenceController::class, 'index']);
+        Route::patch('/me/notification-preferences', [NotificationPreferenceController::class, 'update']);
+    });
+
+    // Notification routes
+    Route::prefix('notifications')->group(function () {
+        Route::get('/', [NotificationController::class, 'index']);
+        Route::get('/unread-count', [NotificationController::class, 'unreadCount']);
+        Route::patch('/{notificationId}/read', [NotificationController::class, 'markAsRead']);
+        Route::patch('/read-all', [NotificationController::class, 'markAllAsRead']);
+        Route::delete('/{notificationId}', [NotificationController::class, 'destroy']);
+    });
+
+    // Activity routes
+    Route::prefix('activity')->group(function () {
+        Route::get('/recent', [ActivityController::class, 'recentActivity']);
+        Route::get('/tenant', [ActivityController::class, 'tenantActivity']);
+    });
+
     // Tenant routes
     Route::prefix('tenants')->group(function () {
         Route::get('/', [TenantController::class, 'index'])->name('tenants.index');
@@ -83,7 +114,10 @@ Route::middleware(['auth:sanctum'])->group(function () {
         // Workspace settings
         Route::get('/{workspace}/settings', [WorkspaceController::class, 'settings'])->name('workspaces.settings');
         Route::put('/{workspace}/settings', [WorkspaceController::class, 'updateSettings'])->name('workspaces.settings.update');
-        
+
+        // Workspace activity
+        Route::get('/{workspace}/activity', [ActivityController::class, 'workspaceActivity'])->name('workspaces.activity');
+
         // Workspace invitations
         Route::get('/{workspace}/invitations', [InvitationController::class, 'index'])->name('workspaces.invitations.index');
         Route::post('/{workspace}/invitations', [InvitationController::class, 'store'])->name('workspaces.invitations.store');
@@ -110,6 +144,9 @@ Route::middleware(['auth:sanctum'])->group(function () {
             Route::post('/restore', [BoardController::class, 'restore'])->name('boards.restore');
             Route::post('/favorite', [BoardController::class, 'favorite'])->name('boards.favorite');
             Route::delete('/favorite', [BoardController::class, 'unfavorite'])->name('boards.unfavorite');
+
+            // Board activity
+            Route::get('/activity', [ActivityController::class, 'boardActivity'])->name('boards.activity');
         });
 
         Route::prefix('tenants/{tenant}/workspaces/{workspace}/boards/{board}/tasks')->group(function () {
@@ -130,6 +167,12 @@ Route::middleware(['auth:sanctum'])->group(function () {
             Route::post('/{task}/duplicate', [TaskController::class, 'duplicate'])->name('tasks.duplicate');
             Route::put('/{task}/position', [TaskController::class, 'updatePosition'])->name('tasks.position.update');
 
+            // Task assignment and watchers
+            Route::patch('/{task}/assignee', [TaskController::class, 'updateAssignee'])->name('tasks.assignee.update');
+            Route::get('/{task}/watchers', [TaskController::class, 'getWatchers'])->name('tasks.watchers.index');
+            Route::post('/{task}/watchers', [TaskController::class, 'addWatcher'])->name('tasks.watchers.store');
+            Route::delete('/{task}/watchers/{user}', [TaskController::class, 'removeWatcher'])->name('tasks.watchers.destroy');
+
             // Task comments
             Route::prefix('/{task}/comments')->group(function () {
                 Route::get('/', [TaskCommentController::class, 'index'])->name('tasks.comments.index');
@@ -137,6 +180,9 @@ Route::middleware(['auth:sanctum'])->group(function () {
                 Route::put('/{comment}', [TaskCommentController::class, 'update'])->name('tasks.comments.update');
                 Route::delete('/{comment}', [TaskCommentController::class, 'destroy'])->name('tasks.comments.destroy');
             });
+
+            // Task activity
+            Route::get('/{task}/activity', [ActivityController::class, 'taskActivity'])->name('tasks.activity');
         });
         
         // Board column routes

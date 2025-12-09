@@ -846,4 +846,112 @@ class TaskController extends Controller
 
         return $lastTask ? $lastTask->position + 1000 : 1000;
     }
+
+    /**
+     * Update the assignee of a task.
+     */
+    public function updateAssignee(Request $request, $tenantId, $workspaceId, $taskId): JsonResponse
+    {
+        $task = Task::where('id', $taskId)
+            ->where('workspace_id', $workspaceId)
+            ->where('tenant_id', $tenantId)
+            ->firstOrFail();
+
+        $this->authorize('assign', $task);
+
+        $validated = $request->validate([
+            'assignee_id' => ['nullable', 'exists:users,id'],
+        ]);
+
+        $oldAssignee = $task->assignee;
+        $task->update($validated);
+
+        // Fire event for notifications
+        event(new \App\Events\TaskAssigned($task, $oldAssignee));
+
+        return new TaskResource($task->load(['assignee', 'watchers']));
+    }
+
+    /**
+     * Get the watchers of a task.
+     */
+    public function getWatchers($tenantId, $workspaceId, $taskId): JsonResponse
+    {
+        $task = Task::where('id', $taskId)
+            ->where('workspace_id', $workspaceId)
+            ->where('tenant_id', $tenantId)
+            ->firstOrFail();
+
+        $this->authorize('view', $task);
+
+        $watchers = $task->watchers()->get();
+
+        return response()->json($watchers);
+    }
+
+    /**
+     * Add a watcher to a task.
+     */
+    public function addWatcher(Request $request, $tenantId, $workspaceId, $taskId): JsonResponse
+    {
+        $task = Task::where('id', $taskId)
+            ->where('workspace_id', $workspaceId)
+            ->where('tenant_id', $tenantId)
+            ->firstOrFail();
+
+        $this->authorize('addSelfAsWatcher', $task);
+
+        $validated = $request->validate([
+            'user_id' => ['required', 'exists:users,id'],
+        ]);
+
+        $user = Auth::user();
+        $targetUser = \App\Models\User::findOrFail($validated['user_id']);
+
+        // Only allow adding yourself or if you can manage watchers
+        if ($user->id !== $targetUser->id && !$user->can('manageWatchers', $task)) {
+            return response()->json(['message' => 'Forbidden'], 403);
+        }
+
+        // Check if target user is in the workspace
+        if (!$task->workspace->users()->where('users.id', $targetUser->id)->exists()) {
+            return response()->json(['message' => 'User is not a member of this workspace'], 422);
+        }
+
+        // Check if already a watcher
+        if ($task->watchers()->where('users.id', $targetUser->id)->exists()) {
+            return response()->json(['message' => 'User is already watching this task'], 422);
+        }
+
+        $task->watchers()->attach($targetUser->id, ['created_at' => now()]);
+
+        // Fire event for notifications
+        event(new \App\Events\TaskWatcherAdded($task, $targetUser));
+
+        return response()->json(['message' => 'Watcher added successfully']);
+    }
+
+    /**
+     * Remove a watcher from a task.
+     */
+    public function removeWatcher($tenantId, $workspaceId, $taskId, $userId): JsonResponse
+    {
+        $task = Task::where('id', $taskId)
+            ->where('workspace_id', $workspaceId)
+            ->where('tenant_id', $tenantId)
+            ->firstOrFail();
+
+        $watcher = \App\Models\User::findOrFail($userId);
+
+        $this->authorize('removeWatcher', [$task, $watcher]);
+
+        // Check if user is actually a watcher
+        if (!$task->watchers()->where('users.id', $watcher->id)->exists()) {
+            return response()->json(['message' => 'User is not watching this task'], 422);
+        }
+
+        $task->watchers()->detach($watcher->id);
+
+        return response()->json(['message' => 'Watcher removed successfully']);
+    }
 }

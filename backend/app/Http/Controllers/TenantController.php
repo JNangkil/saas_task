@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\TenantRequest;
 use App\Http\Resources\TenantResource;
+use App\Http\Resources\TenantUserResource;
 use App\Models\Tenant;
 use App\Models\User;
 use App\Models\Workspace;
@@ -141,17 +142,10 @@ class TenantController extends Controller
     public function members(Tenant $tenant): JsonResponse
     {
         $this->authorize('manageUsers', $tenant);
-        
-        $members = $tenant->users()->select(
-            'users.id',
-            'users.name',
-            'users.email',
-            'tenant_user.role',
-            'tenant_user.joined_at',
-            'tenant_user.invited_at'
-        )->paginate(15);
 
-        return response()->json($members);
+        $members = $tenant->users()->withPivot('role', 'invited_at', 'joined_at')->get();
+
+        return TenantUserResource::collection($members);
     }
 
     /**

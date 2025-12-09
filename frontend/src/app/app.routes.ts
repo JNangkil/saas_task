@@ -60,6 +60,24 @@ export const routes: Routes = [
         title: 'Billing Settings'
     },
     {
+        path: 'profile',
+        loadComponent: () => import('./pages/profile/profile-page.component').then(m => m.ProfilePageComponent),
+        canActivate: [AuthGuard],
+        title: 'Profile Settings'
+    },
+    {
+        path: 'users',
+        loadComponent: () => import('./pages/tenant-users/tenant-user-management-page.component').then(m => m.TenantUserManagementPageComponent),
+        canActivate: [AuthGuard],
+        title: 'User Management'
+    },
+    {
+        path: 'notifications',
+        loadComponent: () => import('./pages/notifications/notifications').then(m => m.Notifications),
+        canActivate: [AuthGuard],
+        title: 'Notifications'
+    },
+    {
         path: '',
         redirectTo: '/workspaces',
         pathMatch: 'full'

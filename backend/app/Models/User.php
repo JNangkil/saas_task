@@ -24,6 +24,11 @@ class User extends Authenticatable
         'email',
         'password',
         'is_super_admin',
+        'job_title',
+        'timezone',
+        'locale',
+        'status',
+        'avatar_url',
     ];
 
 
@@ -85,6 +90,39 @@ class User extends Authenticatable
     public function userBoardPreferences(): HasMany
     {
         return $this->hasMany(UserBoardPreference::class);
+    }
+
+    /**
+     * Get tasks assigned to the user.
+     */
+    public function assignedTasks(): HasMany
+    {
+        return $this->hasMany(Task::class, 'assignee_id');
+    }
+
+    /**
+     * Get tasks created by the user.
+     */
+    public function createdTasks(): HasMany
+    {
+        return $this->hasMany(Task::class, 'creator_id');
+    }
+
+    /**
+     * Get tasks that the user is watching.
+     */
+    public function watchedTasks(): BelongsToMany
+    {
+        return $this->belongsToMany(Task::class, 'task_watchers')
+            ->withTimestamps();
+    }
+
+    /**
+     * Get the user's notification preferences.
+     */
+    public function notificationPreference()
+    {
+        return $this->hasOne(UserNotificationPreference::class);
     }
 
     /**
