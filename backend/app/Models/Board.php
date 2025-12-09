@@ -6,11 +6,13 @@ use App\Traits\BelongsToTenant;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Board extends Model
 {
-    use HasFactory, BelongsToTenant;
+    use HasFactory, BelongsToTenant, SoftDeletes;
 
     /**
      * The attributes that are mass assignable.
@@ -24,7 +26,10 @@ class Board extends Model
         'description',
         'color',
         'icon',
+        'type',
+        'position',
         'is_archived',
+        'created_by',
     ];
 
     /**
@@ -36,8 +41,10 @@ class Board extends Model
     {
         return [
             'is_archived' => 'boolean',
+            'position' => 'integer',
             'created_at' => 'datetime',
             'updated_at' => 'datetime',
+            'deleted_at' => 'datetime',
         ];
     }
 
@@ -58,6 +65,14 @@ class Board extends Model
     }
 
     /**
+     * Get the creator of the board.
+     */
+    public function creator(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'created_by');
+    }
+
+    /**
      * Get the tasks for the board.
      */
     public function tasks(): HasMany
@@ -70,7 +85,7 @@ class Board extends Model
      */
     public function columns(): HasMany
     {
-        return $this->hasMany(BoardColumn::class);
+        return $this->hasMany(BoardColumn::class)->orderBy('position');
     }
 
     /**
@@ -79,6 +94,16 @@ class Board extends Model
     public function userBoardPreferences(): HasMany
     {
         return $this->hasMany(UserBoardPreference::class);
+    }
+
+    /**
+     * Get the users who have favorited this board.
+     */
+    public function favoritedBy(): BelongsToMany
+    {
+        return $this->belongsToMany(User::class, 'user_board_favorites')
+            ->using(UserBoardFavorite::class)
+            ->withTimestamps();
     }
 
     /**

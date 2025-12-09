@@ -21,8 +21,27 @@ export const routes: Routes = [
                 component: WorkspaceFormComponent
             },
             {
-                path: ':id/edit',
+                path: ':id/edit', // Edit workspace
                 component: WorkspaceFormComponent
+            }
+        ]
+    },
+    {
+        path: 'workspaces/:workspaceId',
+        loadComponent: () => import('./components/workspace-layout/workspace-layout').then(m => m.WorkspaceLayout),
+        canActivate: [AuthGuard],
+        children: [
+            {
+                path: 'boards',
+                loadComponent: () => import('./components/board-list/board-list').then(m => m.BoardList)
+            },
+            {
+                path: 'boards/:boardId',
+                loadComponent: () => import('./components/board-detail/board-detail').then(m => m.BoardDetail)
+            },
+            {
+                path: 'boards/:boardId/settings',
+                loadComponent: () => import('./components/board-settings/board-settings').then(m => m.BoardSettings)
             }
         ]
     },

@@ -1,0 +1,68 @@
+<div class="flex flex-col h-full bg-slate-800 text-slate-300">
+    <!-- Brand / Workspace -->
+    <div class="h-14 flex items-center px-4 border-b border-slate-700 bg-slate-900">
+        <div class="w-8 h-8 rounded bg-blue-600 flex items-center justify-center mr-3 text-white font-bold">W</div>
+        <span class="font-semibold text-white tracking-wide truncate">Workspace</span>
+    </div>
+
+    <!-- Navigation -->
+    <nav class="flex-1 overflow-y-auto py-4 px-2 space-y-1">
+
+        <!-- Main Links -->
+        <a [routerLink]="['/workspaces']" routerLinkActive="bg-slate-700 text-white"
+            class="group flex items-center px-2 py-2 text-sm font-medium rounded-md hover:bg-slate-700 hover:text-white transition-colors">
+            <span class="material-icons text-slate-400 group-hover:text-white mr-3 text-xl">home</span>
+            Home
+        </a>
+
+        <a [routerLink]="['/workspaces', workspaceId, 'boards']" routerLinkActive="bg-slate-700 text-white"
+            [routerLinkActiveOptions]="{exact: true}"
+            class="group flex items-center px-2 py-2 text-sm font-medium rounded-md hover:bg-slate-700 hover:text-white transition-colors">
+            <span class="material-icons text-slate-400 group-hover:text-white mr-3 text-xl">dataset</span>
+            All Boards
+        </a>
+
+        <!-- Favorites -->
+        <div *ngIf="favoriteBoards.length > 0" class="mt-6">
+            <h3
+                class="px-2 text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2 flex items-center justify-between">
+                Favorites
+            </h3>
+            <a *ngFor="let board of favoriteBoards" [routerLink]="['/workspaces', workspaceId, 'boards', board.id]"
+                class="group flex items-center px-2 py-2 text-sm font-medium rounded-md hover:bg-slate-700 hover:text-white transition-colors text-slate-300">
+                <span class="w-2 h-2 rounded-full mr-3" [style.background-color]="board.color || '#cbd5e1'"></span>
+                <span class="truncate">{{ board.name }}</span>
+            </a>
+        </div>
+
+        <!-- All Boards (Expandable list or just list recent) -->
+        <div class="mt-6">
+            <h3
+                class="px-2 text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2 flex items-center justify-between">
+                Boards
+                <a [routerLink]="['/workspaces', workspaceId, 'boards']"
+                    class="text-slate-500 hover:text-white cursor-pointer" title="Manage Boards">
+                    <span class="material-icons text-xs">add</span>
+                </a>
+            </h3>
+            <a *ngFor="let board of boards" [routerLink]="['/workspaces', workspaceId, 'boards', board.id]"
+                routerLinkActive="bg-slate-700 text-white"
+                class="group flex items-center px-2 py-2 text-sm font-medium rounded-md hover:bg-slate-700 hover:text-white transition-colors">
+                <span class="material-icons text-slate-400 group-hover:text-white mr-3 text-xl">{{ board.icon ||
+                    'dashboard' }}</span>
+                <span class="truncate">{{ board.name }}</span>
+            </a>
+        </div>
+    </nav>
+
+    <!-- User / Bottom -->
+    <div class="border-t border-slate-700 p-4 bg-slate-900">
+        <div class="flex items-center">
+            <div class="w-8 h-8 rounded-full bg-slate-600 flex items-center justify-center text-xs text-white">U</div>
+            <div class="ml-3">
+                <p class="text-sm font-medium text-white">User</p>
+                <p class="text-xs text-slate-500">View Profile</p>
+            </div>
+        </div>
+    </div>
+</div>

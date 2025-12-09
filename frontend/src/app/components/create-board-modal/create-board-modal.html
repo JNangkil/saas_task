@@ -1,0 +1,111 @@
+<div *ngIf="isOpen" class="fixed inset-0 z-50 overflow-y-auto" aria-labelledby="modal-title" role="dialog"
+    aria-modal="true">
+    <!-- Backdrop -->
+    <div class="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+        <div class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" (click)="closeModal()"></div>
+
+        <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
+
+        <div
+            class="relative inline-block align-bottom bg-white dark:bg-slate-800 rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-2xl sm:w-full">
+
+            <!-- Header -->
+            <div
+                class="bg-white dark:bg-slate-800 px-4 pt-5 pb-4 sm:p-6 sm:pb-4 border-b border-slate-100 dark:border-slate-700">
+                <h3 class="text-lg leading-6 font-medium text-slate-900 dark:text-white" id="modal-title">
+                    Create New Board
+                </h3>
+            </div>
+
+            <!-- Body -->
+            <div class="px-4 py-5 sm:p-6 max-h-[70vh] overflow-y-auto">
+
+                <!-- Template Selection -->
+                <div class="mb-6">
+                    <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Start from</label>
+                    <div class="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                        <!-- Blank -->
+                        <div (click)="selectTemplate(null)" [class.ring-2]="selectedTemplateId === null"
+                            class="cursor-pointer border border-slate-200 dark:border-slate-700 rounded-lg p-3 hover:bg-slate-50 dark:hover:bg-slate-700 transition-all ring-blue-500">
+                            <div
+                                class="w-8 h-8 rounded bg-slate-100 dark:bg-slate-600 flex items-center justify-center mb-2">
+                                <span class="material-icons text-slate-500 text-sm">add</span>
+                            </div>
+                            <div class="font-medium text-sm text-slate-900 dark:text-white">Blank Board</div>
+                        </div>
+
+                        <!-- Templates -->
+                        <div *ngFor="let template of templates" (click)="selectTemplate(template)"
+                            [class.ring-2]="selectedTemplateId === template.id"
+                            class="cursor-pointer border border-slate-200 dark:border-slate-700 rounded-lg p-3 hover:bg-slate-50 dark:hover:bg-slate-700 transition-all ring-blue-500">
+                            <div
+                                class="w-8 h-8 rounded bg-blue-50 dark:bg-blue-900/30 flex items-center justify-center mb-2 text-blue-600">
+                                <span class="material-icons text-sm">{{ template.icon || 'dashboard' }}</span>
+                            </div>
+                            <div class="font-medium text-sm text-slate-900 dark:text-white truncate">{{ template.name }}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 gap-6">
+                    <!-- Name -->
+                    <div>
+                        <label for="name" class="block text-sm font-medium text-slate-700 dark:text-slate-300">Board
+                            Name</label>
+                        <input type="text" [(ngModel)]="name" id="name"
+                            class="mt-1 block w-full shadow-sm sm:text-sm border-slate-300 rounded-md dark:bg-slate-700 dark:border-slate-600 dark:text-white focus:ring-blue-500 focus:border-blue-500 p-2 border">
+                    </div>
+
+                    <!-- Description -->
+                    <div>
+                        <label for="description"
+                            class="block text-sm font-medium text-slate-700 dark:text-slate-300">Description
+                            (Optional)</label>
+                        <textarea [(ngModel)]="description" id="description" rows="2"
+                            class="mt-1 block w-full shadow-sm sm:text-sm border-slate-300 rounded-md dark:bg-slate-700 dark:border-slate-600 dark:text-white focus:ring-blue-500 focus:border-blue-500 p-2 border"></textarea>
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-4">
+                        <!-- Icon -->
+                        <div>
+                            <label
+                                class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Icon</label>
+                            <div class="flex flex-wrap gap-2">
+                                <button *ngFor="let i of icons" (click)="icon = i" [class.bg-blue-100]="icon === i"
+                                    [class.text-blue-600]="icon === i"
+                                    class="p-2 rounded hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors">
+                                    <span class="material-icons text-lg">{{ i }}</span>
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Color -->
+                        <div>
+                            <label
+                                class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Color</label>
+                            <div class="flex flex-wrap gap-2">
+                                <button *ngFor="let c of colors" (click)="color = c" [class.ring-2]="color === c"
+                                    class="w-8 h-8 rounded-full ring-offset-2 ring-blue-500 transition-all"
+                                    [style.background-color]="c"></button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Footer -->
+            <div
+                class="bg-slate-50 dark:bg-slate-700/50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse border-t border-slate-100 dark:border-slate-700">
+                <button type="button" (click)="create()" [disabled]="!name || isCreating"
+                    class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-blue-600 text-base font-medium text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 sm:ml-3 sm:w-auto sm:text-sm disabled:opacity-50 disabled:cursor-not-allowed">
+                    {{ isCreating ? 'Creating...' : 'Create Board' }}
+                </button>
+                <button type="button" (click)="closeModal()"
+                    class="mt-3 w-full inline-flex justify-center rounded-md border border-slate-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-slate-700 hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm dark:bg-slate-800 dark:text-slate-300 dark:border-slate-600 dark:hover:bg-slate-700">
+                    Cancel
+                </button>
+            </div>
+        </div>
+    </div>
+</div>

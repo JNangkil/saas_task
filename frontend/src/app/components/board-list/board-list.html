@@ -1,0 +1,126 @@
+<div class="container mx-auto px-4 py-8">
+    <!-- Header -->
+    <div class="flex justify-between items-center mb-8">
+        <div>
+            <h1 class="text-2xl font-bold text-slate-800 dark:text-white">Boards</h1>
+            <p class="text-sm text-slate-500 dark:text-slate-400 mt-1">Manage project boards for this workspace</p>
+        </div>
+        <button (click)="openCreateModal()"
+            class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg flex items-center gap-2 transition-colors">
+            <span class="material-icons text-sm">add</span>
+            Create Board
+        </button>
+    </div>
+
+    <!-- Filters & View Options -->
+    <div class="flex flex-col sm:flex-row gap-4 mb-8 justify-between">
+        <div class="relative w-full sm:w-64">
+            <span class="material-icons absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-sm">search</span>
+            <input type="text" [(ngModel)]="searchText" placeholder="Search boards..."
+                class="w-full pl-9 pr-4 py-2 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 outline-none transition-shadow">
+        </div>
+
+        <div class="flex bg-slate-100 dark:bg-slate-800 p-1 rounded-lg self-start">
+            <button (click)="view = 'grid'" [class.bg-white]="view === 'grid'"
+                [class.dark:bg-slate-700]="view === 'grid'" [class.shadow-sm]="view === 'grid'"
+                class="px-3 py-1.5 rounded-md text-sm font-medium transition-all flex items-center gap-2"
+                [class.text-slate-600]="view !== 'grid'" [class.dark:text-slate-400]="view !== 'grid'">
+                <span class="material-icons text-sm">grid_view</span>
+                Grid
+            </button>
+            <button (click)="view = 'list'" [class.bg-white]="view === 'list'"
+                [class.dark:bg-slate-700]="view === 'list'" [class.shadow-sm]="view === 'list'"
+                class="px-3 py-1.5 rounded-md text-sm font-medium transition-all flex items-center gap-2"
+                [class.text-slate-600]="view !== 'list'" [class.dark:text-slate-400]="view !== 'list'">
+                <span class="material-icons text-sm">list</span>
+                List
+            </button>
+        </div>
+    </div>
+
+    <!-- Loading State -->
+    <div *ngIf="isLoading" class="flex justify-center py-12">
+        <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+    </div>
+
+    <div *ngIf="!isLoading">
+        <!-- Favorites Section -->
+        <div *ngIf="favoriteBoards.length > 0" class="mb-10">
+            <h2 class="text-lg font-semibold text-slate-700 dark:text-slate-300 mb-4 flex items-center gap-2">
+                <span class="material-icons text-yellow-500 text-sm">star</span>
+                Favorites
+            </h2>
+
+            <div [class.grid-cols-1]="view === 'list'" [class.grid-cols-2]="view === 'grid'"
+                [class.md:grid-cols-3]="view === 'grid'" [class.lg:grid-cols-4]="view === 'grid'" class="grid gap-4">
+                <a *ngFor="let board of favoriteBoards"
+                    [routerLink]="['/tenants', tenantId, 'workspaces', workspaceId, 'boards', board.id]"
+                    class="group bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-4 hover:shadow-lg hover:border-blue-500/30 transition-all cursor-pointer relative block">
+
+                    <div class="flex items-start justify-between mb-3">
+                        <div class="w-10 h-10 rounded-lg flex items-center justify-center text-xl"
+                            [style.background-color]="board.color + '20'" [style.color]="board.color">
+                            <span class="material-icons">{{ board.icon || 'dashboard' }}</span>
+                        </div>
+                        <button (click)="$event.preventDefault(); $event.stopPropagation(); toggleFavorite(board)"
+                            class="text-yellow-400 hover:text-yellow-500 transition-colors bg-transparent">
+                            <span class="material-icons">star</span>
+                        </button>
+                    </div>
+
+                    <h3
+                        class="font-medium text-slate-800 dark:text-white mb-1 group-hover:text-blue-600 transition-colors">
+                        {{ board.name }}</h3>
+                    <p class="text-xs text-slate-500 dark:text-slate-400 line-clamp-2 min-h-[2.5em]">{{
+                        board.description || 'No description' }}</p>
+                </a>
+            </div>
+        </div>
+
+        <!-- All Boards Section -->
+        <div>
+            <h2 class="text-lg font-semibold text-slate-700 dark:text-slate-300 mb-4">All Boards</h2>
+
+            <div *ngIf="otherBoards.length === 0"
+                class="text-center py-12 bg-slate-50 dark:bg-slate-800/50 rounded-lg border border-dashed border-slate-300 dark:border-slate-700">
+                <div
+                    class="w-16 h-16 bg-slate-100 dark:bg-slate-700 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <span class="material-icons text-slate-400 text-3xl">dashboard</span>
+                </div>
+                <h3 class="text-slate-900 dark:text-white font-medium mb-2">No boards found</h3>
+                <p class="text-slate-500 dark:text-slate-400 text-sm max-w-sm mx-auto mb-6">Create a new board to start
+                    tracking tasks and projects.</p>
+                <button class="btn-primary">Create Board</button>
+            </div>
+
+            <div [class.grid-cols-1]="view === 'list'" [class.grid-cols-2]="view === 'grid'"
+                [class.md:grid-cols-3]="view === 'grid'" [class.lg:grid-cols-4]="view === 'grid'" class="grid gap-4">
+                <a *ngFor="let board of otherBoards"
+                    [routerLink]="['/tenants', tenantId, 'workspaces', workspaceId, 'boards', board.id]"
+                    class="group bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-4 hover:shadow-lg hover:border-blue-500/30 transition-all cursor-pointer relative block">
+
+                    <div class="flex items-start justify-between mb-3">
+                        <div class="w-10 h-10 rounded-lg flex items-center justify-center text-xl"
+                            [style.background-color]="(board.color || '#3b82f6') + '20'"
+                            [style.color]="board.color || '#3b82f6'">
+                            <span class="material-icons">{{ board.icon || 'dashboard' }}</span>
+                        </div>
+                        <button (click)="$event.preventDefault(); $event.stopPropagation(); toggleFavorite(board)"
+                            class="text-slate-300 hover:text-yellow-400 transition-colors bg-transparent">
+                            <span class="material-icons">{{ board.is_favorite ? 'star' : 'star_border' }}</span>
+                        </button>
+                    </div>
+
+                    <h3
+                        class="font-medium text-slate-800 dark:text-white mb-1 group-hover:text-blue-600 transition-colors">
+                        {{ board.name }}</h3>
+                    <p class="text-xs text-slate-500 dark:text-slate-400 line-clamp-2 min-h-[2.5em]">{{
+                        board.description || 'No description' }}</p>
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <app-create-board-modal [isOpen]="isCreateModalOpen" [tenantId]="tenantId" [workspaceId]="workspaceId"
+        (close)="closeCreateModal()" (created)="onBoardCreated()"></app-create-board-modal>
+</div>

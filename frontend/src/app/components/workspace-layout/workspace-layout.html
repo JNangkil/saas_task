@@ -1,0 +1,10 @@
+<div class="flex h-screen bg-slate-50 dark:bg-slate-900 overflow-hidden">
+    <aside
+        class="w-64 flex-shrink-0 border-r border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 h-full flex flex-col z-20">
+        <app-sidebar></app-sidebar>
+    </aside>
+
+    <main class="flex-1 overflow-auto w-full relative">
+        <router-outlet></router-outlet>
+    </main>
+</div>

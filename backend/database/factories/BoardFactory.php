@@ -27,11 +27,17 @@ class BoardFactory extends Factory
     {
         return [
             'workspace_id' => Workspace::factory(),
+            'tenant_id' => function (array $attributes) {
+                return Workspace::find($attributes['workspace_id'])->tenant_id;
+            },
             'name' => fake()->words(3, true),
             'description' => fake()->sentence(),
             'color' => fake()->hexColor(),
             'icon' => fake()->randomElement(['board', 'kanban', 'list', 'calendar']),
+            'type' => 'kanban',
+            'position' => 0,
             'is_archived' => false,
+            'created_by' => \App\Models\User::factory(),
         ];
     }
 }

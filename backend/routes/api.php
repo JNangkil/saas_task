@@ -95,6 +95,22 @@ Route::middleware(['auth:sanctum'])->group(function () {
             Route::post('/', [TaskController::class, 'store'])->name('tasks.store');
         });
         
+        // Board routes
+        Route::prefix('tenants/{tenant}/workspaces/{workspace}/boards')->group(function () {
+            Route::get('/', [BoardController::class, 'index'])->name('boards.index');
+            Route::post('/', [BoardController::class, 'store'])->name('boards.store');
+        });
+
+        Route::prefix('tenants/{tenant}/workspaces/{workspace}/boards/{board}')->group(function () {
+            Route::get('/', [BoardController::class, 'show'])->name('boards.show');
+            Route::put('/', [BoardController::class, 'update'])->name('boards.update');
+            Route::delete('/', [BoardController::class, 'destroy'])->name('boards.destroy');
+            Route::post('/archive', [BoardController::class, 'archive'])->name('boards.archive');
+            Route::post('/restore', [BoardController::class, 'restore'])->name('boards.restore');
+            Route::post('/favorite', [BoardController::class, 'favorite'])->name('boards.favorite');
+            Route::delete('/favorite', [BoardController::class, 'unfavorite'])->name('boards.unfavorite');
+        });
+
         Route::prefix('tenants/{tenant}/workspaces/{workspace}/boards/{board}/tasks')->group(function () {
             Route::get('/', [TaskController::class, 'index'])->name('boards.tasks.index');
             Route::get('/filter', [TaskController::class, 'filter'])->name('boards.tasks.filter');
@@ -167,6 +183,17 @@ Route::middleware(['auth:sanctum'])->group(function () {
             Route::get('/hidden-columns', [UserBoardPreferenceController::class, 'getHiddenColumns'])->name('boards.preferences.hidden-columns');
             Route::put('/reset-column', [UserBoardPreferenceController::class, 'resetColumn'])->name('boards.preferences.reset-column');
         });
+
+        // Board Template routes (Workspace scoped creation)
+        Route::post('/{workspace}/board-templates', [\App\Http\Controllers\BoardTemplateController::class, 'store'])->name('workspaces.board-templates.store');
+    });
+    
+    // Board Templates (Global/Tenant scoped)
+    Route::prefix('board-templates')->group(function () {
+        Route::get('/', [\App\Http\Controllers\BoardTemplateController::class, 'index'])->name('board-templates.index');
+        Route::get('/{template}', [\App\Http\Controllers\BoardTemplateController::class, 'show'])->name('board-templates.show');
+        Route::patch('/{template}', [\App\Http\Controllers\BoardTemplateController::class, 'update'])->name('board-templates.update');
+        Route::delete('/{template}', [\App\Http\Controllers\BoardTemplateController::class, 'destroy'])->name('board-templates.destroy');
     });
     
     // Column types route (global)
