@@ -1,5 +1,7 @@
-import { Component, Inject, OnInit } from '@angular/core';
+import { Component, Input, Output, EventEmitter, OnInit } from '@angular/core';
 import { FormBuilder, FormGroup, Validators, FormArray } from '@angular/forms';
+import { CommonModule } from '@angular/common';
+import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { BoardColumn, ColumnType, ColumnTypeDefinition } from '../../models';
 import { BoardColumnService } from '../../services/board-column.service';
 import { ColumnTypeConfigurationService } from '../../services/column-type-configuration.service';
@@ -29,10 +31,12 @@ export interface ColumnManagerDialogResult {
  */
 @Component({
     selector: 'app-column-manager-dialog',
+    standalone: true,
+    imports: [CommonModule, FormsModule, ReactiveFormsModule],
     template: `
         <div class="dialog-container">
             <h2 class="dialog-title">
-                {{ data.mode === 'create' ? 'Add Column' : 'Edit Column' }}
+                {{ data?.mode === 'create' ? 'Add Column' : 'Edit Column' }}
             </h2>
             
             <form [formGroup]="columnForm" (ngSubmit)="onSubmit()">
@@ -58,7 +62,7 @@ export interface ColumnManagerDialogResult {
                     <div class="form-row">
                         <div class="form-field">
                             <label for="type">Column Type</label>
-                            <select formControlName="type" (change)="onTypeChange($event.target.value)">
+                            <select formControlName="type" (change)="onTypeChange($any($event).target?.value)">
                                 <option *ngFor="let type of columnTypes" [value]="type.type">
                                     {{ type.label }}
                                 </option>
@@ -141,7 +145,7 @@ export interface ColumnManagerDialogResult {
                         Cancel
                     </button>
                     <button type="submit" class="btn btn-primary" [disabled]="!columnForm.valid || isSubmitting">
-                        {{ data.mode === 'create' ? 'Create' : 'Update' }}
+                        {{ data?.mode === 'create' ? 'Create' : 'Update' }}
                     </button>
                 </div>
             </form>
@@ -273,6 +277,13 @@ export interface ColumnManagerDialogResult {
     `]
 })
 export class ColumnManagerDialogComponent implements OnInit {
+    @Input() isVisible = false;
+    @Input() data: ColumnManagerDialogData | null = null;
+    @Input() isLoading = false;
+
+    @Output() close = new EventEmitter<ColumnManagerDialogResult | void>();
+    @Output() cancel = new EventEmitter<void>();
+
     columnForm!: FormGroup;
     columnTypes: ColumnTypeDefinition[] = [];
     selectedTypeDefinition: ColumnTypeDefinition | null = null;
@@ -280,15 +291,15 @@ export class ColumnManagerDialogComponent implements OnInit {
 
     constructor(
         private fb: FormBuilder,
-        public dialogRef: any, // Replace with actual dialog ref
         private boardColumnService: BoardColumnService,
-        private columnTypeConfig: ColumnTypeConfigurationService,
-        @Inject('DIALOG_DATA') public data: ColumnManagerDialogData
+        private columnTypeConfig: ColumnTypeConfigurationService
     ) { }
 
     ngOnInit(): void {
-        this.loadColumnTypes();
-        this.initializeForm();
+        if (this.data) {
+            this.loadColumnTypes();
+            this.initializeForm();
+        }
     }
 
     /**
@@ -304,6 +315,8 @@ export class ColumnManagerDialogComponent implements OnInit {
      * Initialize the form
      */
     initializeForm(): void {
+        if (!this.data) return;
+
         const defaultOptions = this.data.column?.options || {};
 
         this.columnForm = this.fb.group({
@@ -343,7 +356,7 @@ export class ColumnManagerDialogComponent implements OnInit {
      * Handle form submission
      */
     onSubmit(): void {
-        if (!this.columnForm.valid) {
+        if (!this.columnForm.valid || !this.data) {
             return;
         }
 
@@ -378,13 +391,14 @@ export class ColumnManagerDialogComponent implements OnInit {
 
         operation.subscribe({
             next: (column) => {
-                this.dialogRef.close({
+                this.close.emit({
                     column,
-                    action: this.data.mode === 'create' ? 'created' : 'updated'
+                    action: this.data?.mode === 'create' ? 'created' : 'updated'
                 });
             },
             error: (error) => {
                 console.error('Error saving column:', error);
+                this.isSubmitting = false;
                 // Handle error (show toast, etc.)
             },
             complete: () => {
@@ -415,6 +429,6 @@ export class ColumnManagerDialogComponent implements OnInit {
      * Handle cancel
      */
     onCancel(): void {
-        this.dialogRef.close();
+        this.cancel.emit();
     }
 }

@@ -267,7 +267,13 @@ export class TaskDetailsPanelComponent implements OnInit, OnDestroy {
                 type: 'comment',
                 message: `Comment added`,
                 timestamp: comment.created_at,
-                user: { id: 1, name: 'Current User', email: 'user@example.com' } as User
+                user: {
+                    id: 1,
+                    name: 'Current User',
+                    email: 'user@example.com',
+                    created_at: '',
+                    updated_at: ''
+                } as User
             });
         }, 500);
     }

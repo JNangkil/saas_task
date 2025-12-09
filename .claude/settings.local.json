@@ -4,7 +4,8 @@
       "Bash(php artisan test:*)",
       "Bash(npm test:*)",
       "Bash(npm run test:unit)",
-      "Bash(npm run:*)"
+      "Bash(npm run:*)",
+      "Bash(ng build:*)"
     ],
     "deny": [],
     "ask": []

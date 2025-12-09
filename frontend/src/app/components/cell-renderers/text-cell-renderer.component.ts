@@ -1,4 +1,5 @@
 import { Component } from '@angular/core';
+import { CommonModule } from '@angular/common';
 import { BaseCellRendererComponent } from './base-cell-renderer.component';
 
 /**
@@ -7,6 +8,8 @@ import { BaseCellRendererComponent } from './base-cell-renderer.component';
  */
 @Component({
     selector: 'app-text-cell-renderer',
+    standalone: true,
+    imports: [CommonModule],
     template: `
         <div [ngClass]="getCellClasses()" (click)="startEditing()">
             <div [ngClass]="getContentClasses()">
@@ -21,8 +24,8 @@ import { BaseCellRendererComponent } from './base-cell-renderer.component';
                         type="text"
                         class="form-control text-input"
                         [value]="value || ''"
-                        [placeholder]="column?.options?.placeholder || ''"
-                        [maxlength]="column?.options?.max_length || 255"
+                        [placeholder]="column.options?.placeholder || ''"
+                        [attr.maxlength]="column.options?.max_length || 255"
                         [disabled]="readonly"
                         (keydown)="onKeyDown($event)"
                         (blur)="stopEditing()"

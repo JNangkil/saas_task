@@ -1,5 +1,6 @@
 import { Component, Input, Output, EventEmitter, HostListener } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
 
 export interface ConfirmationDialogData {
   title: string;
@@ -19,7 +20,7 @@ export interface ConfirmationDialogData {
 @Component({
   selector: 'app-confirmation-dialog',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, FormsModule],
   template: `
     <div class="dialog-overlay" [class.visible]="isVisible" (click)="onOverlayClick($event)">
       <div class="dialog-container" [class.visible]="isVisible" [ngClass]="typeClass">

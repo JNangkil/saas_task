@@ -79,8 +79,8 @@ export class TaskTableExampleComponent implements OnInit {
     /**
      * Get workspace context for display
      */
-    get workspaceInfo() {
-        return this.workspaceContextService.context;
+    get workspaceInfo$() {
+        return this.workspaceContextService.context$;
     }
 
     /**

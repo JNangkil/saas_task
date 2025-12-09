@@ -1,8 +1,10 @@
 import { Component, OnInit, OnDestroy, Input, Output, EventEmitter, ChangeDetectionStrategy } from '@angular/core';
 import { Observable, Subject, BehaviorSubject, combineLatest, of } from 'rxjs';
-import { takeUntil, catchError, map, switchMap, startWith } from 'rxjs/operators';
+import { takeUntil, catchError, map, switchMap, startWith, take } from 'rxjs/operators';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { TaskDetailsPanelComponent } from './task-details-panel.component';
+import { BulkActionToolbarComponent } from './bulk-action-toolbar.component';
 
 import {
     Task,
@@ -22,12 +24,12 @@ import { ColumnTypeConfigurationService } from '../../services/column-type-confi
 
 // Import cell renderers
 import {
-    BaseCellRendererComponent,
-    TextCellRendererComponent,
-    StatusCellRendererComponent,
-    DateCellRendererComponent,
-    CheckboxCellRendererComponent
+    BaseCellRendererComponent
 } from '../cell-renderers';
+import { TextCellRendererComponent } from '../cell-renderers/text-cell-renderer.component';
+import { StatusCellRendererComponent } from '../cell-renderers/status-cell-renderer.component';
+import { DateCellRendererComponent } from '../cell-renderers/date-cell-renderer.component';
+import { CheckboxCellRendererComponent } from '../cell-renderers/checkbox-cell-renderer.component';
 
 /**
  * Dynamic TaskTableComponent with support for dynamic columns
@@ -39,10 +41,8 @@ import {
     imports: [
         CommonModule,
         FormsModule,
-        TextCellRendererComponent,
-        StatusCellRendererComponent,
-        DateCellRendererComponent,
-        CheckboxCellRendererComponent
+        TaskDetailsPanelComponent,
+        BulkActionToolbarComponent
     ],
     templateUrl: './dynamic-task-table.component.html',
     styleUrls: ['./dynamic-task-table.component.css'],
@@ -52,6 +52,18 @@ export class DynamicTaskTableComponent implements OnInit, OnDestroy {
     // Inputs
     @Input() boardId?: number;
     @Input() config: any = {};
+
+    // Table configuration with defaults
+    get tableConfig() {
+        return {
+            showFilters: this.config.showFilters ?? true,
+            showColumnToggles: this.config.showColumnToggles ?? true,
+            showPagination: this.config.showPagination ?? true,
+            allowRowSelection: this.config.allowRowSelection ?? true,
+            pageSize: this.config.pageSize ?? 15,
+            ...this.config
+        };
+    }
 
     // Outputs
     @Output() taskSelected = new EventEmitter<Task>();
@@ -91,7 +103,7 @@ export class DynamicTaskTableComponent implements OnInit, OnDestroy {
     // Private properties
     private destroy$ = new Subject<void>();
     private refreshTrigger$ = new Subject<void>();
-    private showColumnMenu = false;
+    showColumnMenu = false;
     private fieldValues$ = new BehaviorSubject<Map<number, TaskFieldValue[]>>(new Map<number, TaskFieldValue[]>());
 
     // Task details panel state
@@ -231,7 +243,7 @@ export class DynamicTaskTableComponent implements OnInit, OnDestroy {
             this.boardColumnService.getBoardColumns(
                 parseInt(context.currentTenant.id, 10),
                 parseInt(context.currentWorkspace.id, 10),
-                this.boardId
+                this.boardId || 0
             ).pipe(
                 map(columns => {
                     this.loading$.next(false);
@@ -279,10 +291,9 @@ export class DynamicTaskTableComponent implements OnInit, OnDestroy {
 
                 // Load field values for all tasks
                 this.taskFieldValueService.getTaskFieldValues(
-                    context.currentTenant?.id || 0,
-                    context.currentWorkspace?.id || 0,
-                    taskIds[0] || 0, // Use first task ID for now (would need to batch this in production)
-                    ['field_values']
+                    parseInt(context.currentTenant?.id || '0', 10),
+                    parseInt(context.currentWorkspace?.id || '0', 10),
+                    taskIds[0] || 0 // Use first task ID for now (would need to batch this in production)
                 ).pipe(
                     map(fieldValues => {
                         // Group field values by task ID
@@ -309,7 +320,7 @@ export class DynamicTaskTableComponent implements OnInit, OnDestroy {
                     }),
                     catchError(error => {
                         console.error('Error loading field values:', error);
-                        return new Map();
+                        return of(new Map());
                     }),
                     takeUntil(this.destroy$)
                 ).subscribe(fieldValuesMap => {
@@ -322,21 +333,21 @@ export class DynamicTaskTableComponent implements OnInit, OnDestroy {
     /**
      * Get cell renderer component class based on column type
      */
-    getCellRendererClass(columnType: ColumnType): typeof BaseCellRendererComponent {
+    getCellRendererClass(columnType: ColumnType): string {
         switch (columnType) {
             case 'text':
             case 'long_text':
-                return TextCellRendererComponent;
+                return 'app-text-cell-renderer';
             case 'status':
             case 'priority':
-                return StatusCellRendererComponent;
+                return 'app-status-cell-renderer';
             case 'date':
             case 'datetime':
-                return DateCellRendererComponent;
+                return 'app-date-cell-renderer';
             case 'checkbox':
-                return CheckboxCellRendererComponent;
+                return 'app-checkbox-cell-renderer';
             default:
-                return TextCellRendererComponent; // Fallback to text renderer
+                return 'app-text-cell-renderer'; // Fallback to text renderer
         }
     }
 
@@ -438,8 +449,9 @@ export class DynamicTaskTableComponent implements OnInit, OnDestroy {
                 task.id === updatedTask.id ? updatedTask : task
             );
 
-            // Create a new observable with the updated tasks
-            this.tasks$ = of(updatedTasks);
+            // Update tasks observable with the updated tasks
+            const currentTasksValue = this.tasks$ as BehaviorSubject<Task[]>;
+            currentTasksValue.next(updatedTasks);
         });
 
         this.taskUpdate.emit(updatedTask);
@@ -470,6 +482,18 @@ export class DynamicTaskTableComponent implements OnInit, OnDestroy {
         this.selectionCleared.emit();
     }
 
+    getSelectedTasks(): Task[] {
+        const selectedTaskIds = Array.from(this.selectedTasks$.value);
+        const allTasks: Task[] = [];
+
+        // Get current tasks from the observable
+        this.tasks$.pipe(take(1)).subscribe(tasks => {
+            allTasks.push(...tasks);
+        });
+
+        return allTasks.filter(task => selectedTaskIds.includes(task.id));
+    }
+
     /**
      * Handle bulk action toolbar tasks update
      */
@@ -483,8 +507,9 @@ export class DynamicTaskTableComponent implements OnInit, OnDestroy {
                 return updatedTask || task;
             });
 
-            // Create a new observable with the updated tasks
-            this.tasks$ = of(mergedTasks);
+            // Update tasks observable with the merged tasks
+            const currentTasksValue = this.tasks$ as BehaviorSubject<Task[]>;
+            currentTasksValue.next(mergedTasks);
         });
 
         // Emit task updates
@@ -505,8 +530,9 @@ export class DynamicTaskTableComponent implements OnInit, OnDestroy {
                 task.id === updatedTask.id ? updatedTask : task
             );
 
-            // Create a new observable with the updated tasks
-            this.tasks$ = of(updatedTasks);
+            // Update tasks observable with the updated tasks
+            const currentTasksValue = this.tasks$ as BehaviorSubject<Task[]>;
+            currentTasksValue.next(updatedTasks);
         });
 
         this.taskUpdate.emit(updatedTask);
@@ -524,8 +550,8 @@ export class DynamicTaskTableComponent implements OnInit, OnDestroy {
             }
 
             this.taskFieldValueService.updateTaskFieldValue(
-                parseInt(context.currentTenant.id, 10),
-                parseInt(context.currentWorkspace.id, 10),
+                parseInt(context.currentTenant?.id || '0', 10),
+                parseInt(context.currentWorkspace?.id || '0', 10),
                 taskId,
                 taskId, // Field value ID is the same as task ID in this simplified version
                 value
@@ -556,6 +582,78 @@ export class DynamicTaskTableComponent implements OnInit, OnDestroy {
      */
     refreshTasks(): void {
         this.refreshTrigger$.next();
+    }
+
+    toggleColumnMenu(): void {
+        this.showColumnMenu = !this.showColumnMenu;
+    }
+
+    onColumnVisibilityToggle(columnKey: string): void {
+        // This would need to be implemented based on column visibility management
+        console.log('Toggle column visibility:', columnKey);
+    }
+
+    getColumnVisibility(columnKey: string): boolean {
+        // This would need to be implemented based on column visibility management
+        return true;
+    }
+
+    onSelectAllTasks(checked: boolean): void {
+        if (checked) {
+            // Select all visible tasks
+            this.tasks$.pipe(take(1)).subscribe(tasks => {
+                const taskIds = tasks.map(task => task.id);
+                this.selectedTasks$.next(new Set(taskIds));
+                this.showBulkActionToolbar = taskIds.length > 0;
+            });
+        } else {
+            // Clear selection
+            this.selectedTasks$.next(new Set());
+            this.showBulkActionToolbar = false;
+        }
+    }
+
+    isSortable(columnType: string): boolean {
+        // Define which column types are sortable
+        const sortableTypes = ['text', 'long_text', 'number', 'date', 'datetime', 'status', 'priority'];
+        return sortableTypes.includes(columnType);
+    }
+
+    getFieldValue(task: Task, columnId: number): any {
+        // First check if it's a built-in field
+        if (columnId === 1) return task.title; // Assuming column 1 is title
+        if (columnId === 2) return task.description; // Assuming column 2 is description
+        if (columnId === 3) return task.status; // Assuming column 3 is status
+        if (columnId === 4) return task.priority; // Assuming column 4 is priority
+
+        // Check field values
+        const fieldValues = this.fieldValues$.value.get(task.id) || [];
+        const fieldValue = fieldValues.find(fv => fv.board_column_id === columnId);
+        return fieldValue ? fieldValue.value : null;
+    }
+
+    onTaskSelect(task: Task, selected: boolean): void {
+        const currentSelection = new Set(this.selectedTasks$.value);
+
+        if (selected) {
+            currentSelection.add(task.id);
+        } else {
+            currentSelection.delete(task.id);
+        }
+
+        this.selectedTasks$.next(currentSelection);
+        this.showBulkActionToolbar = currentSelection.size > 0;
+
+        // Emit events
+        if (selected) {
+            this.taskSelected.emit(task);
+        }
+
+        // Get selected tasks and emit
+        const selectedTasks = this.getSelectedTasks();
+        if (selectedTasks.length > 0) {
+            this.tasksSelected.emit(selectedTasks);
+        }
     }
 
     /**
@@ -689,7 +787,7 @@ export class DynamicTaskTableComponent implements OnInit, OnDestroy {
      * Format status for display
      */
     formatStatus(status: string): string {
-        return status.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+        return status.replace(/_/g, ' ').replace(/\b\w/g, (match, letter) => letter.toUpperCase());
     }
 
     /**

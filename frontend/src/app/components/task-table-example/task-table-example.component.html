@@ -8,7 +8,7 @@
     </div>
 
     <!-- Workspace Context Info -->
-    <div class="workspace-info" *ngIf="workspaceInfo | async as context">
+    <div class="workspace-info" *ngIf="workspaceInfo$ | async as context">
         <h3>Current Context</h3>
         <div class="context-details">
             <div class="context-item">
@@ -29,7 +29,7 @@
     </div>
 
     <!-- Selected Tasks Actions -->
-    <div class="selected-actions" *ngIf="hasSelectedTasks()">
+    <div class="selected-actions" *ngIf="hasSelectedTasks">
         <h3>Selected Tasks ({{ selectedTasksCount }})</h3>
         <div class="action-buttons">
             <button class="action-btn complete-btn" (click)="onMarkAsComplete()"
@@ -60,7 +60,7 @@
             <div class="task-item">
                 <strong>Status:</strong>
                 <span class="status-badge" [class]="'status-' + currentTask.status">
-                    {{ currentTask.status.replace(/_/g, ' ') }}
+                    {{ currentTask.status.replace('_', ' ') }}
                 </span>
             </div>
             <div class="task-item">

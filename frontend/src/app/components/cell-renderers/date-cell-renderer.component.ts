@@ -1,4 +1,5 @@
 import { Component } from '@angular/core';
+import { CommonModule } from '@angular/common';
 import { BaseCellRendererComponent } from './base-cell-renderer.component';
 
 /**
@@ -7,6 +8,8 @@ import { BaseCellRendererComponent } from './base-cell-renderer.component';
  */
 @Component({
     selector: 'app-date-cell-renderer',
+    standalone: true,
+    imports: [CommonModule],
     template: `
         <div [ngClass]="getCellClasses()" (click)="startEditing()">
             <div [ngClass]="getContentClasses()">
@@ -18,7 +21,7 @@ import { BaseCellRendererComponent } from './base-cell-renderer.component';
                 <ng-container *ngIf="isEditing">
                     <input 
                         #dateInput
-                        [type]="column?.type === 'datetime' ? 'datetime-local' : 'date'"
+                        [type]="column.type === 'datetime' ? 'datetime-local' : 'date'"
                         class="form-control date-input"
                         [value]="formatInputValue(value)"
                         [disabled]="readonly"

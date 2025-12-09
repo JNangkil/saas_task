@@ -53,7 +53,7 @@
                 <div class="detail-group">
                     <label class="detail-label">Status</label>
                     <div *ngIf="!editing" class="status-badge" [class]="getStatusBadgeClass(task.status)">
-                        {{ task.status.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase()) }}
+                        {{ task.status.replace('_', ' ') | titlecase }}
                     </div>
                     <select *ngIf="editing" class="detail-select" [(ngModel)]="editedTask.status" [disabled]="saving">
                         <option *ngFor="let option of statusOptions" [value]="option.value">
@@ -210,8 +210,13 @@
                             <div class="comment-item" *ngFor="let comment of task.comments">
                                 <div class="comment-avatar"
                                     [style.background-color]="getAvatarColor(comment.user_id + '@example.com')">
-                                    {{ getUserInitials({ id: comment.user_id, name: 'User ' + comment.user_id, email:
-                                    comment.user_id + '@example.com' } as User) }}
+                                    {{ getUserInitials({
+                                    id: comment.user_id,
+                                    name: 'User ' + comment.user_id,
+                                    email: comment.user_id + '@example.com',
+                                    created_at: '',
+                                    updated_at: ''
+                                    }) }}
                                 </div>
                                 <div class="comment-content">
                                     <div class="comment-header">

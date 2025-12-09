@@ -1,4 +1,6 @@
 import { Component, Input, Output, EventEmitter, OnInit, OnDestroy, ChangeDetectionStrategy } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
 import { Observable, Subject, of } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
 import { Task, TaskUpdate, User } from '../../models';
@@ -18,7 +20,7 @@ import { WorkspaceContextService } from '../../services/workspace-context.servic
 @Component({
     selector: 'app-bulk-action-toolbar',
     standalone: true,
-    imports: [],
+    imports: [CommonModule, FormsModule],
     templateUrl: './bulk-action-toolbar.component.html',
     styleUrls: ['./bulk-action-toolbar.component.css'],
     changeDetection: ChangeDetectionStrategy.OnPush

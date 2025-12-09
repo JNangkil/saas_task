@@ -23,8 +23,8 @@
                     </div>
                     <div class="column-options">
                         <label class="column-option" *ngFor="let column of (columns$ | async)">
-                            <input type="checkbox" [checked]="getColumnVisibility(column.key)"
-                                (change)="onColumnVisibilityToggle(column.key)" class="column-checkbox">
+                            <input type="checkbox" [checked]="getColumnVisibility(column.id)"
+                                (change)="onColumnVisibilityToggle(column.id)" class="column-checkbox">
                             <span class="column-label">{{ column.name }}</span>
                         </label>
                     </div>
@@ -139,48 +139,56 @@
                                 <!-- Dynamic Cell Renderer Component -->
                                 <ng-container [ngSwitch]="column.type">
                                     <!-- Text Cell Renderer -->
-                                    <ng-container *ngSwitchCase="'text' || ngSwitchCase="'long_text'">
-                                        <app-text-cell-renderer 
-                                            [column]=" column" [fieldValue]="getFieldValue(task, column.id)"
-                                        [taskId]="task.id" [readonly]="false"
-                                        (valueChange)="onFieldValueUpdate(task.id, column.id, $event)">
-                                        </app-text-cell-renderer>
+                                    <ng-container *ngSwitchCase="'text'">
+                                        <div class="table-cell" [title]="column.name">
+                                            {{ getFieldValue(task, column.id) || '—' }}
+                                        </div>
+                                    </ng-container>
+
+                                    <ng-container *ngSwitchCase="'long_text'">
+                                        <div class="table-cell" [title]="column.name">
+                                            {{ getFieldValue(task, column.id) || '—' }}
+                                        </div>
                                     </ng-container>
 
                                     <!-- Status Cell Renderer -->
-                                    <ng-container *ngSwitchCase="'status' || ngSwitchCase="'priority'">
-                                        <app-status-cell-renderer 
-                                            [column]=" column" [fieldValue]="getFieldValue(task, column.id)"
-                                        [taskId]="task.id" [readonly]="false"
-                                        (valueChange)="onFieldValueUpdate(task.id, column.id, $event)">
-                                        </app-status-cell-renderer>
+                                    <ng-container *ngSwitchCase="'status'">
+                                        <div class="table-cell" [title]="column.name">
+                                            {{ getFieldValue(task, column.id) || '—' }}
+                                        </div>
+                                    </ng-container>
+
+                                    <ng-container *ngSwitchCase="'priority'">
+                                        <div class="table-cell" [title]="column.name">
+                                            {{ getFieldValue(task, column.id) || '—' }}
+                                        </div>
                                     </ng-container>
 
                                     <!-- Date Cell Renderer -->
-                                    <ng-container *ngSwitchCase="'date' || ngSwitchCase="'datetime'">
-                                        <app-date-cell-renderer 
-                                            [column]=" column" [fieldValue]="getFieldValue(task, column.id)"
-                                        [taskId]="task.id" [readonly]="false"
-                                        (valueChange)="onFieldValueUpdate(task.id, column.id, $event)">
-                                        </app-date-cell-renderer>
+                                    <ng-container *ngSwitchCase="'date'">
+                                        <div class="table-cell" [title]="column.name">
+                                            {{ getFieldValue(task, column.id) || '—' }}
+                                        </div>
+                                    </ng-container>
+
+                                    <ng-container *ngSwitchCase="'datetime'">
+                                        <div class="table-cell" [title]="column.name">
+                                            {{ getFieldValue(task, column.id) || '—' }}
+                                        </div>
                                     </ng-container>
 
                                     <!-- Checkbox Cell Renderer -->
                                     <ng-container *ngSwitchCase="'checkbox'">
-                                        <app-checkbox-cell-renderer [column]="column"
-                                            [fieldValue]="getFieldValue(task, column.id)" [taskId]="task.id"
-                                            [readonly]="false"
-                                            (valueChange)="onFieldValueUpdate(task.id, column.id, $event)">
-                                        </app-checkbox-cell-renderer>
+                                        <div class="table-cell" [title]="column.name">
+                                            {{ getFieldValue(task, column.id) || '—' }}
+                                        </div>
                                     </ng-container>
 
                                     <!-- Default Text Cell Renderer for other types -->
                                     <ng-container *ngSwitchDefault>
-                                        <app-text-cell-renderer [column]="column"
-                                            [fieldValue]="getFieldValue(task, column.id)" [taskId]="task.id"
-                                            [readonly]="false"
-                                            (valueChange)="onFieldValueUpdate(task.id, column.id, $event)">
-                                        </app-text-cell-renderer>
+                                        <div class="table-cell" [title]="column.name">
+                                            {{ getFieldValue(task, column.id) || '—' }}
+                                        </div>
                                     </ng-container>
                                 </ng-container>
                             </td>
@@ -190,55 +198,54 @@
             </div>
         </ng-container>
     </div>
+</div>
 
-    <!-- Pagination -->
-    <div class="pagination-container" <ng-container
-        *ngIf="tableConfig.showPagination && !(loading$ | async) && !(error$ | async) && (tasks$ | async as tasks); tasks.length > 0">
-        <div class="pagination-info" *ngIf="pagination$ | async as pagination">
-            Showing {{ (((pagination$ | async)?.currentPage || 1) - 1) * tableConfig.pageSize + 1) -{
-            Math.min(((pagination$ | async)?.currentPage || 1) * tableConfig.pageSize, (pagination$ | async)?.total ||
-            0)
-            }} of {{ (pagination$ | async)?.total || 0 }} tasks
-        </div>
-
-        <div class="pagination-controls" *ngIf="pagination$ | async as pagination">
-            <button class="pagination-btn" (click)="onPageChange(1)" [disabled]="pagination.currentPage === 1">
-                First
-            </button>
-            <button class="pagination-btn" (click)="onPageChange(pagination.currentPage - 1)"
-                [disabled]="!pagination.hasPrev">
-                Previous
-            </button>
-
-            <div class="page-numbers">
-                <button class="pagination-btn page-number"
-                    *ngFor="let page of getPageNumbers(pagination.currentPage, pagination.totalPages)"
-                    [class.active]="page === pagination.currentPage" [disabled]="page === '...'"
-                    [disabled]="page === '...'" (click)="page !== '...' ? onPageChange(page as number) : null">
-                    {{ page }}
-                </button>
-            </div>
-
-            <button class="pagination-btn" (click)="onPageChange(pagination.currentPage + 1)"
-                [disabled]="!pagination.hasNext">
-                Next
-            </button>
-            <button class="pagination-btn" (click)="onPageChange(pagination.totalPages)"
-                [disabled]="pagination.currentPage === pagination.totalPages">
-                Last
-            </button>
-        </div>
-        </ng-container>
-
-        <!-- Task Details Panel -->
-        <app-task-details-panel *ngIf="selectedTaskForDetails" [task]="selectedTaskForDetails"
-            [visible]="showTaskDetailsPanel" (close)="onTaskDetailsPanelClose()"
-            (minimize)="onTaskDetailsPanelMinimize()" (taskUpdate)="onTaskDetailsPanelUpdate($event)">
-        </app-task-details-panel>
-
-        <!-- Bulk Action Toolbar -->
-        <app-bulk-action-toolbar [selectedTasks]="getSelectedTasks()" [visible]="showBulkActionToolbar"
-            (tasksUpdated)="onBulkActionToolbarTasksUpdate($event)"
-            (selectionCleared)="onBulkActionToolbarSelectionClear()">
-        </app-bulk-action-toolbar>
+<!-- Pagination -->
+<div class="pagination-container"
+    *ngIf="tableConfig.showPagination && !(loading$ | async) && !(error$ | async) && (tasks$ | async as tasks) && tasks.length > 0">
+    <div class="pagination-info" *ngIf="pagination$ | async as pagination">
+        Showing {{ (((pagination.currentPage || 1) - 1) * tableConfig.pageSize + 1) }}-{{
+        Math.min((pagination.currentPage || 1) * tableConfig.pageSize, pagination.total || 0)
+        }} of {{ pagination.total || 0 }} tasks
     </div>
+
+    <div class="pagination-controls" *ngIf="pagination$ | async as pagination">
+        <button class="pagination-btn" (click)="onPageChange(1)" [disabled]="pagination.currentPage === 1">
+            First
+        </button>
+        <button class="pagination-btn" (click)="onPageChange(pagination.currentPage - 1)"
+            [disabled]="!pagination.hasPrev">
+            Previous
+        </button>
+
+        <div class="page-numbers">
+            <button class="pagination-btn page-number"
+                *ngFor="let page of getPageNumbers(pagination.currentPage, pagination.totalPages)"
+                [class.active]="page === pagination.currentPage" [disabled]="page === '...'"
+                (click)="page !== '...' ? onPageChange(page as number) : null">
+                {{ page }}
+            </button>
+        </div>
+
+        <button class="pagination-btn" (click)="onPageChange(pagination.currentPage + 1)"
+            [disabled]="!pagination.hasNext">
+            Next
+        </button>
+        <button class="pagination-btn" (click)="onPageChange(pagination.totalPages)"
+            [disabled]="pagination.currentPage === pagination.totalPages">
+            Last
+        </button>
+    </div>
+
+    <!-- Task Details Panel -->
+    <app-task-details-panel *ngIf="selectedTaskForDetails" [task]="selectedTaskForDetails"
+        [visible]="showTaskDetailsPanel" (close)="onTaskDetailsPanelClose()" (minimize)="onTaskDetailsPanelMinimize()"
+        (taskUpdate)="onTaskDetailsPanelUpdate($event)">
+    </app-task-details-panel>
+
+    <!-- Bulk Action Toolbar -->
+    <app-bulk-action-toolbar [selectedTasks]="getSelectedTasks()" [visible]="showBulkActionToolbar"
+        (tasksUpdated)="onBulkActionToolbarTasksUpdate($event)"
+        (selectionCleared)="onBulkActionToolbarSelectionClear()">
+    </app-bulk-action-toolbar>
+</div>

@@ -1,4 +1,5 @@
 import { Component } from '@angular/core';
+import { CommonModule } from '@angular/common';
 import { BaseCellRendererComponent } from './base-cell-renderer.component';
 
 /**
@@ -7,6 +8,8 @@ import { BaseCellRendererComponent } from './base-cell-renderer.component';
  */
 @Component({
     selector: 'app-status-cell-renderer',
+    standalone: true,
+    imports: [CommonModule],
     template: `
         <div [ngClass]="getCellClasses()" (click)="startEditing()">
             <div [ngClass]="getContentClasses()">

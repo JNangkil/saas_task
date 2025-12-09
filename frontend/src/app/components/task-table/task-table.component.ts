@@ -312,6 +312,12 @@ export class TaskTableComponent implements OnInit, OnDestroy {
         this.currentPage$.next(page);
     }
 
+    onPageClick(page: string | number): void {
+        if (page !== '...') {
+            this.onPageChange(page as number);
+        }
+    }
+
     /**
      * Handle column visibility toggle
      */
@@ -560,6 +566,19 @@ export class TaskTableComponent implements OnInit, OnDestroy {
     }
 
     /**
+     * Get selected tasks for bulk action toolbar
+     */
+    getSelectedTasks(): Task[] {
+        const selectedTasks = this.selectedTasks$.value;
+        this.tasks$.subscribe(tasks => {
+            return tasks.filter(task => selectedTasks.has(task.id));
+        }).unsubscribe();
+
+        // Return empty array if no tasks loaded yet
+        return [];
+    }
+
+    /**
      * Check if column is visible
      */
     getColumnVisibility(columnKey: string): boolean {
@@ -594,6 +613,11 @@ export class TaskTableComponent implements OnInit, OnDestroy {
         }
         return colors[Math.abs(hash) % colors.length];
     }
+
+    /**
+     * Math utility for template access
+     */
+    Math = Math;
 
     /**
      * Track tasks by ID for better performance
