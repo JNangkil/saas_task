@@ -14,39 +14,39 @@
 - [x] 2.1 Create Tenant model with relationships (workspaces, users, boards)
 - [x] 2.2 Create Workspace model with relationships (tenant, users, boards) and soft deletes
 - [x] 2.3 Update User model with tenant and workspace relationships
-- [ ] 2.4 Define model factories for Tenant and Workspace
+- [x] 2.4 Define model factories for Tenant and Workspace
 
 ## 3. Multi-Tenant Middleware & Scoping
 
 - [x] 3.1 Create TenantResolution middleware (resolve from subdomain → header → JWT claim)
-- [ ] 3.2 Implement TenantScope global scope for automatic query filtering
-- [ ] 3.3 Register middleware and scopes in service providers
-- [ ] 3.4 Add tenant_id to JWT claims during authentication
-- [ ] 3.5 Create helper for accessing current tenant context
+- [x] 3.2 Implement TenantScope global scope for automatic query filtering
+- [x] 3.3 Register middleware and scopes in service providers
+- [x] 3.4 Add tenant_id to JWT claims during authentication
+- [x] 3.5 Create helper for accessing current tenant context
 
 ## 4. Authorization & Policies
 
-- [ ] 4.1 Create TenantPolicy (view, update, delete, manage-users)
-- [ ] 4.2 Create WorkspacePolicy (view, create, update, archive, delete, manage-users)
-- [ ] 4.3 Register policies in AuthServiceProvider
-- [ ] 4.4 Implement role-based access within tenant (owner, admin, member, viewer)
+- [x] 4.1 Create TenantPolicy (view, update, delete, manage-users)
+- [x] 4.2 Create WorkspacePolicy (view, create, update, archive, delete, manage-users)
+- [x] 4.3 Register policies in AuthServiceProvider
+- [x] 4.4 Implement role-based access within tenant (owner, admin, member, viewer)
 
 ## 5. Laravel API Endpoints - Tenants
 
 - [x] 5.1 Create TenantController with index, show, store, update methods
 - [x] 5.2 Implement tenant archive/deactivate endpoint
-- [ ] 5.3 Create TenantRequest form validation classes
-- [ ] 5.4 Create TenantResource for API response formatting
-- [ ] 5.5 Add routes: GET/POST /api/tenants, GET/PUT/DELETE /api/tenants/{tenant}
+- [x] 5.3 Create TenantRequest form validation classes
+- [x] 5.4 Create TenantResource for API response formatting
+- [x] 5.5 Add routes: GET/POST /api/tenants, GET/PUT/DELETE /api/tenants/{tenant}
 
 ## 6. Laravel API Endpoints - Workspaces
 
 - [x] 6.1 Create WorkspaceController with index, show, store, update methods
 - [x] 6.2 Implement workspace archive/delete endpoint (soft delete)
-- [ ] 6.3 Create WorkspaceRequest form validation classes
-- [ ] 6.4 Create WorkspaceResource for API response formatting
-- [ ] 6.5 Add routes: GET/POST /api/tenants/{tenant}/workspaces, GET/PUT/DELETE /api/workspaces/{workspace}
-- [ ] 6.6 Implement pagination and filtering for workspace listing
+- [x] 6.3 Create WorkspaceRequest form validation classes
+- [x] 6.4 Create WorkspaceResource for API response formatting
+- [x] 6.5 Add routes: GET/POST /api/tenants/{tenant}/workspaces, GET/PUT/DELETE /api/workspaces/{workspace}
+- [x] 6.6 Implement pagination and filtering for workspace listing
 
 ## 7. Angular Services
 
@@ -62,30 +62,30 @@
 - [x] 8.2 Implement workspace switching functionality
 - [x] 8.3 Persist last selected workspace (localStorage or backend)
 - [x] 8.4 Handle workspace loading states and errors
-- [ ] 8.5 Style selector with consistent design system
+- [x] 8.5 Style selector with consistent design system
 
 ## 9. Angular UI - Workspace Management
 
 - [x] 9.1 Create WorkspaceListComponent (list all workspaces for user)
 - [x] 9.2 Create WorkspaceFormComponent (create/edit workspace)
-- [ ] 9.3 Implement color/icon picker for workspace customization
-- [ ] 9.4 Add archive/delete confirmation dialogs
-- [ ] 9.5 Handle inactive/disabled workspace states
-- [ ] 9.6 Add workspace settings page with member management
+- [x] 9.3 Implement color/icon picker for workspace customization
+- [x] 9.4 Add archive/delete confirmation dialogs
+- [x] 9.5 Handle inactive/disabled workspace states
+- [x] 9.6 Add workspace settings page with member management
 
 ## 10. Integration & Error Handling
 
 - [x] 10.1 Handle 403/404 responses for tenant/workspace access errors
 - [x] 10.2 Add toast notifications for workspace operations
 - [x] 10.3 Implement navigation guards for workspace context
-- [ ] 10.4 Auto-redirect when workspace becomes inactive/deleted
+- [x] 10.4 Auto-redirect when workspace becomes inactive/deleted
 
 ## 11. Testing & Validation
 
-- [ ] 11.1 Write PHPUnit tests for Tenant CRUD operations
-- [ ] 11.2 Write PHPUnit tests for Workspace CRUD operations
-- [ ] 11.3 Write PHPUnit tests for tenant isolation (cross-tenant access denied)
-- [ ] 11.4 Write PHPUnit tests for authorization policies
-- [ ] 11.5 Write Angular unit tests for TenantService and WorkspaceService
-- [ ] 11.6 Write Angular unit tests for WorkspaceSelectorComponent
-- [ ] 11.7 Manual E2E testing: create tenant → create workspace → switch workspace → archive workspace
+- [x] 11.1 Write PHPUnit tests for Tenant CRUD operations
+- [x] 11.2 Write PHPUnit tests for Workspace CRUD operations
+- [x] 11.3 Write PHPUnit tests for tenant isolation (cross-tenant access denied)
+- [x] 11.4 Write PHPUnit tests for authorization policies
+- [x] 11.5 Write Angular unit tests for TenantService and WorkspaceService
+- [x] 11.6 Write Angular unit tests for WorkspaceSelectorComponent
+- [x] 11.7 Manual E2E testing: create tenant → create workspace → switch workspace → archive workspace

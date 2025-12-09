@@ -68,9 +68,6 @@ import { WorkspaceService } from '../../services/workspace.service';
               <span class="role-badge" [class]="'badge-' + workspace.user_role" *ngIf="workspace.user_role">
                 {{ formatRole(workspace.user_role) }}
               </span>
-              <svg *ngIf="workspace.id === context.currentWorkspace?.id" class="check-icon" width="16" height="16" viewBox="0 0 16 16" fill="none">
-                <path d="M13.5 4.5L6 12L2.5 8.5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-              </svg>
             </div>
           </div>
         </div>
@@ -91,186 +88,216 @@ import { WorkspaceService } from '../../services/workspace.service';
       position: relative;
       display: inline-block;
     }
-
+    
     .selector-trigger {
       display: flex;
       align-items: center;
       justify-content: space-between;
       gap: 12px;
-      padding: 8px 12px;
-      min-width: 220px;
+      padding: 10px 14px;
+      min-width: 240px;
       background: white;
       border: 1px solid var(--slate-200, #e2e8f0);
       border-radius: var(--radius-lg, 12px);
       cursor: pointer;
-      transition: all 0.2s ease;
+      transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+      box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
     }
-
+    
     .selector-trigger:hover {
       border-color: var(--slate-300, #cbd5e1);
       box-shadow: var(--shadow-sm, 0 1px 3px 0 rgb(0 0 0 / 0.1));
+      transform: translateY(-1px);
     }
-
-    .selector-trigger.open {
-      border-color: var(--primary-500, #6366f1);
-      box-shadow: 0 0 0 3px var(--primary-100, #e0e7ff);
+    
+    .selector-trigger:active {
+      transform: translateY(0);
     }
-
+    
     .selector-content {
       display: flex;
       align-items: center;
-      gap: 10px;
+      gap: 12px;
+      flex: 1;
+      min-width: 0;
     }
-
+    
     .workspace-icon {
-      width: 36px;
-      height: 36px;
-      border-radius: var(--radius-md, 8px);
+      width: 40px;
+      height: 40px;
+      border-radius: var(--radius-md, 10px);
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 18px;
+      font-size: 20px;
       background: var(--gradient-primary, linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%));
       color: white;
+      box-shadow: 0 2px 8px rgba(99, 102, 241, 0.2);
+      flex-shrink: 0;
     }
-
+    
     .workspace-info {
       display: flex;
       flex-direction: column;
       align-items: flex-start;
       text-align: left;
+      flex: 1;
+      min-width: 0;
     }
-
+    
     .workspace-name {
       font-size: 14px;
       font-weight: 600;
       color: var(--slate-800, #1e293b);
       line-height: 1.3;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      max-width: 100%;
     }
-
+    
     .workspace-meta {
       font-size: 12px;
       color: var(--slate-500, #64748b);
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      flex-shrink: 0;
     }
-
+    
     .chevron-icon {
       color: var(--slate-400, #94a3b8);
-      transition: transform 0.2s ease;
+      transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+      flex-shrink: 0;
     }
-
+    
     .chevron-icon.rotated {
       transform: rotate(180deg);
     }
-
+    
     /* Dropdown Panel */
     .dropdown-panel {
       position: absolute;
       top: calc(100% + 8px);
       left: 0;
       right: 0;
-      min-width: 280px;
+      min-width: 300px;
+      max-width: 400px;
       background: white;
       border: 1px solid var(--slate-100, #f1f5f9);
       border-radius: var(--radius-xl, 16px);
       box-shadow: var(--shadow-xl, 0 20px 25px -5px rgb(0 0 0 / 0.1));
       z-index: var(--z-dropdown, 100);
-      animation: slideDown 0.2s ease-out;
+      animation: slideDown 0.3s cubic-bezier(0.4, 0, 0.2, 1);
       overflow: hidden;
+      backdrop-filter: blur(8px);
     }
-
+    
     @keyframes slideDown {
       from {
         opacity: 0;
-        transform: translateY(-8px);
+        transform: translateY(-10px) scale(0.95);
       }
       to {
         opacity: 1;
-        transform: translateY(0);
+        transform: translateY(0) scale(1);
       }
     }
-
+    
     .dropdown-header {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      padding: 14px 16px;
+      padding: 16px 20px;
       border-bottom: 1px solid var(--slate-100, #f1f5f9);
+      background: var(--slate-50, #f8fafc);
     }
-
+    
     .header-label {
-      font-size: 11px;
+      font-size: 12px;
       font-weight: 600;
       text-transform: uppercase;
       letter-spacing: 0.05em;
-      color: var(--slate-500, #64748b);
+      color: var(--slate-600, #475569);
     }
-
+    
     .header-count {
       font-size: 11px;
       font-weight: 600;
-      color: var(--slate-400, #94a3b8);
-      background: var(--slate-100, #f1f5f9);
-      padding: 2px 8px;
+      color: var(--slate-500, #64748b);
+      background: var(--slate-200, #e2e8f0);
+      padding: 3px 10px;
       border-radius: var(--radius-full, 9999px);
     }
-
+    
     .dropdown-body {
-      max-height: 320px;
+      max-height: 360px;
       overflow-y: auto;
       padding: 8px 0;
     }
-
+    
     .workspace-item {
       position: relative;
       display: flex;
       align-items: center;
-      gap: 12px;
-      padding: 12px 16px;
+      gap: 14px;
+      padding: 14px 20px;
       cursor: pointer;
-      transition: background 0.15s ease;
+      transition: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+      border-radius: var(--radius-md, 8px);
+      margin: 2px 8px;
     }
-
+    
     .workspace-item:hover {
       background: var(--slate-50, #f8fafc);
+      transform: translateX(2px);
     }
-
+    
     .workspace-item.active {
       background: var(--primary-50, #eef2ff);
+      box-shadow: 0 0 0 1px var(--primary-200, #c7d2fe);
     }
-
+    
     .item-indicator {
       position: absolute;
       left: 0;
-      top: 8px;
-      bottom: 8px;
+      top: 12px;
+      bottom: 12px;
       width: 3px;
       background: transparent;
       border-radius: 0 3px 3px 0;
-      transition: background 0.15s ease;
+      transition: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
     }
-
+    
     .workspace-item.active .item-indicator {
       background: linear-gradient(180deg, var(--primary-500, #6366f1) 0%, var(--secondary-500, #8b5cf6) 100%);
+      box-shadow: 0 0 8px rgba(99, 102, 241, 0.3);
     }
-
+    
     .item-icon {
-      width: 40px;
-      height: 40px;
-      border-radius: var(--radius-md, 8px);
+      width: 44px;
+      height: 44px;
+      border-radius: var(--radius-md, 10px);
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 18px;
+      font-size: 20px;
       flex-shrink: 0;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+      transition: transform 0.15s ease;
     }
-
+    
+    .workspace-item:hover .item-icon {
+      transform: scale(1.05);
+    }
+    
     .item-content {
       flex: 1;
       min-width: 0;
       display: flex;
       flex-direction: column;
     }
-
+    
     .item-name {
       font-size: 14px;
       font-weight: 500;
@@ -278,103 +305,203 @@ import { WorkspaceService } from '../../services/workspace.service';
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
+      margin-bottom: 2px;
     }
-
+    
     .item-description {
       font-size: 12px;
       color: var(--slate-500, #64748b);
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
+      line-height: 1.4;
     }
-
+    
     .item-meta {
       display: flex;
       align-items: center;
-      gap: 8px;
+      gap: 10px;
+      flex-shrink: 0;
     }
-
+    
     .role-badge {
       font-size: 10px;
       font-weight: 600;
       text-transform: uppercase;
-      padding: 3px 8px;
+      padding: 4px 8px;
       border-radius: var(--radius-full, 9999px);
       letter-spacing: 0.02em;
+      box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
     }
-
+    
     .badge-owner {
       background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
       color: white;
     }
-
+    
     .badge-admin {
       background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%);
       color: white;
     }
-
+    
     .badge-member {
       background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);
       color: white;
     }
-
+    
     .badge-viewer {
       background: linear-gradient(135deg, #64748b 0%, #475569 100%);
       color: white;
     }
-
+    
     .check-icon {
       color: var(--primary-500, #6366f1);
+      animation: checkIn 0.2s ease-out;
     }
-
+    
+    @keyframes checkIn {
+      from {
+        transform: scale(0);
+        opacity: 0;
+      }
+      to {
+        transform: scale(1);
+        opacity: 1;
+      }
+    }
+    
     .dropdown-footer {
-      padding: 12px;
+      padding: 16px 20px;
       border-top: 1px solid var(--slate-100, #f1f5f9);
       background: var(--slate-50, #f8fafc);
     }
-
+    
     .manage-btn {
       display: flex;
       align-items: center;
       justify-content: center;
       gap: 8px;
       width: 100%;
-      padding: 10px 16px;
+      padding: 12px 20px;
       background: linear-gradient(135deg, var(--primary-500, #6366f1) 0%, var(--secondary-500, #8b5cf6) 100%);
       color: white;
       border: none;
-      border-radius: var(--radius-md, 8px);
-      font-size: 13px;
-      font-weight: 500;
+      border-radius: var(--radius-md, 10px);
+      font-size: 14px;
+      font-weight: 600;
       cursor: pointer;
-      transition: all 0.2s ease;
+      transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+      box-shadow: 0 2px 8px rgba(99, 102, 241, 0.3);
     }
-
+    
     .manage-btn:hover {
-      box-shadow: 0 4px 12px rgba(99, 102, 241, 0.4);
-      transform: translateY(-1px);
+      box-shadow: 0 4px 16px rgba(99, 102, 241, 0.4);
+      transform: translateY(-2px);
     }
-
+    
+    .manage-btn:active {
+      transform: translateY(0);
+    }
+    
     .manage-btn svg {
       opacity: 0.9;
+      transition: opacity 0.2s ease;
     }
-
+    
+    .manage-btn:hover svg {
+      opacity: 1;
+    }
+    
     /* Scrollbar styling */
     .dropdown-body::-webkit-scrollbar {
       width: 6px;
     }
-
+    
     .dropdown-body::-webkit-scrollbar-track {
       background: var(--slate-100, #f1f5f9);
+      border-radius: 3px;
     }
-
+    
     .dropdown-body::-webkit-scrollbar-thumb {
       background: var(--slate-300, #cbd5e1);
       border-radius: 3px;
+      transition: background 0.2s ease;
     }
-
+    
     .dropdown-body::-webkit-scrollbar-thumb:hover {
       background: var(--slate-400, #94a3b8);
+    }
+    
+    /* Responsive design */
+    @media (max-width: 640px) {
+      .selector-trigger {
+        min-width: 200px;
+        padding: 8px 12px;
+      }
+      
+      .workspace-icon {
+        width: 36px;
+        height: 36px;
+        font-size: 18px;
+      }
+      
+      .workspace-name {
+        font-size: 13px;
+      }
+      
+      .workspace-meta {
+        font-size: 11px;
+      }
+      
+      .dropdown-panel {
+        min-width: 280px;
+        max-width: 320px;
+      }
+      
+      .workspace-item {
+        padding: 12px 16px;
+      }
+      
+      .item-icon {
+        width: 40px;
+        height: 40px;
+        font-size: 18px;
+      }
+      
+      .dropdown-header,
+      .dropdown-footer {
+        padding: 12px 16px;
+      }
+    }
+    
+    /* High contrast mode support */
+    @media (prefers-contrast: high) {
+      .selector-trigger {
+        border-width: 2px;
+      }
+      
+      .workspace-item.active {
+        border: 2px solid var(--primary-600, #4f46e5);
+      }
+    }
+    
+    /* Reduced motion support */
+    @media (prefers-reduced-motion: reduce) {
+      .selector-trigger,
+      .workspace-item,
+      .manage-btn,
+      .chevron-icon,
+      .item-icon {
+        transition: none;
+      }
+      
+      .dropdown-panel {
+        animation: none;
+      }
+      
+      .check-icon {
+        animation: none;
+      }
     }
   `]
 })

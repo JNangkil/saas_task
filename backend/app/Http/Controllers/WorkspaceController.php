@@ -27,16 +27,94 @@ class WorkspaceController extends Controller
         }
 
         $workspaces = $tenant->workspaces()
-            ->withCount('users')
+            ->withCount(['users', 'boards'])
+            ->with(['users' => function ($query) {
+                $query->select('users.id', 'name', 'email', 'avatar_url')
+                      ->wherePivotIn('role', ['admin', 'member']);
+            }])
             ->when($request->get('include_archived'), function ($query) {
                 $query->withTrashed();
+            }, function ($query) {
+                $query->whereNull('deleted_at');
             })
             ->when($request->get('search'), function ($query, $search) {
-                $query->where('name', 'like', "%{$search}%");
+                $query->where(function ($q) use ($search) {
+                    $q->where('name', 'like', "%{$search}%")
+                      ->orWhere('description', 'like', "%{$search}%");
+                });
             })
-            ->paginate($request->get('per_page', 15));
+            ->when($request->get('status'), function ($query, $status) {
+                if ($status === 'archived') {
+                    $query->whereNotNull('deleted_at');
+                } elseif ($status === 'active') {
+                    $query->whereNull('deleted_at')->where('is_archived', false);
+                } elseif ($status === 'all') {
+                    // No additional filtering
+                }
+            })
+            ->when($request->get('is_default'), function ($query, $isDefault) {
+                $query->where('is_default', filter_var($isDefault, FILTER_VALIDATE_BOOLEAN));
+            })
+            ->when($request->get('member_count_min'), function ($query, $min) {
+                $query->having('users_count', '>=', (int) $min);
+            })
+            ->when($request->get('member_count_max'), function ($query, $max) {
+                $query->having('users_count', '<=', (int) $max);
+            })
+            ->when($request->get('created_after'), function ($query, $date) {
+                $query->where('created_at', '>=', $date);
+            })
+            ->when($request->get('created_before'), function ($query, $date) {
+                $query->where('created_at', '<=', $date);
+            })
+            ->when($request->get('sort_by'), function ($query, $sortBy) {
+                $sortDirection = $request->get('sort_direction', 'asc');
+                $allowedSorts = ['name', 'created_at', 'updated_at', 'users_count', 'boards_count', 'is_default'];
+                
+                if (in_array($sortBy, $allowedSorts)) {
+                    $query->orderBy($sortBy, $sortDirection === 'desc' ? 'desc' : 'asc');
+                }
+            }, function ($query) {
+                $query->orderBy('is_default', 'desc')
+                      ->orderBy('name', 'asc');
+            });
 
-        return WorkspaceResource::collection($workspaces);
+        // Apply pagination
+        $perPage = (int) $request->get('per_page', 15);
+        $perPage = max(1, min($perPage, 100)); // Ensure between 1 and 100
+        $page = $request->get('page', 1);
+        
+        $result = $workspaces->paginate($perPage, ['*'], 'page', $page);
+
+        // Add filtering metadata
+        $result->additional([
+            'meta' => [
+                'filters' => [
+                    'search' => $request->get('search'),
+                    'status' => $request->get('status', 'active'),
+                    'is_default' => $request->get('is_default'),
+                    'member_count_min' => $request->get('member_count_min'),
+                    'member_count_max' => $request->get('member_count_max'),
+                    'created_after' => $request->get('created_after'),
+                    'created_before' => $request->get('created_before'),
+                    'include_archived' => $request->get('include_archived'),
+                ],
+                'sort' => [
+                    'sort_by' => $request->get('sort_by', 'is_default'),
+                    'sort_direction' => $request->get('sort_direction', 'asc'),
+                ],
+                'pagination' => [
+                    'per_page' => $perPage,
+                    'current_page' => $result->currentPage(),
+                    'last_page' => $result->lastPage(),
+                    'total' => $result->total(),
+                    'from' => $result->firstItem(),
+                    'to' => $result->lastItem(),
+                ],
+            ],
+        ]);
+
+        return WorkspaceResource::collection($result);
     }
 
     /**

@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Traits\HasTenantRoles;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
@@ -11,7 +12,7 @@ use Illuminate\Database\Eloquent\Builder;
 
 class Tenant extends Model
 {
-    use HasFactory;
+    use HasFactory, HasTenantRoles;
 
     /**
      * The attributes that are mass assignable.
@@ -140,8 +141,56 @@ class Tenant extends Model
      */
     public function canUserManage(User $user): bool
     {
-        $role = $this->getUserRole($user);
-        return in_array($role, ['owner', 'admin']);
+        return $this->hasTenantPermission($user, $this, 'manage-settings');
+    }
+
+    /**
+     * Check if a user can perform a specific action in the tenant
+     */
+    public function canUserPerformAction(User $user, string $action): bool
+    {
+        return $this->hasTenantPermission($user, $this, $action);
+    }
+
+    /**
+     * Check if a user can manage another user's role in the tenant
+     */
+    public function canUserManageUserRole(User $user, User $targetUser): bool
+    {
+        return $this->canManageTenantUserRole($user, $targetUser, $this);
+    }
+
+    /**
+     * Get users by role in the tenant
+     */
+    public function getUsersByRole(string $role)
+    {
+        return $this->users()->wherePivot('role', $role)->get();
+    }
+
+    /**
+     * Check if user has any of the specified roles
+     */
+    public function hasAnyRole(User $user, array $roles): bool
+    {
+        $userRole = $this->getUserRole($user);
+        return in_array($userRole, $roles);
+    }
+
+    /**
+     * Check if user has a role at or above the specified level
+     */
+    public function hasRoleAtLeast(User $user, string $role): bool
+    {
+        $userRole = $this->getUserRole($user);
+        if (!$userRole) {
+            return false;
+        }
+
+        $userLevel = $this->getTenantRoleLevel($userRole);
+        $requiredLevel = $this->getTenantRoleLevel($role);
+
+        return $userLevel >= $requiredLevel;
     }
 
     /**

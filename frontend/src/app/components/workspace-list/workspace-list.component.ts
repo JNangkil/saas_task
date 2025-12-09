@@ -4,11 +4,12 @@ import { Router } from '@angular/router';
 import { IWorkspace } from '../../interfaces/workspace.interface';
 import { WorkspaceService } from '../../services/workspace.service';
 import { WorkspaceContextService } from '../../services/workspace-context.service';
+import { ConfirmationDialogComponent, ConfirmationDialogData } from '../confirmation-dialog/confirmation-dialog.component';
 
 @Component({
   selector: 'app-workspace-list',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, ConfirmationDialogComponent],
   template: `
     <div class="workspace-list">
       <!-- Header -->
@@ -63,11 +64,13 @@ import { WorkspaceContextService } from '../../services/workspace-context.servic
       
       <!-- Workspace Grid -->
       <div class="workspace-grid" *ngIf="!isLoading && !error && workspaces.length > 0">
-        <div 
-          class="workspace-card" 
+        <div
+          class="workspace-card"
           *ngFor="let workspace of workspaces; trackBy: trackWorkspace"
           [class.active]="workspace.id === currentWorkspace?.id"
-          [class.archived]="workspace.is_archived"
+          [class.archived]="workspace.is_archived || workspace.status === 'archived'"
+          [class.inactive]="!workspace.is_active || workspace.status === 'inactive'"
+          [class.disabled]="workspace.is_disabled || workspace.status === 'disabled'"
           (click)="selectWorkspace(workspace)">
           
           <!-- Card Header -->
@@ -79,7 +82,11 @@ import { WorkspaceContextService } from '../../services/workspace-context.servic
             </div>
             <div class="card-title-section">
               <h3 class="card-title">{{ workspace.name }}</h3>
-              <span class="card-status" *ngIf="workspace.is_archived">Archived</span>
+              <div class="card-status-badges">
+                <span class="card-status archived" *ngIf="workspace.is_archived || workspace.status === 'archived'">Archived</span>
+                <span class="card-status inactive" *ngIf="!workspace.is_active || workspace.status === 'inactive'">Inactive</span>
+                <span class="card-status disabled" *ngIf="workspace.is_disabled || workspace.status === 'disabled'">Disabled</span>
+              </div>
             </div>
             <div class="card-menu" (click)="$event.stopPropagation()">
               <button 
@@ -109,9 +116,9 @@ import { WorkspaceContextService } from '../../services/workspace-context.servic
                   Members
                 </button>
                 <div class="menu-divider"></div>
-                <button 
+                <button
                   class="menu-item"
-                  *ngIf="!workspace.is_archived"
+                  *ngIf="!workspace.is_archived && workspace.status !== 'archived' && workspace.status !== 'disabled'"
                   (click)="archiveWorkspace(workspace)">
                   <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
                     <rect x="2" y="5" width="10" height="7" rx="1" stroke="currentColor" stroke-width="1.5"/>
@@ -119,15 +126,24 @@ import { WorkspaceContextService } from '../../services/workspace-context.servic
                   </svg>
                   Archive
                 </button>
-                <button 
+                <button
                   class="menu-item"
-                  *ngIf="workspace.is_archived"
+                  *ngIf="workspace.is_archived || workspace.status === 'archived'"
                   (click)="restoreWorkspace(workspace)">
                   <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
                     <path d="M1 7C1 3.68629 3.68629 1 7 1C10.3137 1 13 3.68629 13 7C13 10.3137 10.3137 13 7 13" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
                     <path d="M4 6L1 7L2 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
                   </svg>
                   Restore
+                </button>
+                <button
+                  class="menu-item danger"
+                  *ngIf="!workspace.is_default"
+                  (click)="deleteWorkspace(workspace)">
+                  <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+                    <path d="M3 3H11M5 3V1M9 3V1M4 7H10M5 7V11M9 7V11" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+                  </svg>
+                  Delete
                 </button>
               </div>
             </div>
@@ -185,60 +201,86 @@ import { WorkspaceContextService } from '../../services/workspace-context.servic
           Create Your First Workspace
         </button>
       </div>
+
+      <!-- Confirmation Dialog -->
+      <app-confirmation-dialog
+        [isVisible]="showConfirmDialog"
+        [data]="confirmDialogData"
+        [isLoading]="isDeleting"
+        [loadingText]="isDeleting ? 'Deleting workspace...' : ''"
+        (confirm)="onConfirmAction()"
+        (cancel)="onCancelAction()">
+      </app-confirmation-dialog>
     </div>
   `,
   styles: [`
     .workspace-list {
-      padding: 8px;
+      padding: 12px;
     }
 
     /* Header */
     .list-header {
       display: flex;
       justify-content: space-between;
-      align-items: center;
-      margin-bottom: 32px;
+      align-items: flex-start;
+      margin-bottom: 40px;
+      gap: 20px;
+    }
+
+    .header-content {
+      flex: 1;
     }
 
     .header-title {
       margin: 0;
-      font-size: 28px;
+      font-size: 32px;
       font-weight: 700;
       color: var(--slate-800, #1e293b);
+      background: linear-gradient(135deg, var(--slate-800, #1e293b) 0%, var(--slate-600, #475569) 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      line-height: 1.2;
     }
 
     .header-subtitle {
-      margin: 6px 0 0;
-      font-size: 15px;
+      margin: 8px 0 0;
+      font-size: 16px;
       color: var(--slate-500, #64748b);
+      line-height: 1.5;
     }
 
     .create-btn {
       display: flex;
       align-items: center;
-      gap: 8px;
-      padding: 12px 20px;
+      gap: 10px;
+      padding: 14px 24px;
       background: linear-gradient(135deg, var(--primary-500, #6366f1) 0%, var(--secondary-500, #8b5cf6) 100%);
       color: white;
       border: none;
       border-radius: var(--radius-lg, 12px);
-      font-size: 14px;
+      font-size: 15px;
       font-weight: 600;
       cursor: pointer;
-      transition: all 0.2s ease;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
       box-shadow: 0 4px 14px rgba(99, 102, 241, 0.3);
+      white-space: nowrap;
     }
 
     .create-btn:hover {
       transform: translateY(-2px);
-      box-shadow: 0 6px 20px rgba(99, 102, 241, 0.4);
+      box-shadow: 0 8px 25px rgba(99, 102, 241, 0.4);
+    }
+
+    .create-btn:active {
+      transform: translateY(0);
     }
 
     /* Workspace Grid */
     .workspace-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
-      gap: 24px;
+      grid-template-columns: repeat(auto-fill, minmax(360px, 1fr));
+      gap: 28px;
     }
 
     /* Workspace Card */
@@ -247,25 +289,88 @@ import { WorkspaceContextService } from '../../services/workspace-context.servic
       background: white;
       border: 1px solid var(--slate-100, #f1f5f9);
       border-radius: var(--radius-xl, 16px);
-      padding: 24px;
+      padding: 28px;
       cursor: pointer;
-      transition: all 0.3s ease;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
       overflow: hidden;
+      box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.05);
     }
 
     .workspace-card:hover {
       border-color: var(--slate-200, #e2e8f0);
-      box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.1);
-      transform: translateY(-4px);
+      box-shadow: 0 20px 40px -15px rgba(0, 0, 0, 0.15);
+      transform: translateY(-6px) scale(1.02);
     }
 
     .workspace-card.active {
       border-color: var(--primary-300, #a5b4fc);
-      box-shadow: 0 0 0 3px var(--primary-100, #e0e7ff);
+      box-shadow: 0 0 0 3px var(--primary-100, #e0e7ff), 0 10px 30px -10px rgba(99, 102, 241, 0.2);
     }
 
     .workspace-card.archived {
       opacity: 0.7;
+      filter: grayscale(0.3);
+      position: relative;
+    }
+
+    .workspace-card.archived::after {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0, 0, 0, 0.1);
+      border-radius: var(--radius-xl, 16px);
+      pointer-events: none;
+    }
+
+    .workspace-card.archived:hover {
+      opacity: 0.8;
+      filter: grayscale(0.1);
+    }
+
+    .workspace-card.inactive {
+      opacity: 0.6;
+      border-color: var(--warning-200, #fef3c7);
+      background: var(--warning-50, #fffbeb);
+    }
+
+    .workspace-card.inactive::before {
+      content: '';
+      position: absolute;
+      top: 12px;
+      right: 12px;
+      width: 8px;
+      height: 8px;
+      background: var(--warning-400, #fbbf24);
+      border-radius: 50%;
+      box-shadow: 0 0 0 2px rgba(251, 191, 36, 0.3);
+    }
+
+    .workspace-card.disabled {
+      opacity: 0.5;
+      border-color: var(--slate-300, #cbd5e1);
+      background: var(--slate-100, #f1f5f9);
+      cursor: not-allowed;
+      pointer-events: none;
+    }
+
+    .workspace-card.disabled::before {
+      content: '';
+      position: absolute;
+      top: 12px;
+      right: 12px;
+      width: 8px;
+      height: 8px;
+      background: var(--slate-400, #94a3b8);
+      border-radius: 50%;
+      box-shadow: 0 0 0 2px rgba(148, 163, 184, 0.3);
+    }
+
+    .workspace-card.disabled:hover {
+      transform: none;
+      box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.05);
     }
 
     .active-indicator {
@@ -275,26 +380,41 @@ import { WorkspaceContextService } from '../../services/workspace-context.servic
       right: 0;
       height: 4px;
       background: linear-gradient(90deg, var(--primary-500, #6366f1) 0%, var(--secondary-500, #8b5cf6) 100%);
+      animation: slideIn 0.3s ease-out;
+    }
+
+    @keyframes slideIn {
+      from {
+        transform: scaleX(0);
+      }
+      to {
+        transform: scaleX(1);
+      }
     }
 
     /* Card Header */
     .card-header {
       display: flex;
       align-items: flex-start;
-      gap: 14px;
-      margin-bottom: 16px;
+      gap: 16px;
+      margin-bottom: 20px;
     }
 
     .card-icon {
-      width: 48px;
-      height: 48px;
-      border-radius: var(--radius-lg, 12px);
+      width: 52px;
+      height: 52px;
+      border-radius: var(--radius-lg, 14px);
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 22px;
+      font-size: 24px;
       flex-shrink: 0;
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+      box-shadow: 0 6px 16px rgba(0, 0, 0, 0.12);
+      transition: transform 0.3s ease;
+    }
+
+    .workspace-card:hover .card-icon {
+      transform: scale(1.1) rotate(2deg);
     }
 
     .card-title-section {
@@ -304,23 +424,49 @@ import { WorkspaceContextService } from '../../services/workspace-context.servic
 
     .card-title {
       margin: 0;
-      font-size: 18px;
+      font-size: 20px;
       font-weight: 600;
       color: var(--slate-800, #1e293b);
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
+      line-height: 1.3;
+      margin-bottom: 4px;
+    }
+
+    .card-status-badges {
+      display: flex;
+      gap: 6px;
+      flex-wrap: wrap;
     }
 
     .card-status {
       display: inline-block;
-      font-size: 11px;
-      font-weight: 500;
+      font-size: 10px;
+      font-weight: 600;
+      padding: 3px 8px;
+      border-radius: var(--radius-full, 9999px);
+      text-transform: uppercase;
+      letter-spacing: 0.02em;
+      border: 1px solid;
+    }
+
+    .card-status.archived {
+      color: var(--warning-700, #b45309);
+      background: var(--warning-50, #fffbeb);
+      border-color: var(--warning-200, #fef3c7);
+    }
+
+    .card-status.inactive {
       color: var(--warning-600, #d97706);
       background: var(--warning-50, #fffbeb);
-      padding: 2px 8px;
-      border-radius: var(--radius-sm, 6px);
-      margin-top: 4px;
+      border-color: var(--warning-200, #fef3c7);
+    }
+
+    .card-status.disabled {
+      color: var(--slate-600, #475569);
+      background: var(--slate-100, #f1f5f9);
+      border-color: var(--slate-200, #e2e8f0);
     }
 
     /* Card Menu */
@@ -329,88 +475,113 @@ import { WorkspaceContextService } from '../../services/workspace-context.servic
     }
 
     .menu-btn {
-      width: 32px;
-      height: 32px;
+      width: 36px;
+      height: 36px;
       display: flex;
       align-items: center;
       justify-content: center;
       background: transparent;
       border: none;
-      border-radius: var(--radius-md, 8px);
+      border-radius: var(--radius-md, 10px);
       color: var(--slate-400, #94a3b8);
       cursor: pointer;
-      transition: all 0.15s ease;
+      transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
     }
 
     .menu-btn:hover,
     .menu-btn.open {
       background: var(--slate-100, #f1f5f9);
       color: var(--slate-600, #475569);
+      transform: scale(1.05);
     }
 
     .card-menu-dropdown {
       position: absolute;
       top: 100%;
       right: 0;
-      margin-top: 4px;
-      min-width: 160px;
+      margin-top: 6px;
+      min-width: 180px;
       background: white;
       border: 1px solid var(--slate-100, #f1f5f9);
       border-radius: var(--radius-lg, 12px);
-      box-shadow: var(--shadow-lg, 0 10px 15px -3px rgb(0 0 0 / 0.1));
+      box-shadow: var(--shadow-xl, 0 20px 25px -5px rgb(0 0 0 / 0.1));
       z-index: 10;
       overflow: hidden;
-      animation: scaleIn 0.15s ease-out;
+      animation: scaleIn 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+      backdrop-filter: blur(8px);
     }
 
     @keyframes scaleIn {
       from {
         opacity: 0;
-        transform: scale(0.95);
+        transform: scale(0.9) translateY(-8px);
       }
       to {
         opacity: 1;
-        transform: scale(1);
+        transform: scale(1) translateY(0);
       }
     }
 
     .menu-item {
       display: flex;
       align-items: center;
-      gap: 10px;
+      gap: 12px;
       width: 100%;
-      padding: 10px 14px;
+      padding: 12px 16px;
       background: transparent;
       border: none;
-      font-size: 13px;
+      font-size: 14px;
       color: var(--slate-700, #334155);
       cursor: pointer;
-      transition: background 0.1s ease;
+      transition: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
       text-align: left;
     }
 
     .menu-item:hover {
       background: var(--slate-50, #f8fafc);
+      transform: translateX(4px);
+    }
+
+    .menu-item.danger {
+      color: var(--error-600, #e11d48);
+    }
+
+    .menu-item.danger svg {
+      color: var(--error-500, #f43f5e);
+    }
+
+    .menu-item.danger:hover {
+      background: var(--error-50, #fff1f2);
+      color: var(--error-700, #b91c1c);
+    }
+
+    .menu-item.danger:hover svg {
+      color: var(--error-600, #e11d48);
     }
 
     .menu-item svg {
       color: var(--slate-400, #94a3b8);
+      transition: color 0.15s ease;
+    }
+
+    .menu-item:hover svg {
+      color: var(--slate-600, #475569);
     }
 
     .menu-divider {
       height: 1px;
       background: var(--slate-100, #f1f5f9);
-      margin: 4px 0;
+      margin: 6px 0;
     }
 
     /* Card Body */
     .card-body {
-      margin-bottom: 16px;
+      margin-bottom: 20px;
     }
 
     .card-description {
       margin: 0;
-      font-size: 14px;
+      font-size: 15px;
       color: var(--slate-500, #64748b);
       line-height: 1.6;
       display: -webkit-box;
@@ -424,32 +595,36 @@ import { WorkspaceContextService } from '../../services/workspace-context.servic
       display: flex;
       justify-content: space-between;
       align-items: center;
+      margin-top: auto;
     }
 
     .card-meta {
       display: flex;
-      gap: 16px;
+      gap: 20px;
     }
 
     .meta-item {
       display: flex;
       align-items: center;
-      gap: 6px;
+      gap: 8px;
       font-size: 13px;
       color: var(--slate-500, #64748b);
+      font-weight: 500;
     }
 
     .meta-item svg {
       color: var(--slate-400, #94a3b8);
+      flex-shrink: 0;
     }
 
     .role-badge {
       font-size: 11px;
       font-weight: 600;
       text-transform: uppercase;
-      padding: 4px 10px;
+      padding: 5px 12px;
       border-radius: var(--radius-full, 9999px);
       letter-spacing: 0.02em;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
     }
 
     .badge-owner {
@@ -477,21 +652,21 @@ import { WorkspaceContextService } from '../../services/workspace-context.servic
       background: white;
       border: 1px solid var(--slate-100, #f1f5f9);
       border-radius: var(--radius-xl, 16px);
-      padding: 24px;
+      padding: 28px;
     }
 
     .skeleton-header {
       display: flex;
       align-items: center;
-      gap: 14px;
-      margin-bottom: 16px;
+      gap: 16px;
+      margin-bottom: 20px;
     }
 
     .skeleton {
       background: linear-gradient(90deg, var(--slate-200, #e2e8f0) 25%, var(--slate-100, #f1f5f9) 50%, var(--slate-200, #e2e8f0) 75%);
       background-size: 200% 100%;
       animation: shimmer 1.5s linear infinite;
-      border-radius: var(--radius-sm, 6px);
+      border-radius: var(--radius-sm, 8px);
     }
 
     @keyframes shimmer {
@@ -500,9 +675,9 @@ import { WorkspaceContextService } from '../../services/workspace-context.servic
     }
 
     .skeleton-icon {
-      width: 48px;
-      height: 48px;
-      border-radius: var(--radius-lg, 12px);
+      width: 52px;
+      height: 52px;
+      border-radius: var(--radius-lg, 14px);
     }
 
     .skeleton-info {
@@ -511,29 +686,29 @@ import { WorkspaceContextService } from '../../services/workspace-context.servic
 
     .skeleton-title {
       width: 60%;
-      height: 20px;
+      height: 24px;
       margin-bottom: 8px;
     }
 
     .skeleton-subtitle {
       width: 40%;
-      height: 14px;
+      height: 16px;
     }
 
     .skeleton-description {
       width: 100%;
-      height: 40px;
-      margin-bottom: 16px;
+      height: 48px;
+      margin-bottom: 20px;
     }
 
     .skeleton-footer {
       display: flex;
-      gap: 12px;
+      gap: 16px;
     }
 
     .skeleton-badge {
-      width: 80px;
-      height: 24px;
+      width: 90px;
+      height: 28px;
       border-radius: var(--radius-full, 9999px);
     }
 
@@ -541,52 +716,59 @@ import { WorkspaceContextService } from '../../services/workspace-context.servic
     .error-container {
       display: flex;
       justify-content: center;
-      padding: 40px 0;
+      padding: 60px 20px;
     }
 
     .error-card {
       text-align: center;
-      padding: 40px;
+      padding: 48px;
       background: var(--error-50, #fff1f2);
       border: 1px solid var(--error-100, #ffe4e6);
       border-radius: var(--radius-xl, 16px);
-      max-width: 400px;
+      max-width: 420px;
+      box-shadow: 0 4px 12px rgba(239, 68, 68, 0.1);
     }
 
     .error-icon {
-      font-size: 48px;
-      margin-bottom: 16px;
+      font-size: 56px;
+      margin-bottom: 20px;
+      opacity: 0.8;
     }
 
     .error-card h3 {
-      margin: 0 0 8px;
-      font-size: 18px;
+      margin: 0 0 12px;
+      font-size: 20px;
       color: var(--error-600, #e11d48);
+      font-weight: 600;
     }
 
     .error-card p {
-      margin: 0 0 20px;
-      font-size: 14px;
+      margin: 0 0 24px;
+      font-size: 15px;
       color: var(--slate-600, #475569);
+      line-height: 1.6;
     }
 
     .retry-btn {
       display: inline-flex;
       align-items: center;
-      gap: 8px;
-      padding: 10px 20px;
+      gap: 10px;
+      padding: 12px 24px;
       background: var(--error-500, #f43f5e);
       color: white;
       border: none;
-      border-radius: var(--radius-md, 8px);
-      font-size: 14px;
-      font-weight: 500;
+      border-radius: var(--radius-md, 10px);
+      font-size: 15px;
+      font-weight: 600;
       cursor: pointer;
-      transition: all 0.2s ease;
+      transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+      box-shadow: 0 2px 8px rgba(239, 68, 68, 0.3);
     }
 
     .retry-btn:hover {
       background: var(--error-600, #e11d48);
+      transform: translateY(-1px);
+      box-shadow: 0 4px 12px rgba(239, 68, 68, 0.4);
     }
 
     /* Empty State */
@@ -595,65 +777,201 @@ import { WorkspaceContextService } from '../../services/workspace-context.servic
       flex-direction: column;
       align-items: center;
       justify-content: center;
-      padding: 80px 20px;
+      padding: 100px 20px;
       text-align: center;
     }
 
     .empty-icon {
       color: var(--slate-300, #cbd5e1);
-      margin-bottom: 24px;
+      margin-bottom: 32px;
+      opacity: 0.8;
     }
 
     .empty-title {
-      margin: 0 0 12px;
-      font-size: 22px;
+      margin: 0 0 16px;
+      font-size: 24px;
       font-weight: 600;
       color: var(--slate-700, #334155);
     }
 
     .empty-description {
-      margin: 0 0 28px;
-      font-size: 15px;
+      margin: 0 0 32px;
+      font-size: 16px;
       color: var(--slate-500, #64748b);
-      max-width: 400px;
+      max-width: 440px;
       line-height: 1.6;
     }
 
     .create-first-btn {
       display: flex;
       align-items: center;
-      gap: 10px;
-      padding: 14px 28px;
+      gap: 12px;
+      padding: 16px 32px;
       background: linear-gradient(135deg, var(--primary-500, #6366f1) 0%, var(--secondary-500, #8b5cf6) 100%);
       color: white;
       border: none;
       border-radius: var(--radius-lg, 12px);
-      font-size: 15px;
+      font-size: 16px;
       font-weight: 600;
       cursor: pointer;
-      transition: all 0.2s ease;
-      box-shadow: 0 4px 14px rgba(99, 102, 241, 0.3);
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      box-shadow: 0 4px 16px rgba(99, 102, 241, 0.3);
     }
 
     .create-first-btn:hover {
       transform: translateY(-2px);
-      box-shadow: 0 6px 20px rgba(99, 102, 241, 0.4);
+      box-shadow: 0 8px 25px rgba(99, 102, 241, 0.4);
     }
 
-    /* Responsive */
+    .create-first-btn:active {
+      transform: translateY(0);
+    }
+
+    /* Responsive Design */
+    @media (max-width: 1024px) {
+      .workspace-grid {
+        grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+        gap: 24px;
+      }
+    }
+
     @media (max-width: 768px) {
+      .workspace-list {
+        padding: 8px;
+      }
+
       .list-header {
         flex-direction: column;
         align-items: stretch;
-        gap: 20px;
+        gap: 24px;
+        margin-bottom: 32px;
+      }
+
+      .header-title {
+        font-size: 28px;
+      }
+
+      .header-subtitle {
+        font-size: 15px;
       }
 
       .create-btn {
         justify-content: center;
+        padding: 12px 20px;
+        font-size: 14px;
       }
 
       .workspace-grid {
         grid-template-columns: 1fr;
+        gap: 20px;
+      }
+
+      .workspace-card {
+        padding: 24px;
+      }
+
+      .card-icon {
+        width: 48px;
+        height: 48px;
+        font-size: 22px;
+      }
+
+      .card-title {
+        font-size: 18px;
+      }
+
+      .card-description {
+        font-size: 14px;
+      }
+    }
+
+    @media (max-width: 480px) {
+      .workspace-card {
+        padding: 20px;
+      }
+
+      .card-header {
+        gap: 12px;
+        margin-bottom: 16px;
+      }
+
+      .card-icon {
+        width: 44px;
+        height: 44px;
+        font-size: 20px;
+      }
+
+      .card-title {
+        font-size: 17px;
+      }
+
+      .card-description {
+        font-size: 13px;
+        -webkit-line-clamp: 3;
+      }
+
+      .card-footer {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 12px;
+      }
+
+      .card-meta {
+        gap: 16px;
+      }
+
+      .meta-item {
+        font-size: 12px;
+      }
+
+      .role-badge {
+        font-size: 10px;
+        padding: 4px 10px;
+      }
+    }
+
+    /* High contrast mode support */
+    @media (prefers-contrast: high) {
+      .workspace-card {
+        border-width: 2px;
+      }
+
+      .workspace-card.active {
+        border-width: 3px;
+      }
+
+      .card-status,
+      .role-badge {
+        border-width: 2px;
+      }
+    }
+
+    /* Reduced motion support */
+    @media (prefers-reduced-motion: reduce) {
+      .workspace-card,
+      .card-icon,
+      .menu-btn,
+      .menu-item,
+      .create-btn,
+      .create-first-btn,
+      .retry-btn {
+        transition: none;
+      }
+
+      .workspace-card:hover {
+        transform: none;
+      }
+
+      .card-menu-dropdown {
+        animation: none;
+      }
+
+      .active-indicator {
+        animation: none;
+      }
+
+      .skeleton {
+        animation: none;
       }
     }
   `]
@@ -664,6 +982,10 @@ export class WorkspaceListComponent implements OnInit {
   isLoading = false;
   error: string | null = null;
   openMenuId: string | null = null;
+  showConfirmDialog = false;
+  confirmDialogData: ConfirmationDialogData | null = null;
+  isDeleting = false;
+  pendingAction: { type: 'archive' | 'delete' | 'restore'; workspace: IWorkspace } | null = null;
 
   constructor(
     private workspaceService: WorkspaceService,
@@ -710,8 +1032,37 @@ export class WorkspaceListComponent implements OnInit {
 
   selectWorkspace(workspace: IWorkspace): void {
     if (this.openMenuId) return; // Don't select if menu is open
+
+    // Prevent selection of inactive or disabled workspaces
+    if (!workspace.is_active || workspace.status === 'inactive' || workspace.status === 'disabled') {
+      this.showWorkspaceStatusMessage(workspace);
+      return;
+    }
+
+    // Allow selection of archived workspaces but with warning
+    if (workspace.is_archived || workspace.status === 'archived') {
+      this.showArchivedWarning(workspace);
+      return;
+    }
+
     this.workspaceContextService.setCurrentWorkspace(workspace);
     this.currentWorkspace = workspace;
+  }
+
+  private showWorkspaceStatusMessage(workspace: IWorkspace): void {
+    const status = workspace.status || 'inactive';
+    const message = status === 'inactive'
+      ? `This workspace is currently inactive and cannot be accessed.`
+      : `This workspace is disabled and cannot be accessed. ${workspace.status_reason || ''}`;
+
+    // You could show a toast or notification here
+    console.warn(message);
+  }
+
+  private showArchivedWarning(workspace: IWorkspace): void {
+    const message = `This workspace is archived. Would you like to restore it to access its content?`;
+    // You could show a confirmation dialog here
+    console.warn(message);
   }
 
   createWorkspace(): void {
@@ -734,30 +1085,130 @@ export class WorkspaceListComponent implements OnInit {
 
   archiveWorkspace(workspace: IWorkspace): void {
     this.openMenuId = null;
-    if (confirm(`Are you sure you want to archive "${workspace.name}"?`)) {
+    this.pendingAction = { type: 'archive', workspace };
+
+    this.confirmDialogData = {
+      title: 'Archive Workspace',
+      message: `Are you sure you want to archive "<strong>${workspace.name}</strong>"?`,
+      type: 'warning',
+      confirmText: 'Archive',
+      cancelText: 'Cancel',
+      showCheckbox: true,
+      checkboxLabel: 'I understand that archiving will hide this workspace and its content from active view',
+      checkboxRequired: true,
+      details: {
+        title: 'What happens when you archive:',
+        items: [
+          'Workspace and all its content will be hidden from main view',
+          'Members will lose access to workspace',
+          'You can restore the workspace at any time',
+          'All data will be preserved'
+        ]
+      }
+    };
+    this.showConfirmDialog = true;
+  }
+
+  restoreWorkspace(workspace: IWorkspace): void {
+    this.openMenuId = null;
+    this.pendingAction = { type: 'restore', workspace };
+
+    this.confirmDialogData = {
+      title: 'Restore Workspace',
+      message: `Are you sure you want to restore "<strong>${workspace.name}</strong>"?`,
+      type: 'info',
+      confirmText: 'Restore',
+      cancelText: 'Cancel',
+      details: {
+        title: 'What happens when you restore:',
+        items: [
+          'Workspace will become visible again to all members',
+          'Previous access permissions will be restored',
+          'All data and content will be available'
+        ]
+      }
+    };
+    this.showConfirmDialog = true;
+  }
+
+  deleteWorkspace(workspace: IWorkspace): void {
+    this.openMenuId = null;
+    this.pendingAction = { type: 'delete', workspace };
+
+    this.confirmDialogData = {
+      title: 'Delete Workspace',
+      message: `Are you sure you want to permanently delete "<strong>${workspace.name}</strong>"?`,
+      type: 'danger',
+      confirmText: 'Delete Permanently',
+      cancelText: 'Cancel',
+      showCheckbox: true,
+      checkboxLabel: 'I understand this action cannot be undone',
+      checkboxRequired: true,
+      details: {
+        title: '⚠️ Warning: This action cannot be undone',
+        items: [
+          'Workspace and all its content will be permanently deleted',
+          'All tasks, boards, and data will be lost',
+          'Member access will be revoked immediately',
+          'This action cannot be reversed'
+        ]
+      }
+    };
+    this.showConfirmDialog = true;
+  }
+
+  onConfirmAction(): void {
+    if (!this.pendingAction) return;
+
+    const { type, workspace } = this.pendingAction;
+
+    if (type === 'archive') {
       this.workspaceService.archiveWorkspace(workspace.id).subscribe({
         next: () => {
           this.loadWorkspaces();
+          this.closeDialog();
         },
         error: (error) => {
           this.error = 'Failed to archive workspace';
+          this.closeDialog();
+        }
+      });
+    } else if (type === 'restore') {
+      this.workspaceService.restoreWorkspace(workspace.id).subscribe({
+        next: () => {
+          this.loadWorkspaces();
+          this.closeDialog();
+        },
+        error: (error) => {
+          this.error = 'Failed to restore workspace';
+          this.closeDialog();
+        }
+      });
+    } else if (type === 'delete') {
+      this.isDeleting = true;
+      this.workspaceService.deleteWorkspace(workspace.id).subscribe({
+        next: () => {
+          this.isDeleting = false;
+          this.loadWorkspaces();
+          this.closeDialog();
+        },
+        error: (error) => {
+          this.isDeleting = false;
+          this.error = 'Failed to delete workspace';
+          this.closeDialog();
         }
       });
     }
   }
 
-  restoreWorkspace(workspace: IWorkspace): void {
-    this.openMenuId = null;
-    if (confirm(`Are you sure you want to restore "${workspace.name}"?`)) {
-      this.workspaceService.restoreWorkspace(workspace.id).subscribe({
-        next: () => {
-          this.loadWorkspaces();
-        },
-        error: (error) => {
-          this.error = 'Failed to restore workspace';
-        }
-      });
-    }
+  onCancelAction(): void {
+    this.closeDialog();
+  }
+
+  private closeDialog(): void {
+    this.showConfirmDialog = false;
+    this.confirmDialogData = null;
+    this.pendingAction = null;
   }
 
   getIconBackground(color?: string): string {

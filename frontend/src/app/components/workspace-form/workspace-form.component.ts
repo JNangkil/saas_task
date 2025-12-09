@@ -75,45 +75,112 @@ import { WorkspaceService } from '../../services/workspace.service';
               ></textarea>
             </div>
 
-            <!-- Color Picker -->
+            <!-- Enhanced Color Picker -->
             <div class="form-group">
-              <label class="form-label">Workspace Color</label>
-              <div class="color-picker">
-                <div 
-                  class="color-option"
-                  *ngFor="let color of colorPresets"
-                  [style.background]="color.gradient"
-                  [class.selected]="workspaceForm.get('color')?.value === color.value"
-                  (click)="selectColor(color.value)"
-                  [title]="color.name">
-                  <svg *ngIf="workspaceForm.get('color')?.value === color.value" width="16" height="16" viewBox="0 0 16 16" fill="none">
-                    <path d="M13 4L6.5 11L3 7.5" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                  </svg>
+              <label class="form-label">
+                Workspace Color
+                <span class="label-hint">Choose a color that represents your workspace</span>
+              </label>
+              <div class="color-picker-enhanced">
+                <!-- Preset Colors -->
+                <div class="color-section">
+                  <div class="section-title">Preset Colors</div>
+                  <div class="color-grid">
+                    <div
+                      class="color-option-enhanced"
+                      *ngFor="let color of colorPresets"
+                      [style.background]="color.gradient"
+                      [class.selected]="workspaceForm.get('color')?.value === color.value"
+                      (click)="selectColor(color.value)"
+                      [title]="color.name">
+                      <div class="color-preview" [style.background]="color.gradient"></div>
+                      <div class="color-name">{{ color.name }}</div>
+                      <svg *ngIf="workspaceForm.get('color')?.value === color.value" class="check-icon" width="16" height="16" viewBox="0 0 16 16" fill="none">
+                        <path d="M13 4L6.5 11L3 7.5" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                      </svg>
+                    </div>
+                  </div>
                 </div>
-                <div class="color-custom">
-                  <input 
-                    type="color" 
-                    formControlName="color"
-                    class="color-input-native"
-                    title="Custom color"
-                  />
-                  <span class="custom-label">Custom</span>
+                
+                <!-- Custom Color -->
+                <div class="color-section">
+                  <div class="section-title">Custom Color</div>
+                  <div class="color-custom-enhanced">
+                    <div class="custom-input-wrapper">
+                      <input
+                        type="color"
+                        formControlName="color"
+                        class="color-input-native-enhanced"
+                        id="custom-color-input"
+                        title="Choose custom color"
+                      />
+                      <label for="custom-color-input" class="custom-color-label">
+                        <div class="custom-preview" [style.background]="workspaceForm.get('color')?.value || '#6366f1'"></div>
+                        <span class="custom-text">Custom</span>
+                      </label>
+                    </div>
+                    <div class="hex-input-wrapper">
+                      <input
+                        type="text"
+                        class="hex-input"
+                        placeholder="#000000"
+                        [value]="workspaceForm.get('color')?.value"
+                        (input)="updateHexColor($event)"
+                        maxlength="7"
+                      />
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
 
-            <!-- Icon Picker -->
+            <!-- Enhanced Icon Picker -->
             <div class="form-group">
-              <label class="form-label">Workspace Icon</label>
-              <div class="icon-picker">
-                <button
-                  type="button"
-                  class="icon-option"
-                  *ngFor="let icon of iconPresets"
-                  [class.selected]="workspaceForm.get('icon')?.value === icon"
-                  (click)="selectIcon(icon)">
-                  {{ icon }}
-                </button>
+              <label class="form-label">
+                Workspace Icon
+                <span class="label-hint">Select an icon that represents your workspace</span>
+              </label>
+              <div class="icon-picker-enhanced">
+                <!-- Icon Categories -->
+                <div class="icon-categories">
+                  <button
+                    type="button"
+                    class="category-tab"
+                    *ngFor="let category of iconCategories"
+                    [class.active]="activeIconCategory === category.id"
+                    (click)="activeIconCategory = category.id">
+                    {{ category.name }}
+                  </button>
+                </div>
+                
+                <!-- Icon Grid -->
+                <div class="icon-grid">
+                  <button
+                    type="button"
+                    class="icon-option-enhanced"
+                    *ngFor="let icon of getFilteredIcons()"
+                    [class.selected]="workspaceForm.get('icon')?.value === icon"
+                    (click)="selectIcon(icon)"
+                    [title]="getIconName(icon)">
+                    <span class="icon-emoji">{{ icon }}</span>
+                    <div class="icon-tooltip">{{ getIconName(icon) }}</div>
+                  </button>
+                </div>
+                
+                <!-- Custom Icon Input -->
+                <div class="custom-icon-section">
+                  <label class="custom-icon-label">
+                    <span>Custom Emoji</span>
+                    <input
+                      type="text"
+                      class="custom-icon-input"
+                      placeholder="Enter emoji..."
+                      [value]="workspaceForm.get('icon')?.value"
+                      (input)="updateCustomIcon($event)"
+                      maxlength="2"
+                    />
+                  </label>
+                </div>
               </div>
             </div>
 
@@ -341,90 +408,306 @@ import { WorkspaceService } from '../../services/workspace.service';
       margin-top: 6px;
     }
 
-    /* Color Picker */
-    .color-picker {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 10px;
+    /* Enhanced Color Picker */
+    .color-picker-enhanced {
+      border: 1px solid var(--slate-200, #e2e8f0);
+      border-radius: var(--radius-lg, 12px);
+      padding: 20px;
+      background: var(--slate-50, #f8fafc);
     }
 
-    .color-option {
-      width: 40px;
-      height: 40px;
-      border-radius: var(--radius-md, 8px);
-      border: 3px solid transparent;
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      transition: all 0.15s ease;
+    .color-section {
+      margin-bottom: 24px;
     }
 
-    .color-option:hover {
-      transform: scale(1.1);
+    .color-section:last-child {
+      margin-bottom: 0;
     }
 
-    .color-option.selected {
-      border-color: var(--slate-800, #1e293b);
-      box-shadow: 0 0 0 2px white, 0 0 0 4px var(--slate-300, #cbd5e1);
+    .section-title {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--slate-600, #475569);
+      margin-bottom: 12px;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
     }
 
-    .color-custom {
+    .color-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
+      gap: 12px;
+    }
+
+    .color-option-enhanced {
+      position: relative;
       display: flex;
       flex-direction: column;
       align-items: center;
-      gap: 4px;
-    }
-
-    .color-input-native {
-      width: 40px;
-      height: 40px;
-      border: 2px dashed var(--slate-300, #cbd5e1);
-      border-radius: var(--radius-md, 8px);
-      padding: 2px;
+      gap: 8px;
+      padding: 12px;
+      border: 2px solid transparent;
+      border-radius: var(--radius-md, 10px);
       cursor: pointer;
+      transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
       background: white;
     }
 
-    .color-input-native::-webkit-color-swatch {
-      border: none;
-      border-radius: 4px;
+    .color-option-enhanced:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
     }
 
-    .custom-label {
-      font-size: 10px;
-      color: var(--slate-500, #64748b);
+    .color-option-enhanced.selected {
+      border-color: var(--primary-500, #6366f1);
+      background: var(--primary-50, #eef2ff);
+      box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
     }
 
-    /* Icon Picker */
-    .icon-picker {
+    .color-preview {
+      width: 40px;
+      height: 40px;
+      border-radius: var(--radius-md, 8px);
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+    }
+
+    .color-name {
+      font-size: 11px;
+      font-weight: 500;
+      color: var(--slate-600, #475569);
+      text-align: center;
+    }
+
+    .check-icon {
+      position: absolute;
+      top: 6px;
+      right: 6px;
+      background: white;
+      border-radius: 50%;
+      padding: 2px;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+      animation: checkIn 0.2s ease-out;
+    }
+
+    @keyframes checkIn {
+      from {
+        transform: scale(0);
+        opacity: 0;
+      }
+      to {
+        transform: scale(1);
+        opacity: 1;
+      }
+    }
+
+    .color-custom-enhanced {
       display: flex;
-      flex-wrap: wrap;
-      gap: 8px;
+      gap: 16px;
+      align-items: center;
     }
 
-    .icon-option {
-      width: 44px;
-      height: 44px;
+    .custom-input-wrapper {
+      position: relative;
+    }
+
+    .color-input-native-enhanced {
+      position: absolute;
+      opacity: 0;
+      width: 0;
+      height: 0;
+    }
+
+    .custom-color-label {
       display: flex;
       align-items: center;
-      justify-content: center;
-      font-size: 20px;
+      gap: 10px;
+      padding: 12px 16px;
+      border: 2px dashed var(--slate-300, #cbd5e1);
+      border-radius: var(--radius-md, 10px);
+      cursor: pointer;
+      transition: all 0.2s ease;
+      background: white;
+    }
+
+    .custom-color-label:hover {
+      border-color: var(--slate-400, #94a3b8);
       background: var(--slate-50, #f8fafc);
-      border: 2px solid var(--slate-200, #e2e8f0);
+    }
+
+    .custom-preview {
+      width: 32px;
+      height: 32px;
+      border-radius: var(--radius-sm, 6px);
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+    }
+
+    .custom-text {
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--slate-600, #475569);
+    }
+
+    .hex-input-wrapper {
+      flex: 1;
+      max-width: 120px;
+    }
+
+    .hex-input {
+      width: 100%;
+      padding: 10px 12px;
+      border: 1px solid var(--slate-300, #cbd5e1);
       border-radius: var(--radius-md, 8px);
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--slate-700, #334155);
+      background: white;
+      transition: all 0.15s ease;
+    }
+
+    .hex-input:focus {
+      outline: none;
+      border-color: var(--primary-500, #6366f1);
+      box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+    }
+
+    /* Enhanced Icon Picker */
+    .icon-picker-enhanced {
+      border: 1px solid var(--slate-200, #e2e8f0);
+      border-radius: var(--radius-lg, 12px);
+      padding: 20px;
+      background: var(--slate-50, #f8fafc);
+    }
+
+    .icon-categories {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 20px;
+      flex-wrap: wrap;
+    }
+
+    .category-tab {
+      padding: 8px 16px;
+      background: white;
+      border: 1px solid var(--slate-200, #e2e8f0);
+      border-radius: var(--radius-md, 8px);
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--slate-600, #475569);
       cursor: pointer;
       transition: all 0.15s ease;
     }
 
-    .icon-option:hover {
-      background: var(--slate-100, #f1f5f9);
-      transform: scale(1.05);
+    .category-tab:hover {
+      background: var(--slate-50, #f8fafc);
+      color: var(--slate-700, #334155);
     }
 
-    .icon-option.selected {
+    .category-tab.active {
+      background: var(--primary-500, #6366f1);
+      color: white;
+      border-color: var(--primary-500, #6366f1);
+    }
+
+    .icon-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(60px, 1fr));
+      gap: 8px;
+      margin-bottom: 20px;
+    }
+
+    .icon-option-enhanced {
+      position: relative;
+      width: 60px;
+      height: 60px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: white;
+      border: 2px solid var(--slate-200, #e2e8f0);
+      border-radius: var(--radius-md, 10px);
+      cursor: pointer;
+      transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+      font-size: 24px;
+    }
+
+    .icon-option-enhanced:hover {
+      transform: translateY(-2px) scale(1.05);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+      border-color: var(--slate-300, #cbd5e1);
+    }
+
+    .icon-option-enhanced.selected {
       background: var(--primary-50, #eef2ff);
       border-color: var(--primary-500, #6366f1);
+      box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+    }
+
+    .icon-emoji {
+      font-size: 24px;
+      line-height: 1;
+    }
+
+    .icon-tooltip {
+      position: absolute;
+      bottom: -30px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: var(--slate-800, #1e293b);
+      color: white;
+      padding: 4px 8px;
+      border-radius: var(--radius-sm, 6px);
+      font-size: 11px;
+      white-space: nowrap;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.2s ease;
+      z-index: 10;
+    }
+
+    .icon-option-enhanced:hover .icon-tooltip {
+      opacity: 1;
+    }
+
+    .custom-icon-section {
+      border-top: 1px solid var(--slate-200, #e2e8f0);
+      padding-top: 16px;
+    }
+
+    .custom-icon-label {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .custom-icon-label span {
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--slate-600, #475569);
+    }
+
+    .custom-icon-input {
+      padding: 10px 12px;
+      border: 1px solid var(--slate-300, #cbd5e1);
+      border-radius: var(--radius-md, 8px);
+      font-size: 16px;
+      color: var(--slate-700, #334155);
+      background: white;
+      transition: all 0.15s ease;
+      max-width: 200px;
+    }
+
+    .custom-icon-input:focus {
+      outline: none;
+      border-color: var(--primary-500, #6366f1);
+      box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+    }
+
+    .label-hint {
+      display: block;
+      font-size: 12px;
+      color: var(--slate-500, #64748b);
+      font-weight: 400;
+      margin-top: 4px;
     }
 
     /* Toggle */
@@ -707,9 +990,25 @@ export class WorkspaceFormComponent implements OnInit {
     { name: 'Teal', value: '#14b8a6', gradient: 'linear-gradient(135deg, #14b8a6 0%, #0d9488 100%)' },
     { name: 'Cyan', value: '#06b6d4', gradient: 'linear-gradient(135deg, #06b6d4 0%, #0891b2 100%)' },
     { name: 'Blue', value: '#3b82f6', gradient: 'linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)' },
+    { name: 'Green', value: '#22c55e', gradient: 'linear-gradient(135deg, #22c55e 0%, #16a34a 100%)' },
+    { name: 'Red', value: '#ef4444', gradient: 'linear-gradient(135deg, #ef4444 0%, #dc2626 100%)' },
   ];
 
-  iconPresets = ['🏢', '💼', '📊', '🚀', '⚡', '🎯', '📁', '🏠', '🌟', '💡', '🔧', '📱', '🎨', '📈', '🛠️'];
+  iconCategories = [
+    { id: 'business', name: 'Business' },
+    { id: 'technology', name: 'Technology' },
+    { id: 'creative', name: 'Creative' },
+    { id: 'misc', name: 'Misc' }
+  ];
+
+  iconPresets = {
+    business: ['🏢', '💼', '📊', '🏭', '🏪', '🏬', '🏛️', '🏦', '🏨', '🏢'],
+    technology: ['💻', '🖥️', '📱', '⚡', '🚀', '🔧', '🛠️', '⚙️', '🔌', '💾'],
+    creative: ['🎨', '🎭', '🎪', '🎯', '💡', '🌟', '✨', '🎬', '📸', '🎪'],
+    misc: ['🏠', '📁', '📈', '📉', '🔔', '📌', '📍', '🗺️', '⏰', '🔒']
+  };
+
+  activeIconCategory = 'business';
 
   constructor(
     private fb: FormBuilder,
@@ -826,6 +1125,74 @@ export class WorkspaceFormComponent implements OnInit {
       }
     }
     return '';
+  }
+
+  getFilteredIcons(): string[] {
+    return this.iconPresets[this.activeIconCategory as keyof typeof this.iconPresets] || [];
+  }
+
+  getIconName(icon: string): string {
+    const iconNames: Record<string, string> = {
+      '🏢': 'Office',
+      '💼': 'Briefcase',
+      '📊': 'Chart',
+      '🏭': 'Factory',
+      '🏪': 'Shop',
+      '🏬': 'Department Store',
+      '🏛️': 'Government',
+      '🏦': 'Bank',
+      '🏨': 'Post Office',
+      '💻': 'Laptop',
+      '🖥️': 'Desktop',
+      '📱': 'Mobile',
+      '⚡': 'Lightning',
+      '🚀': 'Rocket',
+      '🔧': 'Wrench',
+      '🛠️': 'Tools',
+      '⚙️': 'Settings',
+      '🔌': 'Plug',
+      '💾': 'Save',
+      '🎨': 'Palette',
+      '🎭': 'Masks',
+      '🎪': 'Circus',
+      '🎯': 'Target',
+      '💡': 'Idea',
+      '🌟': 'Star',
+      '✨': 'Sparkles',
+      '🎬': 'Film',
+      '📸': 'Camera',
+      '🏠': 'Home',
+      '📁': 'Folder',
+      '📈': 'Growth',
+      '📉': 'Decline',
+      '🔔': 'Bell',
+      '📌': 'Pin',
+      '📍': 'Location',
+      '🗺️': 'Map',
+      '⏰': 'Clock',
+      '🔒': 'Lock'
+    };
+    return iconNames[icon] || icon;
+  }
+
+  updateHexColor(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    const value = input.value;
+
+    // Validate hex color format
+    if (/^#[0-9A-Fa-f]{6}$/.test(value)) {
+      this.workspaceForm.patchValue({ color: value });
+    }
+  }
+
+  updateCustomIcon(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    const value = input.value;
+
+    // Only allow emojis (simplified validation)
+    if (value && /[\u{1F600}-\u{1F64F}]|[\u{1F300}-\u{1F5FF}]|[\u{1F680}-\u{1F6FF}]|[\u{1F1E0}-\u{1F1FF}]|[\u{2600}-\u{26FF}]|[\u{2700}-\u{27BF}]/u.test(value)) {
+      this.workspaceForm.patchValue({ icon: value });
+    }
   }
 
   private darkenColor(hex: string, percent: number): string {

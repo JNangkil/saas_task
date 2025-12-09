@@ -7,6 +7,10 @@ export interface IWorkspace {
     icon?: string;
     is_archived: boolean;
     is_default: boolean;
+    is_active?: boolean;
+    is_disabled?: boolean;
+    status?: 'active' | 'inactive' | 'disabled' | 'archived';
+    status_reason?: string;
     created_at: string;
     updated_at: string;
     deleted_at?: string;

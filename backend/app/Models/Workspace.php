@@ -2,6 +2,8 @@
 
 namespace App\Models;
 
+use App\Traits\BelongsToTenant;
+use App\Traits\HasTenantRoles;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -11,7 +13,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Workspace extends Model
 {
-    use HasFactory, SoftDeletes;
+    use HasFactory, SoftDeletes, BelongsToTenant, HasTenantRoles;
 
     /**
      * The attributes that are mass assignable.
@@ -100,8 +102,7 @@ class Workspace extends Model
      */
     public function canUserManage(User $user): bool
     {
-        $role = $this->getUserRole($user);
-        return in_array($role, ['owner', 'admin']);
+        return $this->hasWorkspacePermission($user, $this, 'manage-settings');
     }
 
     /**
@@ -109,8 +110,7 @@ class Workspace extends Model
      */
     public function canUserCreateBoards(User $user): bool
     {
-        $role = $this->getUserRole($user);
-        return in_array($role, ['owner', 'admin', 'member']);
+        return $this->hasWorkspacePermission($user, $this, 'create-boards');
     }
 
     /**
@@ -118,8 +118,56 @@ class Workspace extends Model
      */
     public function canUserView(User $user): bool
     {
-        $role = $this->getUserRole($user);
-        return in_array($role, ['owner', 'admin', 'member', 'viewer']);
+        return $this->hasWorkspacePermission($user, $this, 'view');
+    }
+
+    /**
+     * Check if a user can perform a specific action in the workspace
+     */
+    public function canUserPerformAction(User $user, string $action): bool
+    {
+        return $this->hasWorkspacePermission($user, $this, $action);
+    }
+
+    /**
+     * Check if a user can manage another user's role in the workspace
+     */
+    public function canUserManageUserRole(User $user, User $targetUser): bool
+    {
+        return $this->canManageWorkspaceUserRole($user, $targetUser, $this);
+    }
+
+    /**
+     * Get users by role in the workspace
+     */
+    public function getUsersByRole(string $role)
+    {
+        return $this->users()->wherePivot('role', $role)->get();
+    }
+
+    /**
+     * Check if user has any of the specified roles
+     */
+    public function hasAnyRole(User $user, array $roles): bool
+    {
+        $userRole = $this->getUserRole($user);
+        return in_array($userRole, $roles);
+    }
+
+    /**
+     * Check if user has a role at or above the specified level
+     */
+    public function hasRoleAtLeast(User $user, string $role): bool
+    {
+        $userRole = $this->getUserRole($user);
+        if (!$userRole) {
+            return false;
+        }
+
+        $userLevel = $this->getWorkspaceRoleLevel($userRole);
+        $requiredLevel = $this->getWorkspaceRoleLevel($role);
+
+        return $userLevel >= $requiredLevel;
     }
 
     /**

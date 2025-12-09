@@ -125,5 +125,63 @@ class AuthServiceProvider extends ServiceProvider
             
             return $workspace->canUserCreateBoardsInWorkspace($user);
         });
+
+        // Role-based gates for tenant permissions
+        Gate::define('tenant-owner', function (User $user, ?Tenant $tenant = null) {
+            if (!$tenant) {
+                $tenant = tenant();
+            }
+            return $tenant && $tenant->hasUserRole($user, 'owner');
+        });
+
+        Gate::define('tenant-admin', function (User $user, ?Tenant $tenant = null) {
+            if (!$tenant) {
+                $tenant = tenant();
+            }
+            return $tenant && $tenant->hasUserRole($user, 'admin');
+        });
+
+        Gate::define('tenant-member', function (User $user, ?Tenant $tenant = null) {
+            if (!$tenant) {
+                $tenant = tenant();
+            }
+            return $tenant && $tenant->hasUserRole($user, 'member');
+        });
+
+        Gate::define('tenant-viewer', function (User $user, ?Tenant $tenant = null) {
+            if (!$tenant) {
+                $tenant = tenant();
+            }
+            return $tenant && $tenant->hasUserRole($user, 'viewer');
+        });
+
+        // Role-based gates for workspace permissions
+        Gate::define('workspace-owner', function (User $user, ?Workspace $workspace = null) {
+            if (!$workspace) {
+                return false;
+            }
+            return $workspace->hasUserRole($user, 'owner');
+        });
+
+        Gate::define('workspace-admin', function (User $user, ?Workspace $workspace = null) {
+            if (!$workspace) {
+                return false;
+            }
+            return $workspace->hasUserRole($user, 'admin');
+        });
+
+        Gate::define('workspace-member', function (User $user, ?Workspace $workspace = null) {
+            if (!$workspace) {
+                return false;
+            }
+            return $workspace->hasUserRole($user, 'member');
+        });
+
+        Gate::define('workspace-viewer', function (User $user, ?Workspace $workspace = null) {
+            if (!$workspace) {
+                return false;
+            }
+            return $workspace->hasUserRole($user, 'viewer');
+        });
     }
 }

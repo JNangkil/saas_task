@@ -39,7 +39,7 @@ class TenantPolicy
      */
     public function update(User $user, Tenant $tenant): bool
     {
-        return $tenant->canUserManage($user);
+        return $tenant->canUserPerformAction($user, 'update');
     }
 
     /**
@@ -47,7 +47,7 @@ class TenantPolicy
      */
     public function delete(User $user, Tenant $tenant): bool
     {
-        return $tenant->hasUserRole($user, 'owner');
+        return $tenant->canUserPerformAction($user, 'delete');
     }
 
     /**
@@ -55,7 +55,7 @@ class TenantPolicy
      */
     public function manageUsers(User $user, Tenant $tenant): bool
     {
-        return $tenant->canUserManage($user);
+        return $tenant->canUserPerformAction($user, 'manage-users');
     }
 
     /**
@@ -63,7 +63,7 @@ class TenantPolicy
      */
     public function manageSettings(User $user, Tenant $tenant): bool
     {
-        return $tenant->canUserManage($user);
+        return $tenant->canUserPerformAction($user, 'manage-settings');
     }
 
     /**
@@ -71,7 +71,7 @@ class TenantPolicy
      */
     public function archive(User $user, Tenant $tenant): bool
     {
-        return $tenant->hasUserRole($user, 'owner');
+        return $tenant->canUserPerformAction($user, 'archive');
     }
 
     /**
@@ -79,7 +79,7 @@ class TenantPolicy
      */
     public function reactivate(User $user, Tenant $tenant): bool
     {
-        return $tenant->hasUserRole($user, 'owner');
+        return $tenant->canUserPerformAction($user, 'reactivate');
     }
 
     /**
@@ -87,7 +87,7 @@ class TenantPolicy
      */
     public function manageBilling(User $user, Tenant $tenant): bool
     {
-        return $tenant->hasUserRole($user, 'owner');
+        return $tenant->canUserPerformAction($user, 'manage-billing');
     }
 
     /**
@@ -95,7 +95,7 @@ class TenantPolicy
      */
     public function createWorkspaces(User $user, Tenant $tenant): bool
     {
-        return $tenant->canUserManage($user);
+        return $tenant->canUserPerformAction($user, 'create-workspaces');
     }
 
     /**
@@ -103,6 +103,46 @@ class TenantPolicy
      */
     public function viewAnalytics(User $user, Tenant $tenant): bool
     {
-        return $tenant->canUserManage($user);
+        return $tenant->canUserPerformAction($user, 'view-analytics');
+    }
+
+    /**
+     * Determine whether the user can invite users to the tenant.
+     */
+    public function inviteUsers(User $user, Tenant $tenant): bool
+    {
+        return $tenant->canUserPerformAction($user, 'invite-users');
+    }
+
+    /**
+     * Determine whether the user can remove users from the tenant.
+     */
+    public function removeUsers(User $user, Tenant $tenant): bool
+    {
+        return $tenant->canUserPerformAction($user, 'remove-users');
+    }
+
+    /**
+     * Determine whether the user can update user roles in the tenant.
+     */
+    public function updateUserRoles(User $user, Tenant $tenant): bool
+    {
+        return $tenant->canUserPerformAction($user, 'update-user-roles');
+    }
+
+    /**
+     * Determine whether the user can view tenant activity logs.
+     */
+    public function viewActivityLogs(User $user, Tenant $tenant): bool
+    {
+        return $tenant->canUserPerformAction($user, 'view-activity-logs');
+    }
+
+    /**
+     * Determine whether the user can manage tenant subscriptions.
+     */
+    public function manageSubscription(User $user, Tenant $tenant): bool
+    {
+        return $tenant->canUserPerformAction($user, 'manage-subscription');
     }
 }

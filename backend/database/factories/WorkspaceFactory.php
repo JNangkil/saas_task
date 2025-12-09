@@ -26,14 +26,17 @@ class WorkspaceFactory extends Factory
      */
     public function definition(): array
     {
+        $workspaceTypes = ['Development', 'Marketing', 'Sales', 'Design', 'Operations', 'Finance', 'HR', 'Support'];
+        $type = fake()->randomElement($workspaceTypes);
+        
         return [
             'tenant_id' => Tenant::factory(),
-            'name' => fake()->words(3, true),
-            'description' => fake()->optional(0.7)->sentence(10),
+            'name' => $type . ' ' . fake()->randomElement(['Team', 'Workspace', 'Hub', 'Center', 'Department']),
+            'description' => fake()->optional(0.8)->sentence(15),
             'color' => fake()->hexColor(),
-            'icon' => fake()->randomElement(['🏢', '💼', '📊', '🎯', '🚀', '💡', '🎨', '📱', '🌐', '🔧']),
-            'is_archived' => false,
-            'is_default' => false,
+            'icon' => fake()->randomElement(['🏢', '💼', '📊', '🎯', '🚀', '💡', '🎨', '📱', '🌐', '🔧', '🛠️', '📈', '🎪', '🌟']),
+            'is_archived' => fake()->boolean(10), // 10% chance of being archived
+            'is_default' => fake()->boolean(5),  // 5% chance of being default
         ];
     }
 
@@ -91,9 +94,65 @@ class WorkspaceFactory extends Factory
             foreach ($members as $member) {
                 $workspace->users()->attach($member, [
                     'role' => fake()->randomElement(['member', 'viewer']),
-                    'joined_at' => now(),
+                    'joined_at' => fake()->dateTimeBetween('-6 months', 'now'),
                 ]);
             }
         });
+    }
+
+    /**
+     * Indicate that the workspace has an owner.
+     */
+    public function withOwner(User $owner): static
+    {
+        return $this->afterCreating(function (Workspace $workspace) use ($owner) {
+            $workspace->users()->attach($owner, [
+                'role' => 'owner',
+                'joined_at' => now(),
+            ]);
+        });
+    }
+
+    /**
+     * Indicate that the workspace has boards.
+     */
+    public function withBoards(int $count = 3): static
+    {
+        return $this->afterCreating(function (Workspace $workspace) use ($count) {
+            \App\Models\Board::factory()->count($count)->create([
+                'workspace_id' => $workspace->id,
+                'tenant_id' => $workspace->tenant_id,
+            ]);
+        });
+    }
+
+    /**
+     * Create a workspace with a specific color.
+     */
+    public function withColor(string $color): static
+    {
+        return $this->state(fn (array $attributes) => [
+            'color' => $color,
+        ]);
+    }
+
+    /**
+     * Create a workspace with a specific icon.
+     */
+    public function withIcon(string $icon): static
+    {
+        return $this->state(fn (array $attributes) => [
+            'icon' => $icon,
+        ]);
+    }
+
+    /**
+     * Create a workspace with a specific name pattern.
+     */
+    public function withNamePattern(string $pattern): static
+    {
+        return $this->state(fn (array $attributes) => [
+            'name' => $pattern . ' ' . fake()->randomElement(['Team', 'Workspace', 'Hub']),
+        ]);
     }
 }

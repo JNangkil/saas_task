@@ -3,6 +3,7 @@
 namespace App\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
 class TenantRequest extends FormRequest
 {
@@ -11,9 +12,11 @@ class TenantRequest extends FormRequest
      */
     public function authorize(): bool
     {
-        // For create requests, allow any authenticated user
+        $user = auth()->user();
+        
+        // For create requests, check if user can create tenants
         if ($this->isMethod('POST')) {
-            return true;
+            return $user->can('create', \App\Models\Tenant::class);
         }
 
         // For update/delete requests, check if user can manage the tenant
@@ -22,7 +25,8 @@ class TenantRequest extends FormRequest
             return false;
         }
 
-        return $tenant->canUserManage(auth()->user());
+        // Use policy for authorization
+        return $user->can('update', $tenant);
     }
 
     /**
@@ -32,19 +36,33 @@ class TenantRequest extends FormRequest
      */
     public function rules(): array
     {
+        $tenantId = $this->route('tenant')?->id;
+        
         $rules = [
-            'name' => 'required|string|max:255',
-            'slug' => 'required|string|max:63|alpha_dash|unique:tenants,slug,' . $this->route('tenant')?->id,
+            'name' => 'required|string|max:255|min:2',
+            'slug' => [
+                'required',
+                'string',
+                'max:63',
+                'alpha_dash',
+                Rule::unique('tenants', 'slug')->ignore($tenantId),
+            ],
             'logo_url' => 'nullable|url|max:2048',
             'billing_email' => 'nullable|email|max:255',
             'settings' => 'sometimes|array',
+            'settings.theme' => 'sometimes|string|in:light,dark',
+            'settings.timezone' => 'sometimes|timezone',
+            'settings.locale' => 'sometimes|string|max:10',
+            'settings.features' => 'sometimes|array',
+            'settings.features.*' => 'string',
+            'status' => 'sometimes|string|in:active,deactivated,suspended',
             'locale' => 'nullable|string|max:10',
             'timezone' => 'nullable|timezone',
         ];
 
-        // Add unique slug rule for create requests
+        // Additional validation for create requests
         if ($this->isMethod('POST')) {
-            $rules['slug'] = 'required|string|max:63|alpha_dash|unique:tenants,slug';
+            $rules['name'][] = 'unique:tenants,name,NULL,id';
         }
 
         return $rules;
@@ -59,7 +77,9 @@ class TenantRequest extends FormRequest
     {
         return [
             'name.required' => 'Tenant name is required',
+            'name.min' => 'Tenant name must be at least 2 characters',
             'name.max' => 'Tenant name may not be greater than 255 characters',
+            'name.unique' => 'Tenant name has already been taken',
             'slug.required' => 'Tenant slug is required',
             'slug.max' => 'Tenant slug may not be greater than 63 characters',
             'slug.alpha_dash' => 'Tenant slug may only contain letters, numbers, dashes, and underscores',
@@ -68,6 +88,10 @@ class TenantRequest extends FormRequest
             'logo_url.max' => 'Logo URL may not be greater than 2048 characters',
             'billing_email.email' => 'Billing email must be a valid email address',
             'billing_email.max' => 'Billing email may not be greater than 255 characters',
+            'settings.theme.in' => 'Theme must be either light or dark',
+            'settings.timezone.timezone' => 'Settings timezone must be a valid timezone',
+            'settings.locale.max' => 'Settings locale may not be greater than 10 characters',
+            'status.in' => 'Status must be one of: active, deactivated, suspended',
             'locale.max' => 'Locale may not be greater than 10 characters',
             'timezone.timezone' => 'Timezone must be a valid timezone',
         ];
@@ -86,8 +110,47 @@ class TenantRequest extends FormRequest
             'logo_url' => 'logo URL',
             'billing_email' => 'billing email',
             'settings' => 'settings',
+            'settings.theme' => 'theme setting',
+            'settings.timezone' => 'timezone setting',
+            'settings.locale' => 'locale setting',
+            'settings.features' => 'feature settings',
+            'status' => 'tenant status',
             'locale' => 'locale',
             'timezone' => 'timezone',
         ];
+    }
+
+    /**
+     * Prepare the data for validation.
+     */
+    protected function prepareForValidation(): void
+    {
+        // Convert empty strings to null for nullable fields
+        $this->merge([
+            'logo_url' => $this->logo_url === '' ? null : $this->logo_url,
+            'billing_email' => $this->billing_email === '' ? null : $this->billing_email,
+            'locale' => $this->locale === '' ? null : $this->locale,
+            'timezone' => $this->timezone === '' ? null : $this->timezone,
+        ]);
+
+        // Sanitize slug
+        if ($this->has('slug')) {
+            $this->merge([
+                'slug' => strtolower($this->slug),
+            ]);
+        }
+    }
+
+    /**
+     * Configure the validator instance.
+     */
+    public function withValidator($validator): void
+    {
+        $validator->after(function ($validator) {
+            // Additional validation logic can be added here
+            if ($this->isMethod('POST') && auth()->user()->tenants()->count() >= 5) {
+                $validator->errors()->add('name', 'You have reached the maximum number of tenants allowed.');
+            }
+        });
     }
 }
