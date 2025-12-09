@@ -23,6 +23,7 @@ class UserResource extends JsonResource
             'locale' => $this->locale,
             'status' => $this->status,
             'avatar_url' => $this->avatar_url,
+            'is_super_admin' => $this->is_super_admin,
             'email_verified_at' => $this->email_verified_at,
             'created_at' => $this->created_at,
             'updated_at' => $this->updated_at,

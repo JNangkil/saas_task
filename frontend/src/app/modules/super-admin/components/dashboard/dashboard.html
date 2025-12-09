@@ -1,0 +1,141 @@
+<div class="dashboard-container">
+  <!-- Loading State -->
+  <div class="loading-container" *ngIf="loading">
+    <mat-spinner></mat-spinner>
+    <p>Loading system metrics...</p>
+  </div>
+
+  <!-- Error State -->
+  <div class="error-container" *ngIf="error">
+    <mat-icon color="warn">error</mat-icon>
+    <p>{{ error }}</p>
+    <button mat-raised-button color="primary" (click)="loadMetrics()">Retry</button>
+  </div>
+
+  <!-- Dashboard Content -->
+  <div class="dashboard-content" *ngIf="!loading && !error && metrics">
+    <!-- Metrics Overview -->
+    <div class="metrics-grid">
+      <mat-card class="metric-card">
+        <mat-card-header>
+          <mat-card-title>Total Tenants</mat-card-title>
+          <mat-icon mat-card-avatar>business</mat-icon>
+        </mat-card-header>
+        <mat-card-content>
+          <div class="metric-value">{{ metrics.total_tenants }}</div>
+          <div class="metric-subtitle">{{ metrics.active_tenants }} active</div>
+        </mat-card-content>
+      </mat-card>
+
+      <mat-card class="metric-card">
+        <mat-card-header>
+          <mat-card-title>Total Users</mat-card-title>
+          <mat-icon mat-card-avatar>people</mat-icon>
+        </mat-card-header>
+        <mat-card-content>
+          <div class="metric-value">{{ metrics.total_users }}</div>
+          <div class="metric-subtitle">Across all tenants</div>
+        </mat-card-content>
+      </mat-card>
+
+      <mat-card class="metric-card">
+        <mat-card-header>
+          <mat-card-title>Active Subscriptions</mat-card-title>
+          <mat-icon mat-card-avatar>credit_card</mat-icon>
+        </mat-card-header>
+        <mat-card-content>
+          <div class="metric-value">{{ metrics.active_subscriptions }}</div>
+          <div class="metric-subtitle">of {{ metrics.total_subscriptions }} total</div>
+        </mat-card-content>
+      </mat-card>
+
+      <mat-card class="metric-card">
+        <mat-card-header>
+          <mat-card-title>Monthly Revenue</mat-card-title>
+          <mat-icon mat-card-avatar>attach_money</mat-icon>
+        </mat-card-header>
+        <mat-card-content>
+          <div class="metric-value">${{ metrics.monthly_revenue | number }}</div>
+          <div class="metric-subtitle">Per month</div>
+        </mat-card-content>
+      </mat-card>
+    </div>
+
+    <!-- Additional Metrics -->
+    <div class="secondary-metrics">
+      <mat-card class="metric-card">
+        <mat-card-header>
+          <mat-card-title>Workspaces</mat-card-title>
+          <mat-icon mat-card-avatar>dashboard</mat-icon>
+        </mat-card-header>
+        <mat-card-content>
+          <div class="metric-value">{{ metrics.total_workspaces }}</div>
+        </mat-card-content>
+      </mat-card>
+
+      <mat-card class="metric-card">
+        <mat-card-header>
+          <mat-card-title>Boards</mat-card-title>
+          <mat-icon mat-card-avatar>view_kanban</mat-icon>
+        </mat-card-header>
+        <mat-card-content>
+          <div class="metric-value">{{ metrics.total_boards }}</div>
+        </mat-card-content>
+      </mat-card>
+
+      <mat-card class="metric-card">
+        <mat-card-header>
+          <mat-card-title>Tasks</mat-card-title>
+          <mat-icon mat-card-avatar>task</mat-icon>
+        </mat-card-header>
+        <mat-card-content>
+          <div class="metric-value">{{ metrics.total_tasks }}</div>
+        </mat-card-content>
+      </mat-card>
+
+      <mat-card class="metric-card">
+        <mat-card-header>
+          <mat-card-title>Yearly Revenue</mat-card-title>
+          <mat-icon mat-card-avatar>trending_up</mat-icon>
+        </mat-card-header>
+        <mat-card-content>
+          <div class="metric-value">${{ metrics.yearly_revenue | number }}</div>
+          <div class="metric-subtitle">Per year</div>
+        </mat-card-content>
+      </mat-card>
+    </div>
+
+    <!-- Charts Section -->
+    <div class="charts-section">
+      <div class="chart-container">
+        <mat-card>
+          <mat-card-header>
+            <mat-card-title>Recent Signups</mat-card-title>
+          </mat-card-header>
+          <mat-card-content>
+            <div class="chart-placeholder">
+              <p>Chart component would go here</p>
+              <small>Showing last 30 days of tenant signups</small>
+            </div>
+          </mat-card-content>
+        </mat-card>
+      </div>
+
+      <div class="chart-container">
+        <mat-card>
+          <mat-card-header>
+            <mat-card-title>Subscription Distribution</mat-card-title>
+          </mat-card-header>
+          <mat-card-content>
+            <div class="subscription-distribution">
+              <div class="subscription-item" *ngFor="let sub of metrics.subscription_distribution">
+                <span class="plan-name">{{ sub.plan_name }}</span>
+                <span class="plan-count">{{ sub.count }}</span>
+              </div>
+            </div>
+          </mat-card-content>
+        </mat-card>
+      </div>
+    </div>
+  </div>
+</div>

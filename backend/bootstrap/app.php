@@ -25,6 +25,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'workspace.permission' => \App\Http\Middleware\WorkspacePermission::class,
             'subscription.limit' => \App\Http\Middleware\SubscriptionLimitMiddleware::class,
             'permission' => \App\Http\Middleware\CheckPermission::class,
+            'super.admin' => \App\Http\Middleware\SuperAdminMiddleware::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {

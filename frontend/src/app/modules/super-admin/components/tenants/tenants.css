@@ -1,0 +1,182 @@
+.tenants-container {
+  padding: 0;
+}
+
+.tenants-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24px;
+  flex-wrap: wrap;
+  gap: 16px;
+}
+
+.tenants-header h1 {
+  margin: 0;
+  font-size: 28px;
+  font-weight: 400;
+}
+
+.header-actions {
+  display: flex;
+  gap: 16px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.header-actions mat-form-field {
+  min-width: 200px;
+}
+
+.loading-container,
+.error-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 60px 20px;
+  text-align: center;
+}
+
+.loading-container p,
+.error-container p {
+  margin-top: 16px;
+  font-size: 16px;
+  color: #666;
+}
+
+.error-container {
+  color: #f44336;
+}
+
+.table-container {
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  overflow: hidden;
+}
+
+.tenants-table {
+  width: 100%;
+}
+
+.tenants-table mat-header-cell {
+  font-weight: 600;
+}
+
+.tenants-table mat-cell {
+  border-bottom: 1px solid #e0e0e0;
+}
+
+.tenant-link {
+  color: #1976d2;
+  text-decoration: none;
+  font-weight: 500;
+}
+
+.tenant-link:hover {
+  text-decoration: underline;
+}
+
+.status-badge {
+  padding: 4px 12px;
+  border-radius: 16px;
+  font-size: 12px;
+  font-weight: 500;
+  text-transform: uppercase;
+}
+
+.status-active {
+  background-color: #e8f5e8;
+  color: #2e7d32;
+}
+
+.status-inactive {
+  background-color: #fff3e0;
+  color: #f57c00;
+}
+
+.status-suspended {
+  background-color: #ffebee;
+  color: #c62828;
+}
+
+.subscription-info {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.plan-name {
+  font-weight: 500;
+  color: #333;
+}
+
+.plan-details {
+  font-size: 12px;
+  color: #666;
+}
+
+.subscription-status {
+  align-self: flex-start;
+  padding: 2px 8px;
+  border-radius: 12px;
+  font-size: 11px;
+  font-weight: 500;
+  text-transform: uppercase;
+}
+
+.no-subscription {
+  color: #999;
+  font-style: italic;
+}
+
+.no-data-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 80px 20px;
+  text-align: center;
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.no-data-container mat-icon {
+  font-size: 64px;
+  width: 64px;
+  height: 64px;
+  color: #ccc;
+  margin-bottom: 16px;
+}
+
+.no-data-container h3 {
+  margin: 0 0 8px 0;
+  font-size: 20px;
+  font-weight: 400;
+  color: #666;
+}
+
+.no-data-container p {
+  margin: 0;
+  color: #999;
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+  .tenants-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .header-actions {
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  .header-actions mat-form-field {
+    flex: 1;
+    min-width: 150px;
+  }
+}

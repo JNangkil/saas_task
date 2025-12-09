@@ -1,0 +1,159 @@
+.dashboard-container {
+  padding: 0;
+}
+
+.loading-container,
+.error-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 60px 20px;
+  text-align: center;
+}
+
+.loading-container p,
+.error-container p {
+  margin-top: 16px;
+  font-size: 16px;
+  color: #666;
+}
+
+.error-container {
+  color: #f44336;
+}
+
+.metrics-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 20px;
+  margin-bottom: 24px;
+}
+
+.secondary-metrics {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 20px;
+  margin-bottom: 32px;
+}
+
+.metric-card {
+  text-align: center;
+}
+
+.metric-card mat-card-header {
+  justify-content: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+
+.metric-card mat-card-title {
+  font-size: 16px;
+  font-weight: 500;
+  margin: 0;
+}
+
+.metric-card mat-card-avatar {
+  background-color: #1976d2;
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.metric-card .metric-value {
+  font-size: 32px;
+  font-weight: 600;
+  color: #1976d2;
+  margin-bottom: 4px;
+}
+
+.metric-card .metric-subtitle {
+  font-size: 14px;
+  color: #666;
+}
+
+.charts-section {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+  gap: 24px;
+}
+
+.chart-container {
+  min-height: 300px;
+}
+
+.chart-placeholder {
+  height: 200px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background-color: #f5f5f5;
+  border-radius: 4px;
+  color: #666;
+}
+
+.chart-placeholder p {
+  margin: 0 0 8px 0;
+  font-weight: 500;
+}
+
+.chart-placeholder small {
+  opacity: 0.8;
+}
+
+.subscription-distribution {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.subscription-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 16px;
+  background-color: #f5f5f5;
+  border-radius: 4px;
+}
+
+.subscription-item .plan-name {
+  font-weight: 500;
+}
+
+.subscription-item .plan-count {
+  background-color: #1976d2;
+  color: white;
+  padding: 4px 12px;
+  border-radius: 16px;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+  .metrics-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .secondary-metrics {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .charts-section {
+    grid-template-columns: 1fr;
+  }
+
+  .metric-card .metric-value {
+    font-size: 28px;
+  }
+}
+
+@media (max-width: 480px) {
+  .secondary-metrics {
+    grid-template-columns: 1fr;
+  }
+}

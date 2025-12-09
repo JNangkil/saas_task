@@ -1,0 +1,298 @@
+<div class="tenant-detail-container">
+  <!-- Loading State -->
+  <div class="loading-container" *ngIf="loading">
+    <mat-spinner></mat-spinner>
+    <p>Loading tenant details...</p>
+  </div>
+
+  <!-- Error State -->
+  <div class="error-container" *ngIf="error">
+    <mat-icon color="warn">error</mat-icon>
+    <p>{{ error }}</p>
+    <button mat-raised-button color="primary" (click)="loadTenant()">Retry</button>
+  </div>
+
+  <!-- Tenant Details -->
+  <div class="tenant-content" *ngIf="!loading && !error && tenant">
+    <!-- Header -->
+    <div class="tenant-header">
+      <div class="header-left">
+        <h1>{{ tenant.name }}</h1>
+        <p class="domain">{{ tenant.domain }}</p>
+        <span class="status-badge status-{{ tenant.status }}">
+          {{ tenant.status | titlecase }}
+        </span>
+      </div>
+      <div class="header-actions">
+        <button mat-raised-button
+                color="primary"
+                (click)="editTenant()"
+                matTooltip="Edit tenant details">
+          <mat-icon>edit</mat-icon>
+          Edit
+        </button>
+        <button mat-raised-button
+                color="warn"
+                (click)="impersonateTenant()"
+                matTooltip="Login as this tenant">
+          <mat-icon>login</mat-icon>
+          Impersonate
+        </button>
+      </div>
+    </div>
+
+    <!-- Stats Cards -->
+    <div class="stats-grid">
+      <mat-card class="stat-card">
+        <mat-card-header>
+          <mat-card-title>Users</mat-card-title>
+          <mat-icon mat-card-avatar>people</mat-icon>
+        </mat-card-header>
+        <mat-card-content>
+          <div class="stat-value">{{ tenant.users_count }}</div>
+        </mat-card-content>
+      </mat-card>
+
+      <mat-card class="stat-card">
+        <mat-card-header>
+          <mat-card-title>Workspaces</mat-card-title>
+          <mat-icon mat-card-avatar>dashboard</mat-icon>
+        </mat-card-header>
+        <mat-card-content>
+          <div class="stat-value">{{ tenant.workspaces_count }}</div>
+        </mat-card-content>
+      </mat-card>
+
+      <mat-card class="stat-card">
+        <mat-card-header>
+          <mat-card-title>Boards</mat-card-title>
+          <mat-icon mat-card-avatar>view_kanban</mat-icon>
+        </mat-card-header>
+        <mat-card-content>
+          <div class="stat-value">{{ tenant.boards_count }}</div>
+        </mat-card-content>
+      </mat-card>
+
+      <mat-card class="stat-card">
+        <mat-card-header>
+          <mat-card-title>Tasks</mat-card-title>
+          <mat-icon mat-card-avatar>task</mat-icon>
+        </mat-card-header>
+        <mat-card-content>
+          <div class="stat-value">{{ tenant.tasks_count }}</div>
+        </mat-card-content>
+      </mat-card>
+    </div>
+
+    <!-- Tabs for detailed information -->
+    <mat-tab-group class="tenant-tabs">
+      <!-- General Information Tab -->
+      <mat-tab label="General Information">
+        <div class="tab-content">
+          <mat-card>
+            <mat-card-header>
+              <mat-card-title>Tenant Information</mat-card-title>
+            </mat-card-header>
+            <mat-card-content>
+              <div class="info-grid">
+                <div class="info-item">
+                  <label>Tenant ID:</label>
+                  <span>{{ tenant.id }}</span>
+                </div>
+                <div class="info-item">
+                  <label>Name:</label>
+                  <span>{{ tenant.name }}</span>
+                </div>
+                <div class="info-item">
+                  <label>Domain:</label>
+                  <span>{{ tenant.domain }}</span>
+                </div>
+                <div class="info-item">
+                  <label>Status:</label>
+                  <span class="status-badge status-{{ tenant.status }}">
+                    {{ tenant.status | titlecase }}
+                  </span>
+                </div>
+                <div class="info-item">
+                  <label>Created:</label>
+                  <span>{{ tenant.created_at | date:'long' }}</span>
+                </div>
+                <div class="info-item">
+                  <label>Last Updated:</label>
+                  <span>{{ tenant.updated_at | date:'long' }}</span>
+                </div>
+              </div>
+            </mat-card-content>
+          </mat-card>
+        </div>
+      </mat-tab>
+
+      <!-- Subscription Tab -->
+      <mat-tab label="Subscription">
+        <div class="tab-content">
+          <mat-card *ngIf="tenant.subscription; else noSubscription">
+            <mat-card-header>
+              <mat-card-title>Current Subscription</mat-card-title>
+              <div mat-card-avatar class="subscription-avatar">
+                <mat-icon>credit_card</mat-icon>
+              </div>
+            </mat-card-header>
+            <mat-card-content>
+              <div class="subscription-info">
+                <div class="subscription-details">
+                  <h3>{{ tenant.subscription.plan.name }}</h3>
+                  <p class="price">${{ tenant.subscription.plan.price }}/{{ tenant.subscription.plan.billing_interval }}</p>
+                  <span class="subscription-status status-{{ tenant.subscription.status }}">
+                    {{ tenant.subscription.status | titlecase }}
+                  </span>
+                </div>
+
+                <div class="plan-features" *ngIf="tenant.subscription.plan.features?.length">
+                  <h4>Plan Features:</h4>
+                  <ul>
+                    <li *ngFor="let feature of tenant.subscription.plan.features">{{ feature }}</li>
+                  </ul>
+                </div>
+
+                <div class="plan-limits" *ngIf="tenant.subscription.plan.limits">
+                  <h4>Plan Limits:</h4>
+                  <div class="limits-grid">
+                    <div class="limit-item">
+                      <label>Users:</label>
+                      <span>{{ tenant.subscription.plan.limits.users }} {{ tenant.subscription.plan.limits.users === -1 ? '(Unlimited)' : '' }}</span>
+                    </div>
+                    <div class="limit-item">
+                      <label>Workspaces:</label>
+                      <span>{{ tenant.subscription.plan.limits.workspaces }} {{ tenant.subscription.plan.limits.workspaces === -1 ? '(Unlimited)' : '' }}</span>
+                    </div>
+                    <div class="limit-item">
+                      <label>Boards per Workspace:</label>
+                      <span>{{ tenant.subscription.plan.limits.boards_per_workspace }} {{ tenant.subscription.plan.limits.boards_per_workspace === -1 ? '(Unlimited)' : '' }}</span>
+                    </div>
+                    <div class="limit-item">
+                      <label>Storage:</label>
+                      <span>{{ tenant.subscription.plan.limits.storage_mb }}MB {{ tenant.subscription.plan.limits.storage_mb === -1 ? '(Unlimited)' : '' }}</span>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="subscription-actions">
+                  <button mat-raised-button
+                          color="primary"
+                          (click)="changeSubscription()"
+                          matTooltip="Change subscription plan">
+                    <mat-icon>swap_horiz</mat-icon>
+                    Change Plan
+                  </button>
+                  <button mat-raised-button
+                          color="accent"
+                          (click)="cancelSubscription()"
+                          *ngIf="tenant.subscription.status === 'active'"
+                          matTooltip="Cancel subscription">
+                    <mat-icon>cancel</mat-icon>
+                    Cancel
+                  </button>
+                </div>
+              </div>
+            </mat-card-content>
+          </mat-card>
+
+          <ng-template #noSubscription>
+            <mat-card>
+              <mat-card-content>
+                <div class="no-subscription">
+                  <mat-icon>credit_card_off</mat-icon>
+                  <h3>No Active Subscription</h3>
+                  <p>This tenant doesn't have an active subscription.</p>
+                  <button mat-raised-button
+                          color="primary"
+                          (click)="createSubscription()">
+                    <mat-icon>add</mat-icon>
+                    Create Subscription
+                  </button>
+                </div>
+              </mat-card-content>
+            </mat-card>
+          </ng-template>
+        </div>
+      </mat-tab>
+
+      <!-- Actions Tab -->
+      <mat-tab label="Actions">
+        <div class="tab-content">
+          <mat-card>
+            <mat-card-header>
+              <mat-card-title>Tenant Actions</mat-card-title>
+            </mat-card-header>
+            <mat-card-content>
+              <div class="actions-grid">
+                <div class="action-section">
+                  <h3>Status Management</h3>
+                  <div class="action-buttons">
+                    <button mat-raised-button
+                            color="primary"
+                            [disabled]="tenant.status === 'active'"
+                            (click)="updateTenantStatus('active')"
+                            matTooltip="Activate tenant account">
+                      <mat-icon>check_circle</mat-icon>
+                      Activate
+                    </button>
+                    <button mat-raised-button
+                            color="warn"
+                            [disabled]="tenant.status === 'suspended'"
+                            (click)="updateTenantStatus('suspended')"
+                            matTooltip="Suspend tenant account">
+                      <mat-icon>block</mat-icon>
+                      Suspend
+                    </button>
+                    <button mat-raised-button
+                            color="accent"
+                            [disabled]="tenant.status === 'inactive'"
+                            (click)="updateTenantStatus('inactive')"
+                            matTooltip="Deactivate tenant account">
+                      <mat-icon>cancel</mat-icon>
+                      Deactivate
+                    </button>
+                  </div>
+                </div>
+
+                <div class="action-section">
+                  <h3>Access Management</h3>
+                  <div class="action-buttons">
+                    <button mat-raised-button
+                            color="primary"
+                            (click)="impersonateTenant()"
+                            matTooltip="Login as this tenant">
+                      <mat-icon>login</mat-icon>
+                      Impersonate
+                    </button>
+                    <button mat-raised-button
+                            color="accent"
+                            (click)="resetPassword()"
+                            matTooltip="Reset tenant owner password">
+                      <mat-icon>password</mat-icon>
+                      Reset Password
+                    </button>
+                  </div>
+                </div>
+
+                <div class="action-section">
+                  <h3>Danger Zone</h3>
+                  <div class="action-buttons">
+                    <button mat-raised-button
+                            color="warn"
+                            (click)="deleteTenant()"
+                            matTooltip="Permanently delete tenant and all data">
+                      <mat-icon>delete</mat-icon>
+                      Delete Tenant
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </mat-card-content>
+          </mat-card>
+        </div>
+      </mat-tab>
+    </mat-tab-group>
+  </div>
+</div>

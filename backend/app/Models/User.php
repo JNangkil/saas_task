@@ -203,4 +203,20 @@ class User extends Authenticatable
         // This will be implemented with workspace context service
         return current_workspace();
     }
+
+    /**
+     * Get the audit logs for this user as a super admin.
+     */
+    public function adminAuditLogs()
+    {
+        return $this->hasMany(SuperAdminAuditLog::class, 'admin_id');
+    }
+
+    /**
+     * Check if user can access super admin features.
+     */
+    public function canAccessSuperAdmin(): bool
+    {
+        return $this->isSuperAdmin();
+    }
 }

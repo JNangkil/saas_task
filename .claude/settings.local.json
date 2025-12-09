@@ -16,7 +16,9 @@
       "Bash(ng generate component:*)",
       "Bash(findstr:*)",
       "Bash(composer:*)",
-      "Bash(npm install:*)"
+      "Bash(npm install:*)",
+      "Bash(ng generate module:*)",
+      "Bash(ng generate guard:*)"
     ],
     "deny": [],
     "ask": []

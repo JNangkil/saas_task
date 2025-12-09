@@ -6,6 +6,7 @@ import { AcceptInvitationComponent } from './components/accept-invitation/accept
 import { PricingPageComponent } from './components/pricing-page/pricing-page.component';
 import { BillingSettingsComponent } from './components/billing-settings/billing-settings.component';
 import { AuthGuard } from './guards/auth.guard';
+import { superAdminGuard } from './guards/super-admin.guard';
 
 export const routes: Routes = [
     {
@@ -76,6 +77,12 @@ export const routes: Routes = [
         loadComponent: () => import('./pages/notifications/notifications').then(m => m.Notifications),
         canActivate: [AuthGuard],
         title: 'Notifications'
+    },
+    {
+        path: 'admin',
+        loadChildren: () => import('./modules/super-admin/super-admin-module').then(m => m.SuperAdminModule),
+        canActivate: [superAdminGuard],
+        title: 'Super Admin Panel'
     },
     {
         path: '',

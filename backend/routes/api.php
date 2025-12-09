@@ -23,6 +23,7 @@ use App\Http\Controllers\Api\NotificationController;
 use App\Http\Controllers\Api\NotificationPreferenceController;
 use App\Http\Controllers\Api\ActivityController;
 use App\Http\Controllers\AnalyticsController;
+use App\Http\Controllers\SuperAdminController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -338,4 +339,38 @@ Route::prefix('invitations')->group(function () {
 // Webhook routes (no auth required, verified by signature)
 Route::prefix('webhooks')->group(function () {
     Route::post('/stripe', [WebhookController::class, 'handleStripeWebhook'])->name('webhooks.stripe');
+});
+
+// Super Admin routes (require auth and super admin middleware)
+Route::middleware(['auth:sanctum', 'super.admin'])->prefix('super-admin')->group(function () {
+    // Tenant management
+    Route::get('/tenants', [SuperAdminController::class, 'indexTenants'])->name('super-admin.tenants.index');
+    Route::get('/tenants/{tenant}', [SuperAdminController::class, 'showTenant'])->name('super-admin.tenants.show');
+    Route::patch('/tenants/{tenant}/status', [SuperAdminController::class, 'updateTenantStatus'])->name('super-admin.tenants.status');
+    Route::post('/tenants/{tenant}/impersonate', [SuperAdminController::class, 'impersonateTenant'])->name('super-admin.tenants.impersonate');
+
+    // Subscription management
+    Route::get('/subscriptions/summary', [SuperAdminController::class, 'subscriptionSummary'])->name('super-admin.subscriptions.summary');
+    Route::get('/subscriptions', [SuperAdminController::class, 'indexSubscriptions'])->name('super-admin.subscriptions.index');
+
+    // Plan management
+    Route::get('/plans', [SuperAdminController::class, 'indexPlans'])->name('super-admin.plans.index');
+    Route::post('/plans', [SuperAdminController::class, 'storePlan'])->name('super-admin.plans.store');
+    Route::get('/plans/{plan}', [SuperAdminController::class, 'showPlan'])->name('super-admin.plans.show');
+    Route::patch('/plans/{plan}', [SuperAdminController::class, 'updatePlan'])->name('super-admin.plans.update');
+    Route::delete('/plans/{plan}', [SuperAdminController::class, 'destroyPlan'])->name('super-admin.plans.destroy');
+
+    // System settings
+    Route::get('/settings', [SuperAdminController::class, 'indexSettings'])->name('super-admin.settings.index');
+    Route::patch('/settings', [SuperAdminController::class, 'updateSettings'])->name('super-admin.settings.update');
+    Route::get('/settings/{key}', [SuperAdminController::class, 'showSetting'])->name('super-admin.settings.show');
+    Route::patch('/settings/{key}', [SuperAdminController::class, 'updateSetting'])->name('super-admin.settings.update-key');
+
+    // System metrics and health
+    Route::get('/system/metrics', [SuperAdminController::class, 'systemMetrics'])->name('super-admin.system.metrics');
+    Route::get('/system/logs', [SuperAdminController::class, 'errorLogs'])->name('super-admin.system.logs');
+    Route::get('/system/health', [SuperAdminController::class, 'healthChecks'])->name('super-admin.system.health');
+
+    // Audit logs
+    Route::get('/audit-logs', [SuperAdminController::class, 'auditLogs'])->name('super-admin.audit-logs');
 });

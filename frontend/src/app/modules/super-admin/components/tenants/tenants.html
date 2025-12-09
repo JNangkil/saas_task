@@ -1,0 +1,174 @@
+<div class="tenants-container">
+  <!-- Header with Actions -->
+  <div class="tenants-header">
+    <h1>Tenant Management</h1>
+    <div class="header-actions">
+      <mat-form-field appearance="outline">
+        <mat-label>Search</mat-label>
+        <input matInput
+               placeholder="Search by name or domain"
+               (keyup)="applySearch($event)"
+               [value]="searchTerm">
+        <mat-icon matSuffix>search</mat-icon>
+      </mat-form-field>
+
+      <mat-form-field appearance="outline">
+        <mat-label>Status</mat-label>
+        <mat-select (selectionChange)="onStatusChange($event)" [value]="statusFilter">
+          <mat-option value="">All</mat-option>
+          <mat-option value="active">Active</mat-option>
+          <mat-option value="inactive">Inactive</mat-option>
+          <mat-option value="suspended">Suspended</mat-option>
+        </mat-select>
+      </mat-form-field>
+
+      <button mat-raised-button color="primary" (click)="loadTenants()">
+        <mat-icon>refresh</mat-icon>
+        Refresh
+      </button>
+    </div>
+  </div>
+
+  <!-- Loading State -->
+  <div class="loading-container" *ngIf="loading">
+    <mat-spinner></mat-spinner>
+    <p>Loading tenants...</p>
+  </div>
+
+  <!-- Error State -->
+  <div class="error-container" *ngIf="error">
+    <mat-icon color="warn">error</mat-icon>
+    <p>{{ error }}</p>
+    <button mat-raised-button color="primary" (click)="loadTenants()">Retry</button>
+  </div>
+
+  <!-- Tenants Table -->
+  <div class="table-container" *ngIf="!loading && !error">
+    <mat-table [dataSource]="tenants" class="tenants-table">
+      <!-- Tenant Name Column -->
+      <ng-container matColumnDef="name">
+        <mat-header-cell *matHeaderCellDef>Tenant Name</mat-header-cell>
+        <mat-cell *matCellDef="let tenant">
+          <a [routerLink]="['/admin/tenants', tenant.id]" class="tenant-link">
+            {{ tenant.name }}
+          </a>
+        </mat-cell>
+      </ng-container>
+
+      <!-- Domain Column -->
+      <ng-container matColumnDef="domain">
+        <mat-header-cell *matHeaderCellDef>Domain</mat-header-cell>
+        <mat-cell *matCellDef="let tenant">{{ tenant.domain }}</mat-cell>
+      </ng-container>
+
+      <!-- Status Column -->
+      <ng-container matColumnDef="status">
+        <mat-header-cell *matHeaderCellDef>Status</mat-header-cell>
+        <mat-cell *matCellDef="let tenant">
+          <span class="status-badge status-{{ tenant.status }}">
+            {{ tenant.status | titlecase }}
+          </span>
+        </mat-cell>
+      </ng-container>
+
+      <!-- Users Column -->
+      <ng-container matColumnDef="users_count">
+        <mat-header-cell *matHeaderCellDef>Users</mat-header-cell>
+        <mat-cell *matCellDef="let tenant">{{ tenant.users_count }}</mat-cell>
+      </ng-container>
+
+      <!-- Workspaces Column -->
+      <ng-container matColumnDef="workspaces_count">
+        <mat-header-cell *matHeaderCellDef>Workspaces</mat-header-cell>
+        <mat-cell *matCellDef="let tenant">{{ tenant.workspaces_count }}</mat-cell>
+      </ng-container>
+
+      <!-- Subscription Column -->
+      <ng-container matColumnDef="subscription">
+        <mat-header-cell *matHeaderCellDef>Subscription</mat-header-cell>
+        <mat-cell *matCellDef="let tenant">
+          <div *ngIf="tenant.subscription" class="subscription-info">
+            <div class="plan-name">{{ tenant.subscription.plan.name }}</div>
+            <div class="plan-details">
+              ${{ tenant.subscription.plan.price }}/{{ tenant.subscription.plan.billing_interval }}
+            </div>
+            <span class="subscription-status status-{{ tenant.subscription.status }}">
+              {{ tenant.subscription.status | titlecase }}
+            </span>
+          </div>
+          <span *ngIf="!tenant.subscription" class="no-subscription">No subscription</span>
+        </mat-cell>
+      </ng-container>
+
+      <!-- Created At Column -->
+      <ng-container matColumnDef="created_at">
+        <mat-header-cell *matHeaderCellDef>Created</mat-header-cell>
+        <mat-cell *matCellDef="let tenant">{{ tenant.created_at | date:'shortDate' }}</mat-cell>
+      </ng-container>
+
+      <!-- Actions Column -->
+      <ng-container matColumnDef="actions">
+        <mat-header-cell *matHeaderCellDef>Actions</mat-header-cell>
+        <mat-cell *matCellDef="let tenant">
+          <button mat-icon-button
+                  [matMenuTriggerFor]="menu"
+                  matTooltip="Actions">
+            <mat-icon>more_vert</mat-icon>
+          </button>
+          <mat-menu #menu="matMenu">
+            <a mat-menu-item [routerLink]="['/admin/tenants', tenant.id]">
+              <mat-icon>visibility</mat-icon>
+              <span>View Details</span>
+            </a>
+            <button mat-menu-item
+                    [disabled]="tenant.status === 'active'"
+                    (click)="updateTenantStatus(tenant.id, 'active')"
+                    matTooltip="Activate tenant">
+              <mat-icon>check_circle</mat-icon>
+              <span>Activate</span>
+            </button>
+            <button mat-menu-item
+                    [disabled]="tenant.status === 'inactive'"
+                    (click)="updateTenantStatus(tenant.id, 'inactive')"
+                    matTooltip="Deactivate tenant">
+              <mat-icon>cancel</mat-icon>
+              <span>Deactivate</span>
+            </button>
+            <button mat-menu-item
+                    [disabled]="tenant.status === 'suspended'"
+                    (click)="updateTenantStatus(tenant.id, 'suspended')"
+                    matTooltip="Suspend tenant">
+              <mat-icon>block</mat-icon>
+              <span>Suspend</span>
+            </button>
+            <button mat-menu-item
+                    (click)="impersonateTenant(tenant.id)"
+                    matTooltip="Login as this tenant">
+              <mat-icon>login</mat-icon>
+              <span>Impersonate</span>
+            </button>
+          </mat-menu>
+        </mat-cell>
+      </ng-container>
+
+      <mat-header-row *matHeaderRowDef="displayedColumns"></mat-header-row>
+      <mat-row *matRowDef="let row; columns: displayedColumns;"></mat-row>
+    </mat-table>
+
+    <!-- Pagination -->
+    <mat-paginator
+      [length]="totalTenants"
+      [pageSize]="pageSize"
+      [pageSizeOptions]="[10, 25, 50, 100]"
+      (page)="onPageChange($event)"
+      showFirstLastButtons>
+    </mat-paginator>
+  </div>
+
+  <!-- No Data State -->
+  <div class="no-data-container" *ngIf="!loading && !error && tenants.length === 0">
+    <mat-icon>business</mat-icon>
+    <h3>No tenants found</h3>
+    <p>Try adjusting your search or filters.</p>
+  </div>
+</div>

@@ -1,0 +1,150 @@
+<div class="system-settings-container">
+  <!-- Header -->
+  <div class="settings-header">
+    <h1>System Settings</h1>
+    <div class="header-actions">
+      <mat-form-field appearance="outline">
+        <mat-label>Search Settings</mat-label>
+        <input matInput
+               placeholder="Search by key or description"
+               (keyup)="applySearch($event)"
+               [value]="searchTerm">
+        <mat-icon matSuffix>search</mat-icon>
+      </mat-form-field>
+
+      <mat-form-field appearance="outline">
+        <mat-label>Type</mat-label>
+        <mat-select (selectionChange)="onTypeChange($event)" [value]="typeFilter">
+          <mat-option value="">All Types</mat-option>
+          <mat-option value="string">String</mat-option>
+          <mat-option value="number">Number</mat-option>
+          <mat-option value="boolean">Boolean</mat-option>
+          <mat-option value="array">Array</mat-option>
+        </mat-select>
+      </mat-form-field>
+
+      <button mat-raised-button
+              color="primary"
+              (click)="createSetting()"
+              matTooltip="Create new setting">
+        <mat-icon>add</mat-icon>
+        Create Setting
+      </button>
+    </div>
+  </div>
+
+  <!-- Loading State -->
+  <div class="loading-container" *ngIf="loading">
+    <mat-spinner></mat-spinner>
+    <p>Loading system settings...</p>
+  </div>
+
+  <!-- Error State -->
+  <div class="error-container" *ngIf="error">
+    <mat-icon color="warn">error</mat-icon>
+    <p>{{ error }}</p>
+    <button mat-raised-button color="primary" (click)="loadSettings()">Retry</button>
+  </div>
+
+  <!-- Settings Grid -->
+  <div class="settings-content" *ngIf="!loading && !error">
+    <!-- Settings Groups -->
+    <div class="settings-group" *ngFor="let group of groupedSettings | keyvalue">
+      <mat-card class="group-card" *ngIf="group.value.length > 0">
+        <mat-card-header>
+          <mat-card-title>{{ formatGroupName(group.key) }}</mat-card-title>
+          <mat-icon matCardAvatar>settings</mat-icon>
+        </mat-card-header>
+        <mat-card-content>
+          <div class="settings-list">
+            <div class="setting-item" *ngFor="let setting of group.value">
+              <div class="setting-info">
+                <div class="setting-header">
+                  <h4 class="setting-key">{{ setting.key }}</h4>
+                  <div class="setting-meta">
+                    <span class="setting-type type-{{ setting.type }}">{{ setting.type }}</span>
+                    <span class="setting-public" *ngIf="setting.is_public">
+                      <mat-icon>public</mat-icon>
+                      Public
+                    </span>
+                  </div>
+                </div>
+                <p class="setting-description" *ngIf="setting.description">
+                  {{ setting.description }}
+                </p>
+              </div>
+
+              <div class="setting-value">
+                <!-- String Input -->
+                <mat-form-field appearance="outline" *ngIf="setting.type === 'string'">
+                  <mat-label>Value</mat-label>
+                  <input matInput
+                         [value]="settingValue(setting.key)"
+                         (blur)="updateSetting(setting.key, $event.target.value)">
+                </mat-form-field>
+
+                <!-- Number Input -->
+                <mat-form-field appearance="outline" *ngIf="setting.type === 'number' || setting.type === 'integer'">
+                  <mat-label>Value</mat-label>
+                  <input matInput
+                         type="number"
+                         [value]="settingValue(setting.key)"
+                         (blur)="updateSetting(setting.key, $event.target.value)">
+                </mat-form-field>
+
+                <!-- Boolean Toggle -->
+                <mat-slide-toggle *ngIf="setting.type === 'boolean'"
+                                  [checked]="settingValue(setting.key)"
+                                  (change)="updateSetting(setting.key, $event.checked)">
+                  {{ settingValue(setting.key) ? 'Enabled' : 'Disabled' }}
+                </mat-slide-toggle>
+
+                <!-- Array/JSON Editor -->
+                <mat-form-field appearance="outline" *ngIf="setting.type === 'array'">
+                  <mat-label>Value (JSON)</mat-label>
+                  <textarea matInput
+                            rows="3"
+                            [value]="formatJsonForDisplay(settingValue(setting.key))"
+                            (blur)="updateSetting(setting.key, parseJsonValue($event.target.value))">
+                  </textarea>
+                </mat-form-field>
+
+                <!-- Actions -->
+                <div class="setting-actions">
+                  <button mat-icon-button
+                          (click)="editSetting(setting)"
+                          matTooltip="Edit setting">
+                    <mat-icon>edit</mat-icon>
+                  </button>
+                  <button mat-icon-button
+                          class="danger-action"
+                          (click)="deleteSetting(setting)"
+                          matTooltip="Delete setting">
+                    <mat-icon>delete</mat-icon>
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </mat-card-content>
+      </mat-card>
+    </div>
+
+    <!-- No Data State -->
+    <div class="no-data-container" *ngIf="settings.length === 0">
+      <mat-icon>settings</mat-icon>
+      <h3>No system settings found</h3>
+      <p>Start by creating your first system setting.</p>
+      <button mat-raised-button color="primary" (click)="createSetting()">
+        <mat-icon>add</mat-icon>
+        Create Setting
+      </button>
+    </div>
+  </div>
+
+  <!-- Save Status -->
+  <div class="save-status" *ngIf="saveStatus" [class]="saveStatus.type">
+    <mat-icon>{{ saveStatus.type === 'success' ? 'check_circle' : 'error' }}</mat-icon>
+    <span>{{ saveStatus.message }}</span>
+  </div>
+</div>
