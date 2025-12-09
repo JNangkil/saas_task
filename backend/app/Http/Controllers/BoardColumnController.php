@@ -13,6 +13,10 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
+use App\Events\ColumnCreated;
+use App\Events\ColumnUpdated;
+use App\Events\ColumnDeleted;
+use App\Events\ColumnsReordered;
 
 class BoardColumnController extends Controller
 {
@@ -56,6 +60,8 @@ class BoardColumnController extends Controller
         }
 
         $column = BoardColumn::create($validated);
+        
+        broadcast(new ColumnCreated($column))->toOthers();
 
         return new BoardColumnResource($column);
     }
@@ -99,6 +105,8 @@ class BoardColumnController extends Controller
         $validated = $request->getValidatedData();
 
         $column->update($validated);
+        
+        broadcast(new ColumnUpdated($column))->toOthers();
 
         return new BoardColumnResource($column);
     }
@@ -128,7 +136,11 @@ class BoardColumnController extends Controller
         $column->taskFieldValues()->delete();
 
         // Delete the column
+        $columnId = $column->id;
+        $boardId = $board->id;
         $column->delete();
+        
+        broadcast(new ColumnDeleted($columnId, $boardId))->toOthers();
 
         return response()->json(null, 204);
     }
@@ -152,6 +164,8 @@ class BoardColumnController extends Controller
                     ->update(['position' => $columnData['order']]);
             }
         });
+
+        broadcast(new ColumnsReordered($board->id, $reorderData))->toOthers();
 
         return response()->json(['message' => 'Columns reordered successfully']);
     }
@@ -209,6 +223,8 @@ class BoardColumnController extends Controller
         $newColumn->position = $newPosition;
         $newColumn->is_required = false; // Make duplicate non-required
         $newColumn->save();
+        
+        broadcast(new ColumnCreated($newColumn))->toOthers();
 
         return new BoardColumnResource($newColumn);
     }
@@ -231,6 +247,8 @@ class BoardColumnController extends Controller
 
         $column->is_pinned = !$column->is_pinned;
         $column->save();
+        
+        broadcast(new ColumnUpdated($column))->toOthers();
 
         return new BoardColumnResource($column);
     }
@@ -258,6 +276,8 @@ class BoardColumnController extends Controller
 
         $column->is_required = !$column->is_required;
         $column->save();
+        
+        broadcast(new ColumnUpdated($column))->toOthers();
 
         return new BoardColumnResource($column);
     }

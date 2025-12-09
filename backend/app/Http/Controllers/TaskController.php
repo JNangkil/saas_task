@@ -19,6 +19,10 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use App\Events\TaskCreated;
+use App\Events\TaskUpdated;
+use App\Events\TaskDeleted;
+use App\Events\TaskReordered;
 
 class TaskController extends Controller
 {
@@ -572,7 +576,11 @@ class TaskController extends Controller
                 }
             }
 
-            return (new TaskResource($task->load(['labels', 'customValues', 'assignee', 'creator'])))
+            $task->load(['labels', 'customValues', 'assignee', 'creator']);
+            
+            broadcast(new TaskCreated($task))->toOthers();
+
+            return (new TaskResource($task))
                 ->response()
                 ->setStatusCode(201);
         });
@@ -634,7 +642,11 @@ class TaskController extends Controller
                 }
             }
 
-            return new TaskResource($task->fresh(['labels', 'customValues', 'assignee', 'creator']));
+            $task->fresh(['labels', 'customValues', 'assignee', 'creator']);
+            
+            broadcast(new TaskUpdated($task))->toOthers();
+
+            return new TaskResource($task);
         });
     }
 
@@ -650,7 +662,11 @@ class TaskController extends Controller
             return response()->json(['error' => 'Task not found in specified workspace/tenant'], 404);
         }
 
+        $boardId = $task->board_id;
+        $taskId = $task->id;
         $task->delete();
+
+        broadcast(new TaskDeleted($taskId, $boardId))->toOthers();
 
         return response()->json([
             'message' => 'Task deleted successfully',
@@ -670,6 +686,8 @@ class TaskController extends Controller
         }
 
         $task->archive();
+        
+        broadcast(new TaskUpdated($task))->toOthers();
 
         return response()->json([
             'message' => 'Task archived successfully',
@@ -692,6 +710,8 @@ class TaskController extends Controller
             'status' => 'todo',
             'archived_at' => null,
         ]);
+
+        broadcast(new TaskUpdated($task))->toOthers();
 
         return response()->json([
             'message' => 'Task restored successfully',
@@ -741,7 +761,11 @@ class TaskController extends Controller
                 ]);
             }
 
-            return (new TaskResource($newTask->load(['labels', 'customValues', 'assignee', 'creator'])))
+            $newTask->load(['labels', 'customValues', 'assignee', 'creator']);
+            
+            broadcast(new TaskCreated($newTask))->toOthers();
+
+            return (new TaskResource($newTask))
                 ->response()
                 ->setStatusCode(201);
         });
@@ -769,7 +793,9 @@ class TaskController extends Controller
                 'status' => $validated['status'] ?? $task->status,
             ]);
 
-            return new TaskResource($task->fresh());
+            $task->fresh();
+            broadcast(new TaskUpdated($task))->toOthers();
+            return new TaskResource($task);
         });
     }
 

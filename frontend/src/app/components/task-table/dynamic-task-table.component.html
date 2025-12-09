@@ -9,6 +9,19 @@
         </div>
 
         <div class="header-right">
+            <!-- Presence Indicators -->
+            <div class="presence-indicators" *ngIf="usersPresent$ | async as users">
+                <div class="user-avatar" *ngFor="let user of users.slice(0, 3)" [title]="user.name">
+                    <!-- Placeholder avatar if no image -->
+                    <div class="avatar-circle" [style.background-color]="'#3b82f6'">
+                        {{ user.name.charAt(0).toUpperCase() }}
+                    </div>
+                </div>
+                <div class="more-users" *ngIf="users.length > 3">
+                    +{{ users.length - 3 }}
+                </div>
+            </div>
+
             <!-- Column Toggles -->
             <div class="column-toggles" *ngIf="tableConfig.showColumnToggles">
                 <button class="toggle-btn" (click)="toggleColumnMenu()" [class.active]="showColumnMenu">

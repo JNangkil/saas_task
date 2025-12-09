@@ -21,6 +21,7 @@ import { BoardColumnService } from '../../services/board-column.service';
 import { TaskFieldValueService } from '../../services/task-field-value.service';
 import { WorkspaceContextService } from '../../services/workspace-context.service';
 import { ColumnTypeConfigurationService } from '../../services/column-type-configuration.service';
+import { BoardStateService } from '../../services/board-state.service';
 
 // Import cell renderers
 import {
@@ -93,16 +94,6 @@ export class DynamicTaskTableComponent implements OnInit, OnDestroy {
 
     // Filter and sort state
     search$ = new BehaviorSubject<string>('');
-    statusFilter$ = new BehaviorSubject<string[]>([]);
-    priorityFilter$ = new BehaviorSubject<string[]>([]);
-    assigneeFilter$ = new BehaviorSubject<number[]>([]);
-    sort$ = new BehaviorSubject<TaskSort>({ sort_by: 'position', sort_order: 'asc' });
-    currentPage$ = new BehaviorSubject<number>(1);
-    selectedTasks$ = new BehaviorSubject<Set<number>>(new Set());
-
-    // Private properties
-    private destroy$ = new Subject<void>();
-    private refreshTrigger$ = new Subject<void>();
     showColumnMenu = false;
     private fieldValues$ = new BehaviorSubject<Map<number, TaskFieldValue[]>>(new Map<number, TaskFieldValue[]>());
 
@@ -118,7 +109,8 @@ export class DynamicTaskTableComponent implements OnInit, OnDestroy {
         private boardColumnService: BoardColumnService,
         private taskFieldValueService: TaskFieldValueService,
         private workspaceContextService: WorkspaceContextService,
-        private columnTypeConfig: ColumnTypeConfigurationService
+        private columnTypeConfig: ColumnTypeConfigurationService,
+        private boardStateService: BoardStateService
     ) { }
 
     ngOnInit(): void {
@@ -126,9 +118,15 @@ export class DynamicTaskTableComponent implements OnInit, OnDestroy {
         this.loadTasks();
         this.loadColumns();
         this.loadFieldValues();
+        this.joinBoardChannel();
+        this.loadFieldValues();
+        this.joinBoardChannel();
+        this.subscribeToRealtimeEvents();
+        this.usersPresent$ = this.boardStateService.usersPresent$;
     }
 
     ngOnDestroy(): void {
+        this.boardStateService.leaveBoard();
         this.destroy$.next();
         this.destroy$.complete();
     }
@@ -328,6 +326,77 @@ export class DynamicTaskTableComponent implements OnInit, OnDestroy {
                 });
             });
         });
+    }
+
+    private joinBoardChannel(): void {
+        if (this.boardId) {
+            this.boardStateService.joinBoard(this.boardId);
+        }
+    }
+
+    private subscribeToRealtimeEvents(): void {
+        // Task Created
+        this.boardStateService.taskCreated$
+            .pipe(takeUntil(this.destroy$))
+            .subscribe(task => {
+                const currentTasks = this.tasks$ as BehaviorSubject<Task[]>;
+                const tasks = currentTasks.value;
+                // Add to beginning or end based on position/sort
+                // For simplicity, we prepend it
+                currentTasks.next([task, ...tasks]);
+            });
+
+        // Task Updated
+        this.boardStateService.taskUpdated$
+            .pipe(takeUntil(this.destroy$))
+            .subscribe(updatedTask => {
+                const currentTasks = this.tasks$ as BehaviorSubject<Task[]>;
+                const tasks = currentTasks.value;
+                const index = tasks.findIndex(t => t.id === updatedTask.id);
+                if (index !== -1) {
+                    const newTasks = [...tasks];
+                    newTasks[index] = updatedTask;
+                    currentTasks.next(newTasks);
+                }
+            });
+
+        // Task Deleted
+        this.boardStateService.taskDeleted$
+            .pipe(takeUntil(this.destroy$))
+            .subscribe(({ taskId }) => {
+                const currentTasks = this.tasks$ as BehaviorSubject<Task[]>;
+                const tasks = currentTasks.value;
+                currentTasks.next(tasks.filter(t => t.id !== taskId));
+            });
+
+        // Column Created
+        this.boardStateService.columnCreated$
+            .pipe(takeUntil(this.destroy$))
+            .subscribe(column => {
+                // Refresh columns or append
+                this.loadColumns();
+            });
+
+        // Column Updated
+        this.boardStateService.columnUpdated$
+            .pipe(takeUntil(this.destroy$))
+            .subscribe(column => {
+                this.loadColumns();
+            });
+
+        // Column Deleted
+        this.boardStateService.columnDeleted$
+            .pipe(takeUntil(this.destroy$))
+            .subscribe(({ columnId }) => {
+                this.loadColumns();
+            });
+
+        // Columns Reordered
+        this.boardStateService.columnsReordered$
+            .pipe(takeUntil(this.destroy$))
+            .subscribe(() => {
+                this.loadColumns();
+            });
     }
 
     /**
@@ -632,29 +701,7 @@ export class DynamicTaskTableComponent implements OnInit, OnDestroy {
         return fieldValue ? fieldValue.value : null;
     }
 
-    onTaskSelect(task: Task, selected: boolean): void {
-        const currentSelection = new Set(this.selectedTasks$.value);
 
-        if (selected) {
-            currentSelection.add(task.id);
-        } else {
-            currentSelection.delete(task.id);
-        }
-
-        this.selectedTasks$.next(currentSelection);
-        this.showBulkActionToolbar = currentSelection.size > 0;
-
-        // Emit events
-        if (selected) {
-            this.taskSelected.emit(task);
-        }
-
-        // Get selected tasks and emit
-        const selectedTasks = this.getSelectedTasks();
-        if (selectedTasks.length > 0) {
-            this.tasksSelected.emit(selectedTasks);
-        }
-    }
 
     /**
      * Get page numbers for pagination

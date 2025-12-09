@@ -41,4 +41,8 @@ return [
         'webhook_secret' => env('STRIPE_WEBHOOK_SECRET'),
     ],
 
+    'realtime' => [
+        'enabled' => env('REALTIME_ENABLED', true),
+    ],
+
 ];
