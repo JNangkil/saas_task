@@ -11,6 +11,7 @@ use App\Http\Controllers\RealtimeController;
 use App\Http\Controllers\TaskController;
 use App\Http\Controllers\TaskFieldValueController;
 use App\Http\Controllers\TaskCommentController;
+use App\Http\Controllers\AttachmentController;
 use App\Http\Controllers\TenantController;
 use App\Http\Controllers\BoardViewPreferenceController;
 use App\Http\Controllers\UserBoardPreferenceController;
@@ -21,6 +22,7 @@ use App\Http\Controllers\Api\UserController;
 use App\Http\Controllers\Api\NotificationController;
 use App\Http\Controllers\Api\NotificationPreferenceController;
 use App\Http\Controllers\Api\ActivityController;
+use App\Http\Controllers\AnalyticsController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -123,7 +125,17 @@ Route::middleware(['auth:sanctum'])->group(function () {
         Route::post('/{workspace}/invitations', [InvitationController::class, 'store'])->name('workspaces.invitations.store');
         Route::delete('/{workspace}/invitations/{invitation}', [InvitationController::class, 'destroy'])->name('workspaces.invitations.destroy');
         Route::post('/{workspace}/invitations/{invitation}/resend', [InvitationController::class, 'resend'])->name('workspaces.invitations.resend');
-        
+
+        // Analytics routes
+        Route::prefix('{workspace}/analytics')->group(function () {
+            Route::get('/summary', [AnalyticsController::class, 'getWorkspaceSummary'])->name('analytics.workspace.summary');
+            Route::get('/user-productivity', [AnalyticsController::class, 'getUserProductivity'])->name('analytics.workspace.productivity');
+            Route::get('/trends', [AnalyticsController::class, 'getActivityTrends'])->name('analytics.workspace.trends');
+            Route::get('/export/csv', [AnalyticsController::class, 'exportWorkspaceCsv'])->name('analytics.workspace.export.csv');
+            Route::get('/export/pdf', [AnalyticsController::class, 'exportWorkspacePdf'])->name('analytics.workspace.export.pdf');
+            Route::delete('/cache', [AnalyticsController::class, 'clearWorkspaceCache'])->name('analytics.workspace.cache.clear');
+        });
+
         // Task routes
         Route::prefix('tenants/{tenant}/workspaces/{workspace}/tasks')->group(function () {
             Route::get('/', [TaskController::class, 'index'])->name('tasks.index');
@@ -147,6 +159,10 @@ Route::middleware(['auth:sanctum'])->group(function () {
 
             // Board activity
             Route::get('/activity', [ActivityController::class, 'boardActivity'])->name('boards.activity');
+
+            // Board analytics
+            Route::get('/analytics/summary', [AnalyticsController::class, 'getBoardSummary'])->name('analytics.board.summary');
+            Route::delete('/analytics/cache', [AnalyticsController::class, 'clearBoardCache'])->name('analytics.board.cache.clear');
         });
 
         Route::prefix('tenants/{tenant}/workspaces/{workspace}/boards/{board}/tasks')->group(function () {
@@ -179,6 +195,11 @@ Route::middleware(['auth:sanctum'])->group(function () {
                 Route::post('/', [TaskCommentController::class, 'store'])->name('tasks.comments.store');
                 Route::put('/{comment}', [TaskCommentController::class, 'update'])->name('tasks.comments.update');
                 Route::delete('/{comment}', [TaskCommentController::class, 'destroy'])->name('tasks.comments.destroy');
+            });
+
+            // Task attachments
+            Route::prefix('/{task}/attachments')->group(function () {
+                Route::post('/', [AttachmentController::class, 'store'])->name('tasks.attachments.store');
             });
 
             // Task activity
@@ -272,6 +293,13 @@ Route::middleware(['auth:sanctum'])->group(function () {
         Route::post('/bulk-add-labels', [TaskBulkOperationController::class, 'bulkAddLabels'])->name('tasks.bulk-add-labels');
         Route::post('/bulk-remove-labels', [TaskBulkOperationController::class, 'bulkRemoveLabels'])->name('tasks.bulk-remove-labels');
         Route::post('/bulk-set-due-date', [TaskBulkOperationController::class, 'bulkSetDueDate'])->name('tasks.bulk-set-due-date');
+    });
+
+    // Attachment routes
+    Route::prefix('tenants/{tenant}/workspaces/{workspace}/attachments')->group(function () {
+        Route::get('/{attachment}', [AttachmentController::class, 'show'])->name('attachments.show');
+        Route::get('/{attachment}/download', [AttachmentController::class, 'download'])->name('attachments.download');
+        Route::delete('/{attachment}', [AttachmentController::class, 'destroy'])->name('attachments.destroy');
     });
 });
 

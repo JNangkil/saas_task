@@ -13,7 +13,10 @@
       "Bash(openspec show:*)",
       "Bash(openspec list:*)",
       "Bash(ng generate service:*)",
-      "Bash(ng generate component:*)"
+      "Bash(ng generate component:*)",
+      "Bash(findstr:*)",
+      "Bash(composer:*)",
+      "Bash(npm install:*)"
     ],
     "deny": [],
     "ask": []

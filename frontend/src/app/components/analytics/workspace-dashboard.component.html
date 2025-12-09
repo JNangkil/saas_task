@@ -1,0 +1,375 @@
+<div class="workspace-dashboard p-6" *ngIf="workspace; else noWorkspace">
+    <div class="mb-6">
+        <h1 class="text-3xl font-bold text-gray-900 mb-2">{{ workspace.name }} Analytics</h1>
+        <p class="text-gray-600">Track your team's productivity and task performance</p>
+    </div>
+
+    <!-- Filters and Actions -->
+    <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-4 mb-6">
+        <div class="flex flex-wrap items-center justify-between gap-4">
+            <!-- Date Range Filter -->
+            <div class="flex items-center gap-2">
+                <label class="text-sm font-medium text-gray-700">Date Range:</label>
+                <div class="btn-group">
+                    <button
+                        type="button"
+                        class="btn btn-sm"
+                        [class.btn-primary]="dateRangeFilter === '7'"
+                        [class.btn-outline]="dateRangeFilter !== '7'"
+                        (click)="onDateRangeChange('7')"
+                    >7 Days</button>
+                    <button
+                        type="button"
+                        class="btn btn-sm"
+                        [class.btn-primary]="dateRangeFilter === '30'"
+                        [class.btn-outline]="dateRangeFilter !== '30'"
+                        (click)="onDateRangeChange('30')"
+                    >30 Days</button>
+                    <button
+                        type="button"
+                        class="btn btn-sm"
+                        [class.btn-primary]="dateRangeFilter === '90'"
+                        [class.btn-outline]="dateRangeFilter !== '90'"
+                        (click)="onDateRangeChange('90')"
+                    >90 Days</button>
+                </div>
+            </div>
+
+            <!-- Custom Date Pickers -->
+            <div class="flex items-center gap-2" *ngIf="dateRangeFilter === 'custom'">
+                <input
+                    type="date"
+                    class="form-control form-control-sm"
+                    [value]="startDate"
+                    (input)="onStartDateChange($any($event.target).value)"
+                    [max]="endDate"
+                >
+                <span class="text-gray-500">to</span>
+                <input
+                    type="date"
+                    class="form-control form-control-sm"
+                    [value]="endDate"
+                    (input)="onEndDateChange($any($event.target).value)"
+                    [min]="startDate"
+                    [max]="today | date:'yyyy-MM-dd'"
+                >
+            </div>
+        </div>
+
+        <!-- Additional Filters Row -->
+        <div class="flex flex-wrap items-center gap-4 mt-4 pt-4 border-t border-gray-200">
+            <div class="flex items-center gap-2">
+                <label class="text-sm font-medium text-gray-700">Assignees:</label>
+                <div style="width: 250px;">
+                    <app-assignee-filter
+                        [(selectedAssignees)]="selectedAssignees"
+                        (assigneesChange)="onFiltersChange()"
+                        [disabled]="loading"
+                    ></app-assignee-filter>
+                </div>
+            </div>
+
+            <div class="flex items-center gap-2">
+                <label class="text-sm font-medium text-gray-700">Boards:</label>
+                <div style="width: 250px;">
+                    <app-board-filter
+                        [(selectedBoards)]="selectedBoards"
+                        (boardsChange)="onFiltersChange()"
+                        [disabled]="loading"
+                    ></app-board-filter>
+                </div>
+            </div>
+
+            <!-- Actions -->
+            <div class="flex items-center gap-2">
+                <button
+                    type="button"
+                    class="btn btn-outline-secondary btn-sm"
+                    (click)="refreshData()"
+                    [disabled]="loading"
+                >
+                    <i class="fas fa-sync-alt" [class.fa-spin]="loading"></i>
+                    Refresh
+                </button>
+                <button
+                    type="button"
+                    class="btn btn-outline-secondary btn-sm"
+                    (click)="exportCsv()"
+                    [disabled]="loading"
+                >
+                    <i class="fas fa-file-csv"></i>
+                    Export CSV
+                </button>
+                <button
+                    type="button"
+                    class="btn btn-outline-secondary btn-sm"
+                    (click)="exportPdf()"
+                    [disabled]="loading"
+                >
+                    <i class="fas fa-file-pdf"></i>
+                    Export PDF
+                </button>
+                <button
+                    type="button"
+                    class="btn btn-outline-warning btn-sm"
+                    (click)="clearCache()"
+                    [disabled]="loading"
+                >
+                    <i class="fas fa-trash"></i>
+                    Clear Cache
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Loading State -->
+    <div *ngIf="loading" class="text-center py-12">
+        <i class="fas fa-spinner fa-spin text-4xl text-gray-400"></i>
+        <p class="mt-4 text-gray-600">Loading analytics data...</p>
+    </div>
+
+    <!-- Error State -->
+    <div *ngIf="error" class="alert alert-danger">
+        <i class="fas fa-exclamation-triangle"></i>
+        {{ error }}
+    </div>
+
+    <!-- Analytics Content -->
+    <div *ngIf="!loading && !error && summary">
+        <!-- Summary Cards -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+            <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-sm text-gray-600">Total Tasks</p>
+                        <p class="text-2xl font-bold text-gray-900">{{ summary.total_tasks | number }}</p>
+                    </div>
+                    <div class="text-blue-500">
+                        <i class="fas fa-tasks text-3xl"></i>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-sm text-gray-600">Completed</p>
+                        <p class="text-2xl font-bold text-gray-900">{{ summary.completed_tasks | number }}</p>
+                    </div>
+                    <div class="text-green-500">
+                        <i class="fas fa-check-circle text-3xl"></i>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-sm text-gray-600">Completion Rate</p>
+                        <p class="text-2xl font-bold" [ngClass]="getCompletionRateColor()">
+                            {{ summary.completion_rate }}%
+                        </p>
+                    </div>
+                    <div class="text-indigo-500">
+                        <i class="fas fa-percentage text-3xl"></i>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-sm text-gray-600">Overdue Tasks</p>
+                        <p class="text-2xl font-bold" [ngClass]="getOverdueTasksColor()">
+                            {{ summary.overdue_tasks | number }}
+                        </p>
+                    </div>
+                    <div class="text-red-500">
+                        <i class="fas fa-exclamation-triangle text-3xl"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Charts Section -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+            <!-- Tasks by Status Chart -->
+            <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+                <h3 class="text-lg font-semibold text-gray-900 mb-4">Tasks by Status</h3>
+                <div class="chart-container" style="height: 300px;">
+                    <canvas baseChart
+                        [data]="{
+                            labels: statusChartData.map(s => s.name),
+                            datasets: [{
+                                data: statusChartData.map(s => s.value),
+                                backgroundColor: statusChartData.map(s => s.color)
+                            }]
+                        }"
+                        [options]="{
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            plugins: {
+                                legend: {
+                                    position: 'bottom'
+                                }
+                            }
+                        }"
+                        type="doughnut">
+                    </canvas>
+                </div>
+            </div>
+
+            <!-- Tasks by Priority Chart -->
+            <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+                <h3 class="text-lg font-semibold text-gray-900 mb-4">Tasks by Priority</h3>
+                <div class="chart-container" style="height: 300px;">
+                    <canvas baseChart
+                        [data]="{
+                            labels: priorityChartData.map(p => p.name),
+                            datasets: [{
+                                data: priorityChartData.map(p => p.value),
+                                backgroundColor: priorityChartData.map(p => p.color)
+                            }]
+                        }"
+                        [options]="{
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            plugins: {
+                                legend: {
+                                    position: 'bottom'
+                                }
+                            }
+                        }"
+                        type="pie">
+                    </canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- Activity Trend Chart -->
+        <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mb-6">
+            <h3 class="text-lg font-semibold text-gray-900 mb-4">Activity Trends</h3>
+            <div class="chart-container" style="height: 400px;">
+                <canvas baseChart
+                    [data]="{
+                        labels: trendChartData.map(t => t.date),
+                        datasets: [
+                            {
+                                label: 'Tasks Created',
+                                data: trendChartData.map(t => t.created),
+                                borderColor: '#3b82f6',
+                                backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                                tension: 0.4
+                            },
+                            {
+                                label: 'Tasks Completed',
+                                data: trendChartData.map(t => t.completed),
+                                borderColor: '#22c55e',
+                                backgroundColor: 'rgba(34, 197, 94, 0.1)',
+                                tension: 0.4
+                            }
+                        ]
+                    }"
+                    [options]="{
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                position: 'bottom'
+                            }
+                        },
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                ticks: {
+                                    stepSize: 1
+                                }
+                            }
+                        }
+                    }"
+                    type="line">
+                </canvas>
+            </div>
+        </div>
+
+        <!-- User Productivity Table -->
+        <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+            <h3 class="text-lg font-semibold text-gray-900 mb-4">User Productivity</h3>
+            <div class="overflow-x-auto">
+                <table class="min-w-full divide-y divide-gray-200">
+                    <thead class="bg-gray-50">
+                        <tr>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                User
+                            </th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                Total Tasks
+                            </th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                Completed
+                            </th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                Completion Rate
+                            </th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                Avg Cycle Time
+                            </th>
+                        </tr>
+                    </thead>
+                    <tbody class="bg-white divide-y divide-gray-200">
+                        <tr *ngFor="let user of userProductivity">
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <div class="flex items-center">
+                                    <div class="flex-shrink-0 h-10 w-10">
+                                        <div class="h-10 w-10 rounded-full bg-gray-300 flex items-center justify-center">
+                                            <span class="text-sm font-medium text-gray-700">
+                                                {{ user.user.name.charAt(0).toUpperCase() }}
+                                            </span>
+                                        </div>
+                                    </div>
+                                    <div class="ml-4">
+                                        <div class="text-sm font-medium text-gray-900">{{ user.user.name }}</div>
+                                        <div class="text-sm text-gray-500">{{ user.user.email }}</div>
+                                    </div>
+                                </div>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                {{ user.total_tasks | number }}
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                {{ user.completed_tasks | number }}
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full"
+                                    [ngClass]="{
+                                        'bg-green-100 text-green-800': user.completion_rate >= 80,
+                                        'bg-yellow-100 text-yellow-800': user.completion_rate >= 60 && user.completion_rate < 80,
+                                        'bg-red-100 text-red-800': user.completion_rate < 60
+                                    }">
+                                    {{ user.completion_rate }}%
+                                </span>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                {{ user.average_cycle_time }} days
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+                <div *ngIf="userProductivity.length === 0" class="text-center py-8 text-gray-500">
+                    No productivity data available for the selected period
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- No Workspace Selected -->
+<ng-template #noWorkspace>
+    <div class="flex items-center justify-center h-96">
+        <div class="text-center">
+            <i class="fas fa-chart-bar text-6xl text-gray-400 mb-4"></i>
+            <h2 class="text-2xl font-semibold text-gray-900 mb-2">No Workspace Selected</h2>
+            <p class="text-gray-600">Please select a workspace to view analytics</p>
+        </div>
+    </div>
+</ng-template>

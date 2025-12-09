@@ -1,0 +1,74 @@
+<div class="board-filter">
+    <div class="filter-header">
+        <div class="dropdown-trigger" [class.active]="isOpen">
+            <input
+                type="text"
+                class="form-control"
+                [placeholder]="placeholder"
+                [value]="search"
+                (input)="search = $event.target.value"
+                (focus)="isOpen = true"
+                (blur)="onBlur()"
+                [disabled]="disabled"
+            >
+            <span class="filter-badge" *ngIf="selectedCount > 0">{{ selectedCount }}</span>
+            <i class="fas fa-chevron-down dropdown-arrow" [class.rotate]="isOpen"></i>
+        </div>
+    </div>
+
+    <div class="dropdown-menu" [class.show]="isOpen && !disabled">
+        <div class="filter-actions" *ngIf="showAll">
+            <button
+                type="button"
+                class="btn btn-sm btn-outline-secondary"
+                (click)="selectAll()"
+                [disabled]="loading"
+            >
+                <i class="fas fa-check-square"></i> Select All
+            </button>
+            <button
+                type="button"
+                class="btn btn-sm btn-outline-secondary"
+                (click)="clearAll()"
+                [disabled]="loading || selectedCount === 0"
+            >
+                <i class="fas fa-times"></i> Clear All
+            </button>
+        </div>
+
+        <div class="filter-content">
+            <div *ngIf="loading" class="text-center py-4">
+                <i class="fas fa-spinner fa-spin"></i> Loading boards...
+            </div>
+
+            <div *ngIf="!loading && filteredBoards.length === 0" class="text-center py-4 text-muted">
+                <i class="fas fa-search"></i> No boards found
+            </div>
+
+            <div class="board-list">
+                <label
+                    class="board-item"
+                    *ngFor="let board of filteredBoards"
+                    [class.selected]="isBoardSelected(board.id)"
+                >
+                    <input
+                        type="checkbox"
+                        [checked]="isBoardSelected(board.id)"
+                        (change)="onBoardToggle(board.id)"
+                    >
+                    <div class="board-info">
+                        <div class="board-icon">
+                            <i class="fas fa-columns"></i>
+                        </div>
+                        <div class="board-details">
+                            <div class="board-name">{{ board.name }}</div>
+                            <div class="board-description" *ngIf="board.description">
+                                {{ board.description }}
+                            </div>
+                        </div>
+                    </div>
+                </label>
+            </div>
+        </div>
+    </div>
+</div>

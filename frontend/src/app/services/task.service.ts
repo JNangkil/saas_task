@@ -11,6 +11,7 @@ import {
     Board,
     Workspace,
     TaskComment,
+    Attachment,
     TaskFilters,
     TaskSort,
     TaskCreate,
@@ -376,6 +377,73 @@ export class TaskService {
         return this.apiService.delete(endpoint).pipe(
             catchError(error => this.handleError(error))
         );
+    }
+
+    /**
+     * Upload an attachment to a task
+     */
+    uploadAttachment(
+        tenantId: number,
+        workspaceId: number,
+        taskId: number,
+        file: File,
+        commentId?: number
+    ): Observable<Attachment> {
+        const endpoint = `tenants/${tenantId}/workspaces/${workspaceId}/tasks/${taskId}/attachments`;
+        const formData = new FormData();
+        formData.append('file', file);
+        if (commentId) {
+            formData.append('task_comment_id', commentId.toString());
+        }
+
+        const httpOptions = {
+            headers: new HttpHeaders({
+                'Accept': 'application/json'
+            })
+        };
+
+        return this.http.post<Attachment>(`${this.baseUrl}/${endpoint}`, formData, httpOptions).pipe(
+            catchError(error => this.handleError(error))
+        );
+    }
+
+    /**
+     * Get attachment details
+     */
+    getAttachment(
+        tenantId: number,
+        workspaceId: number,
+        attachmentId: number
+    ): Observable<Attachment> {
+        const endpoint = `tenants/${tenantId}/workspaces/${workspaceId}/attachments/${attachmentId}`;
+        return this.apiService.get<Attachment>(endpoint).pipe(
+            catchError(error => this.handleError(error))
+        );
+    }
+
+    /**
+     * Delete an attachment
+     */
+    deleteAttachment(
+        tenantId: number,
+        workspaceId: number,
+        attachmentId: number
+    ): Observable<any> {
+        const endpoint = `tenants/${tenantId}/workspaces/${workspaceId}/attachments/${attachmentId}`;
+        return this.apiService.delete(endpoint).pipe(
+            catchError(error => this.handleError(error))
+        );
+    }
+
+    /**
+     * Get download URL for an attachment
+     */
+    getAttachmentDownloadUrl(
+        tenantId: number,
+        workspaceId: number,
+        attachmentId: number
+    ): string {
+        return `${this.baseUrl}/tenants/${tenantId}/workspaces/${workspaceId}/attachments/${attachmentId}/download`;
     }
 
     /**

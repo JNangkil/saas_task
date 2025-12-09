@@ -6,6 +6,7 @@ use App\Traits\BelongsToTenant;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class TaskComment extends Model
 {
@@ -58,6 +59,14 @@ class TaskComment extends Model
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
+    }
+
+    /**
+     * Get attachments for the comment.
+     */
+    public function attachments(): HasMany
+    {
+        return $this->hasMany(Attachment::class, 'task_comment_id');
     }
 
     /**

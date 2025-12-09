@@ -26,6 +26,7 @@ export interface Task {
     board?: Board;
     workspace?: Workspace;
     comments?: TaskComment[];
+    attachments?: Attachment[];
 }
 
 /**
@@ -95,6 +96,28 @@ export interface TaskComment {
     task_id: number;
     user_id: number;
     content: string;
+    created_at: string;
+    updated_at: string;
+    user?: User;
+    attachments?: Attachment[];
+}
+
+/**
+ * Interface for Attachment entity
+ */
+export interface Attachment {
+    id: number;
+    task_id?: number;
+    task_comment_id?: number;
+    user_id: number;
+    filename: string;
+    original_filename: string;
+    mime_type: string;
+    size: number;
+    human_readable_size: string;
+    url: string;
+    is_image: boolean;
+    is_pdf: boolean;
     created_at: string;
     updated_at: string;
     user?: User;

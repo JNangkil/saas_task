@@ -3,7 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Subject, of } from 'rxjs';
 import { catchError, takeUntil } from 'rxjs/operators';
-import { Task, TaskComment, TaskUpdate, User, Label } from '../../models';
+import { Task, TaskComment, TaskUpdate, User, Label, Attachment } from '../../models';
 import { TaskService } from '../../services/task.service';
 import { WorkspaceContextService } from '../../services/workspace-context.service';
 import { BoardStateService } from '../../services/board-state.service';
@@ -52,10 +52,12 @@ export class TaskDetailsPanelComponent implements OnInit, OnDestroy {
     error: string | null = null;
     editing = false;
     saving = false;
+    uploading = false;
 
     // Form state
     editedTask: Partial<Task> = {};
     newComment = '';
+    attachments: Attachment[] = [];
 
     // Available options
     readonly statusOptions = [
@@ -92,6 +94,7 @@ export class TaskDetailsPanelComponent implements OnInit, OnDestroy {
         this.initializeEditedTask();
         this.generateActivityLog();
         this.subscribeToRealtimeEvents();
+        this.loadAttachments();
     }
 
     /**
@@ -418,6 +421,187 @@ export class TaskDetailsPanelComponent implements OnInit, OnDestroy {
     getHiddenLabelsCount(): number {
         return Math.max(0, (this.task.labels?.length || 0) - 5);
     }
+
+    /**
+     * Load attachments for the task
+     */
+    loadAttachments(): void {
+        this.attachments = this.task.attachments || [];
+    }
+
+    /**
+     * Handle file selection for upload
+     */
+    onFileSelected(event: Event): void {
+        const element = event.currentTarget as HTMLInputElement;
+        const files: FileList | null = element.files;
+
+        if (files && files.length > 0) {
+            this.uploadFiles(Array.from(files));
+        }
+
+        // Clear the input value to allow selecting the same file again
+        element.value = '';
+    }
+
+    /**
+     * Handle drag and drop files
+     */
+    onFilesDropped(event: DragEvent): void {
+        event.preventDefault();
+        event.stopPropagation();
+
+        const files: FileList | null = event.dataTransfer?.files || null;
+        if (files && files.length > 0) {
+            this.uploadFiles(Array.from(files));
+        }
+    }
+
+    /**
+     * Upload multiple files
+     */
+    uploadFiles(files: File[]): void {
+        if (files.length === 0) return;
+
+        this.uploading = true;
+        this.error = null;
+
+        const tenantId = this.workspaceContextService.context$.value?.tenant?.id;
+        const workspaceId = this.workspaceContextService.context$.value?.workspace?.id;
+
+        if (!tenantId || !workspaceId) {
+            this.error = 'Tenant or workspace not found';
+            this.uploading = false;
+            return;
+        }
+
+        // Upload files one by one to track progress
+        files.forEach((file, index) => {
+            this.taskService.uploadAttachment(tenantId, workspaceId, this.task.id, file)
+                .pipe(
+                    catchError(error => {
+                        console.error('Error uploading file:', error);
+                        this.error = `Failed to upload ${file.name}`;
+                        return of(null);
+                    }),
+                    takeUntil(this.destroy$)
+                )
+                .subscribe(attachment => {
+                    if (attachment) {
+                        this.attachments.unshift(attachment);
+
+                        // Add to activity log
+                        this.activityLog.unshift({
+                            id: attachment.id,
+                            type: 'attachment',
+                            message: `Attached ${attachment.original_filename}`,
+                            timestamp: attachment.created_at,
+                            user: attachment.user
+                        });
+
+                        // Re-sort activity log
+                        this.activityLog.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
+                    }
+
+                    // Check if this was the last file
+                    if (index === files.length - 1) {
+                        this.uploading = false;
+                    }
+                });
+        });
+    }
+
+    /**
+     * Delete an attachment
+     */
+    deleteAttachment(attachment: Attachment): void {
+        if (!confirm(`Are you sure you want to delete ${attachment.original_filename}?`)) {
+            return;
+        }
+
+        const tenantId = this.workspaceContextService.context$.value?.tenant?.id;
+        const workspaceId = this.workspaceContextService.context$.value?.workspace?.id;
+
+        if (!tenantId || !workspaceId) {
+            this.error = 'Tenant or workspace not found';
+            return;
+        }
+
+        this.taskService.deleteAttachment(tenantId, workspaceId, attachment.id)
+            .pipe(
+                catchError(error => {
+                    console.error('Error deleting attachment:', error);
+                    this.error = 'Failed to delete attachment';
+                    return of(null);
+                }),
+                takeUntil(this.destroy$)
+            )
+            .subscribe(success => {
+                if (success) {
+                    this.attachments = this.attachments.filter(a => a.id !== attachment.id);
+
+                    // Add to activity log
+                    this.activityLog.unshift({
+                        id: Date.now(),
+                        type: 'attachment_deleted',
+                        message: `Deleted ${attachment.original_filename}`,
+                        timestamp: new Date().toISOString(),
+                        user: {
+                            id: 0,
+                            name: 'Current User',
+                            email: '',
+                            created_at: '',
+                            updated_at: ''
+                        }
+                    });
+
+                    // Re-sort activity log
+                    this.activityLog.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
+                }
+            });
+    }
+
+    /**
+     * Get download URL for an attachment
+     */
+    getAttachmentDownloadUrl(attachment: Attachment): string {
+        const tenantId = this.workspaceContextService.context$.value?.tenant?.id;
+        const workspaceId = this.workspaceContextService.context$.value?.workspace?.id;
+
+        if (!tenantId || !workspaceId) {
+            return '#';
+        }
+
+        return this.taskService.getAttachmentDownloadUrl(tenantId, workspaceId, attachment.id);
+    }
+
+    /**
+     * Check if a file is an image
+     */
+    isImageFile(mimeType: string): boolean {
+        return mimeType.startsWith('image/');
+    }
+
+    /**
+     * Check if a file is a PDF
+     */
+    isPdfFile(mimeType: string): boolean {
+        return mimeType === 'application/pdf';
+    }
+
+    /**
+     * Format file size
+     */
+    formatFileSize(bytes: number): string {
+        if (bytes === 0) return '0 B';
+
+        const k = 1024;
+        const sizes = ['B', 'KB', 'MB', 'GB'];
+        const i = Math.floor(Math.log(bytes) / Math.log(k));
+
+        return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+    }
+
     private subscribeToRealtimeEvents(): void {
         // Comment Added
         this.boardStateService.commentAdded$

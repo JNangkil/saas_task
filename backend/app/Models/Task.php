@@ -151,6 +151,14 @@ class Task extends Model
     }
 
     /**
+     * Get attachments for the task.
+     */
+    public function attachments(): HasMany
+    {
+        return $this->hasMany(Attachment::class);
+    }
+
+    /**
      * Scope a query to only include tasks with a specific status.
      */
     public function scopeWithStatus($query, $status)

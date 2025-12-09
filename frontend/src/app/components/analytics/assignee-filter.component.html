@@ -1,0 +1,77 @@
+<div class="assignee-filter">
+    <div class="filter-header">
+        <div class="dropdown-trigger" [class.active]="isOpen">
+            <input
+                type="text"
+                class="form-control"
+                [placeholder]="placeholder"
+                [value]="search"
+                (input)="search = $event.target.value"
+                (focus)="isOpen = true"
+                (blur)="onBlur()"
+                [disabled]="disabled"
+            >
+            <span class="filter-badge" *ngIf="selectedCount > 0">{{ selectedCount }}</span>
+            <i class="fas fa-chevron-down dropdown-arrow" [class.rotate]="isOpen"></i>
+        </div>
+    </div>
+
+    <div class="dropdown-menu" [class.show]="isOpen && !disabled">
+        <div class="filter-actions" *ngIf="showAll">
+            <button
+                type="button"
+                class="btn btn-sm btn-outline-secondary"
+                (click)="selectAll()"
+                [disabled]="loading"
+            >
+                <i class="fas fa-check-square"></i> Select All
+            </button>
+            <button
+                type="button"
+                class="btn btn-sm btn-outline-secondary"
+                (click)="clearAll()"
+                [disabled]="loading || selectedCount === 0"
+            >
+                <i class="fas fa-times"></i> Clear All
+            </button>
+        </div>
+
+        <div class="filter-content">
+            <div *ngIf="loading" class="text-center py-4">
+                <i class="fas fa-spinner fa-spin"></i> Loading users...
+            </div>
+
+            <div *ngIf="!loading && filteredUsers.length === 0" class="text-center py-4 text-muted">
+                <i class="fas fa-search"></i> No users found
+            </div>
+
+            <div class="user-list">
+                <label
+                    class="user-item"
+                    *ngFor="let user of filteredUsers"
+                    [class.selected]="isAssigneeSelected(user.id)"
+                >
+                    <input
+                        type="checkbox"
+                        [checked]="isAssigneeSelected(user.id)"
+                        (change)="onAssigneeToggle(user.id)"
+                    >
+                    <div class="user-avatar">
+                        <img
+                            [src]="user.avatar_url || 'assets/default-avatar.png'"
+                            [alt]="user.name"
+                            *ngIf="user.avatar_url"
+                        >
+                        <div class="avatar-fallback" *ngIf="!user.avatar_url">
+                            {{ user.name.charAt(0).toUpperCase() }}
+                        </div>
+                    </div>
+                    <div class="user-info">
+                        <div class="user-name">{{ user.name }}</div>
+                        <div class="user-email">{{ user.email }}</div>
+                    </div>
+                </label>
+            </div>
+        </div>
+    </div>
+</div>

@@ -1,0 +1,203 @@
+<!-- Compact Mode (for board header) -->
+<div *ngIf="compact && board" class="board-stats-compact">
+    <ng-container *ngIf="loading; else compactContent">
+        <div class="flex items-center gap-2 text-sm text-gray-500">
+            <i class="fas fa-spinner fa-spin"></i>
+            <span>Loading...</span>
+        </div>
+    </ng-container>
+
+    <ng-template #compactContent>
+        <div class="flex items-center gap-4 text-sm" *ngIf="summary">
+            <!-- Total Tasks -->
+            <div class="flex items-center gap-1">
+                <i class="fas fa-tasks text-gray-400"></i>
+                <span class="font-medium">{{ summary.total_tasks }}</span>
+                <span class="text-gray-500">tasks</span>
+            </div>
+
+            <!-- Completion Rate -->
+            <div class="flex items-center gap-1">
+                <i class="fas fa-chart-pie text-gray-400"></i>
+                <span class="font-medium" [ngClass]="getCompletionRateColor()">
+                    {{ summary.completion_rate }}%
+                </span>
+                <span class="text-gray-500">done</span>
+            </div>
+
+            <!-- Overdue Tasks -->
+            <div class="flex items-center gap-1" *ngIf="summary.overdue_tasks > 0">
+                <i class="fas fa-clock text-red-400"></i>
+                <span class="font-medium text-red-600">{{ summary.overdue_tasks }}</span>
+                <span class="text-gray-500">overdue</span>
+            </div>
+
+            <!-- Avg Cycle Time -->
+            <div class="flex items-center gap-1" *ngIf="summary.average_cycle_time > 0">
+                <i class="fas fa-hourglass-half text-gray-400"></i>
+                <span class="font-medium">{{ formatCycleTime(summary.average_cycle_time) }}</span>
+                <span class="text-gray-500">avg</span>
+            </div>
+        </div>
+    </ng-template>
+</div>
+
+<!-- Full Mode (detailed view) -->
+<div *ngIf="!compact && board" class="board-stats-full">
+    <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+        <div class="flex items-center justify-between mb-6">
+            <h3 class="text-lg font-semibold text-gray-900">Board Statistics</h3>
+            <div class="flex items-center gap-2">
+                <button
+                    type="button"
+                    class="btn btn-sm btn-outline-secondary"
+                    (click)="refreshStats()"
+                    [disabled]="loading"
+                    title="Refresh stats"
+                >
+                    <i class="fas fa-sync-alt" [class.fa-spin]="loading"></i>
+                </button>
+                <button
+                    type="button"
+                    class="btn btn-sm btn-outline-warning"
+                    (click)="clearCache()"
+                    [disabled]="loading"
+                    title="Clear cache"
+                >
+                    <i class="fas fa-trash"></i>
+                </button>
+            </div>
+        </div>
+
+        <!-- Loading State -->
+        <div *ngIf="loading" class="text-center py-8">
+            <i class="fas fa-spinner fa-spin text-3xl text-gray-400"></i>
+            <p class="mt-4 text-gray-600">Loading board statistics...</p>
+        </div>
+
+        <!-- Stats Content -->
+        <div *ngIf="!loading && summary" class="space-y-6">
+            <!-- Summary Cards -->
+            <div class="grid grid-cols-2 md:grid-cols-5 gap-4">
+                <!-- Total Tasks -->
+                <div class="text-center p-4 bg-gray-50 rounded-lg">
+                    <div class="text-3xl font-bold text-gray-900">{{ summary.total_tasks | number }}</div>
+                    <div class="text-sm text-gray-600 mt-1">Total Tasks</div>
+                </div>
+
+                <!-- Completed -->
+                <div class="text-center p-4 bg-green-50 rounded-lg">
+                    <div class="text-3xl font-bold text-green-600">{{ summary.completed_tasks | number }}</div>
+                    <div class="text-sm text-gray-600 mt-1">Completed</div>
+                </div>
+
+                <!-- In Progress -->
+                <div class="text-center p-4 bg-blue-50 rounded-lg">
+                    <div class="text-3xl font-bold text-blue-600">{{ summary.in_progress_tasks | number }}</div>
+                    <div class="text-sm text-gray-600 mt-1">In Progress</div>
+                </div>
+
+                <!-- Pending -->
+                <div class="text-center p-4 bg-yellow-50 rounded-lg">
+                    <div class="text-3xl font-bold text-yellow-600">{{ summary.pending_tasks | number }}</div>
+                    <div class="text-sm text-gray-600 mt-1">Pending</div>
+                </div>
+
+                <!-- Overdue -->
+                <div class="text-center p-4" [ngClass]="summary.overdue_tasks > 0 ? 'bg-red-50' : 'bg-gray-50'">
+                    <div class="text-3xl font-bold" [ngClass]="getOverdueColor()">{{ summary.overdue_tasks | number }}</div>
+                    <div class="text-sm text-gray-600 mt-1">Overdue</div>
+                </div>
+            </div>
+
+            <!-- Completion Progress Bar -->
+            <div>
+                <div class="flex items-center justify-between mb-2">
+                    <span class="text-sm font-medium text-gray-700">Completion Progress</span>
+                    <span class="text-sm font-medium" [ngClass]="getCompletionRateColor()">
+                        {{ summary.completion_rate }}%
+                    </span>
+                </div>
+                <div class="w-full bg-gray-200 rounded-full h-2">
+                    <div class="h-2 rounded-full transition-all duration-300"
+                         [style.width.%]="getCompletionPercentage()"
+                         [ngClass]="{
+                             'bg-green-500': summary.completion_rate >= 80,
+                             'bg-yellow-500': summary.completion_rate >= 60 && summary.completion_rate < 80,
+                             'bg-red-500': summary.completion_rate < 60
+                         }">
+                    </div>
+                </div>
+            </div>
+
+            <!-- Status Distribution -->
+            <div>
+                <h4 class="text-sm font-medium text-gray-700 mb-3">Task Distribution</h4>
+                <div class="space-y-3">
+                    <!-- Completed -->
+                    <div class="flex items-center">
+                        <div class="w-20 text-sm text-gray-600">Completed</div>
+                        <div class="flex-1 bg-gray-200 rounded-full h-2 mr-3">
+                            <div class="bg-green-500 h-2 rounded-full"
+                                 [style.width.%]="getCompletionPercentage()"></div>
+                        </div>
+                        <div class="text-sm font-medium text-gray-900 w-16 text-right">
+                            {{ summary.completed_tasks }}
+                        </div>
+                    </div>
+
+                    <!-- In Progress -->
+                    <div class="flex items-center">
+                        <div class="w-20 text-sm text-gray-600">In Progress</div>
+                        <div class="flex-1 bg-gray-200 rounded-full h-2 mr-3">
+                            <div class="bg-blue-500 h-2 rounded-full"
+                                 [style.width.%]="getInProgressPercentage()"></div>
+                        </div>
+                        <div class="text-sm font-medium text-gray-900 w-16 text-right">
+                            {{ summary.in_progress_tasks }}
+                        </div>
+                    </div>
+
+                    <!-- Pending -->
+                    <div class="flex items-center">
+                        <div class="w-20 text-sm text-gray-600">Pending</div>
+                        <div class="flex-1 bg-gray-200 rounded-full h-2 mr-3">
+                            <div class="bg-yellow-500 h-2 rounded-full"
+                                 [style.width.%]="getPendingPercentage()"></div>
+                        </div>
+                        <div class="text-sm font-medium text-gray-900 w-16 text-right">
+                            {{ summary.pending_tasks }}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Additional Metrics -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 pt-4 border-t border-gray-200">
+                <!-- Average Cycle Time -->
+                <div class="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+                    <div>
+                        <div class="text-sm text-gray-600">Average Cycle Time</div>
+                        <div class="text-lg font-semibold text-gray-900">
+                            {{ formatCycleTime(summary.average_cycle_time) }}
+                        </div>
+                    </div>
+                    <i class="fas fa-hourglass-half text-2xl text-gray-400"></i>
+                </div>
+
+                <!-- Completion Status -->
+                <div class="flex items-center justify-between p-4 rounded-lg"
+                     [ngClass]="summary.completion_rate >= 80 ? 'bg-green-50' : summary.completion_rate >= 60 ? 'bg-yellow-50' : 'bg-red-50'">
+                    <div>
+                        <div class="text-sm text-gray-600">Health Status</div>
+                        <div class="text-lg font-semibold" [ngClass]="getCompletionRateColor()">
+                            <i [class]="getCompletionRateIcon()"></i>
+                            {{ summary.completion_rate >= 80 ? 'Excellent' : summary.completion_rate >= 60 ? 'Good' : 'Needs Attention' }}
+                        </div>
+                    </div>
+                    <i class="fas fa-heartbeat text-2xl" [ngClass]="getCompletionRateColor()"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
