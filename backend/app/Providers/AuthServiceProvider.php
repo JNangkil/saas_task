@@ -2,6 +2,7 @@
 
 namespace App\Providers;
 
+use App\Helpers\WorkspacePermissionHelper;
 use App\Models\Invitation;
 use App\Models\Task;
 use App\Models\Tenant;
@@ -182,6 +183,61 @@ class AuthServiceProvider extends ServiceProvider
                 return false;
             }
             return $workspace->hasUserRole($user, 'viewer');
+        });
+
+        // Workspace permission gates using the WorkspacePermissionHelper
+        Gate::define('workspace.permission', function (User $user, Workspace $workspace, string $permission) {
+            return WorkspacePermissionHelper::userHasPermission($user, $workspace, $permission);
+        });
+
+        // Specific permission gates for convenience
+        Gate::define('workspace.invite-members', function (User $user, Workspace $workspace) {
+            return WorkspacePermissionHelper::canInviteMembers($user, $workspace);
+        });
+
+        Gate::define('workspace.remove-members', function (User $user, Workspace $workspace) {
+            return WorkspacePermissionHelper::canRemoveMembers($user, $workspace);
+        });
+
+        Gate::define('workspace.manage-boards', function (User $user, Workspace $workspace) {
+            return WorkspacePermissionHelper::canManageBoards($user, $workspace);
+        });
+
+        Gate::define('workspace.create-boards', function (User $user, Workspace $workspace) {
+            return WorkspacePermissionHelper::canCreateBoards($user, $workspace);
+        });
+
+        Gate::define('workspace.delete-boards', function (User $user, Workspace $workspace) {
+            return WorkspacePermissionHelper::canDeleteBoards($user, $workspace);
+        });
+
+        Gate::define('workspace.create-tasks', function (User $user, Workspace $workspace) {
+            return WorkspacePermissionHelper::canCreateTasks($user, $workspace);
+        });
+
+        Gate::define('workspace.assign-tasks', function (User $user, Workspace $workspace) {
+            return WorkspacePermissionHelper::canAssignTasks($user, $workspace);
+        });
+
+        Gate::define('workspace.delete-tasks', function (User $user, Workspace $workspace) {
+            return WorkspacePermissionHelper::canDeleteTasks($user, $workspace);
+        });
+
+        Gate::define('workspace.manage-comments', function (User $user, Workspace $workspace) {
+            return WorkspacePermissionHelper::canManageComments($user, $workspace);
+        });
+
+        Gate::define('workspace.view-analytics', function (User $user, Workspace $workspace) {
+            return WorkspacePermissionHelper::canViewAnalytics($user, $workspace);
+        });
+
+        Gate::define('workspace.manage-settings', function (User $user, Workspace $workspace) {
+            return WorkspacePermissionHelper::canManageSettings($user, $workspace);
+        });
+
+        // Gate to check if user can manage another user in workspace
+        Gate::define('workspace.manage-user', function (User $user, Workspace $workspace, User $targetUser) {
+            return WorkspacePermissionHelper::canManageUser($user, $workspace, $targetUser);
         });
     }
 }

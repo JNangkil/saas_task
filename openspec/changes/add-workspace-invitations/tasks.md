@@ -4,7 +4,7 @@
 
 - [x] 1.1 Update `workspace_user` pivot table (add role enum, status, invited_by, joined_at)
 - [x] 1.2 Create `invitations` table (id, workspace_id, tenant_id, email, role, token, message, invited_by, expires_at, status, accepted_at, created_at, updated_at)
-- [ ] 1.3 Create `workspace_role_permissions` config or table for permission matrix
+- [x] 1.3 Create `workspace_role_permissions` config or table for permission matrix
 - [x] 1.4 Add indexes for invitation token lookup and workspace+email uniqueness
 - [x] 1.5 Create foreign key constraints with appropriate cascade rules
 
@@ -12,19 +12,19 @@
 
 - [x] 2.1 Create Invitation model with relationships (workspace, inviter, invitee)
 - [x] 2.2 Update Workspace model with members relationship and role scopes
-- [ ] 2.3 Create WorkspaceRole enum/class with permission definitions
-- [ ] 2.4 Add model factories for Invitation testing
+- [x] 2.3 Create WorkspaceRole enum/class with permission definitions
+- [x] 2.4 Add model factories for Invitation testing
 
 ## 3. Role & Permission System
 
-- [ ] 3.1 Define permission matrix (workspace.manage, boards.manage, tasks.create, members.invite, etc.)
-- [ ] 3.2 Create WorkspacePermission helper to check user permissions
-- [ ] 3.3 Update WorkspacePolicy with role-based permission checks
-- [ ] 3.4 Create middleware/gate for permission validation
+- [x] 3.1 Define permission matrix (workspace.manage, boards.manage, tasks.create, members.invite, etc.)
+- [x] 3.2 Create WorkspacePermission helper to check user permissions
+- [x] 3.3 Update WorkspacePolicy with role-based permission checks
+- [x] 3.4 Create middleware/gate for permission validation
 
 ## 4. Invitation Backend Logic
 
-- [ ] 4.1 Create InvitationService with create, accept, decline, cancel, resend methods
+- [x] 4.1 Create InvitationService with create, accept, decline, cancel, resend methods
 - [x] 4.2 Implement token generation (secure random, 48 chars)
 - [x] 4.3 Implement expiry logic (default 7 days, configurable)
 - [x] 4.4 Add duplicate invitation prevention (same workspace+email+pending)
@@ -48,7 +48,7 @@
 - [x] 6.3 PATCH /api/workspaces/{workspace}/members/{user} (change role)
 - [x] 6.4 DELETE /api/workspaces/{workspace}/members/{user} (remove member)
 - [x] 6.5 Create MemberResource for API response formatting
-- [ ] 6.6 Implement pagination and filtering for member list
+- [x] 6.6 Implement pagination and filtering for member list
 
 ## 7. Email Notifications
 
@@ -99,10 +99,10 @@
 
 ## 13. Testing & Validation
 
-- [ ] 13.1 PHPUnit tests for Invitation CRUD operations
-- [ ] 13.2 PHPUnit tests for invitation accept/decline flow
-- [ ] 13.3 PHPUnit tests for role-based authorization
-- [ ] 13.4 PHPUnit tests for duplicate invitation prevention
+- [x] 13.1 PHPUnit tests for Invitation CRUD operations
+- [x] 13.2 PHPUnit tests for invitation accept/decline flow
+- [x] 13.3 PHPUnit tests for role-based authorization
+- [x] 13.4 PHPUnit tests for duplicate invitation prevention
 - [x] 13.5 Angular unit tests for InvitationService
 - [x] 13.6 Angular unit tests for WorkspaceMembersComponent
 - [ ] 13.7 E2E test: invite → email → accept → member list

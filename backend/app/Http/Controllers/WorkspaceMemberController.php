@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers;
 
+use App\Enums\WorkspaceRole;
+use App\Helpers\WorkspacePermissionHelper;
 use App\Http\Resources\WorkspaceMemberResource;
 use App\Models\Invitation;
 use App\Models\User;
@@ -24,24 +26,70 @@ class WorkspaceMemberController extends Controller
 
         // Get active members with their roles
         $perPage = request('per_page', 20);
-        $members = $workspace->users()
+        $search = request('search');
+        $role = request('role');
+        $sortBy = request('sort_by', 'joined_at');
+        $sortOrder = request('sort_order', 'desc');
+
+        // Build query for members
+        $membersQuery = $workspace->users()
             ->wherePivot('status', 'active')
-            ->withPivot('role', 'joined_at', 'invited_by')
-            ->paginate($perPage);
+            ->withPivot('role', 'joined_at', 'invited_by');
+
+        // Apply search filter
+        if ($search) {
+            $membersQuery->where(function ($query) use ($search) {
+                $query->where('users.name', 'like', "%{$search}%")
+                      ->orWhere('users.email', 'like', "%{$search}%");
+            });
+        }
+
+        // Apply role filter
+        if ($role && in_array($role, ['owner', 'admin', 'member', 'viewer'])) {
+            $membersQuery->wherePivot('role', $role);
+        }
+
+        // Apply sorting
+        if (in_array($sortBy, ['name', 'email', 'role', 'joined_at'])) {
+            if ($sortBy === 'name' || $sortBy === 'email') {
+                $membersQuery->orderBy("users.{$sortBy}", $sortOrder);
+            } else {
+                $membersQuery->orderByPivot($sortBy, $sortOrder);
+            }
+        }
+
+        $members = $membersQuery->paginate($perPage);
 
         // Get pending invitations count
         $pendingInvitationsCount = Invitation::where('workspace_id', $workspace->id)
             ->where('status', 'pending')
             ->count();
 
+        // Get member statistics
+        $memberStats = $workspace->users()
+            ->wherePivot('status', 'active')
+            ->selectRaw('role, COUNT(*) as count')
+            ->groupBy('role')
+            ->pluck('count', 'role')
+            ->toArray();
+
         return response()->json([
             'members' => WorkspaceMemberResource::collection($members),
             'pending_invitations_count' => $pendingInvitationsCount,
+            'member_stats' => $memberStats,
+            'filters' => [
+                'search' => $search,
+                'role' => $role,
+                'sort_by' => $sortBy,
+                'sort_order' => $sortOrder,
+            ],
             'pagination' => [
                 'current_page' => $members->currentPage(),
                 'last_page' => $members->lastPage(),
                 'per_page' => $members->perPage(),
                 'total' => $members->total(),
+                'from' => $members->firstItem(),
+                'to' => $members->lastItem(),
             ],
         ]);
     }
@@ -56,13 +104,13 @@ class WorkspaceMemberController extends Controller
 
         // Validate the request
         $validated = $request->validate([
-            'role' => ['required', Rule::in(['owner', 'admin', 'member', 'viewer'])],
+            'role' => ['required', Rule::in(WorkspaceRole::values())],
         ]);
 
         // Get current user
         $currentUser = auth()->user();
-        $currentUserRole = $workspace->getUserRole($currentUser);
-        $targetUserRole = $workspace->getUserRole($user);
+        $currentUserRole = WorkspacePermissionHelper::getUserRole($currentUser, $workspace);
+        $targetUserRole = WorkspacePermissionHelper::getUserRole($user, $workspace);
 
         // Check if target user is a member of the workspace
         if (!$targetUserRole) {
@@ -71,15 +119,18 @@ class WorkspaceMemberController extends Controller
             ], 404);
         }
 
-        // Prevent privilege escalation beyond current user's role
-        if ($this->isRoleHigher($validated['role'], $currentUserRole)) {
+        // Get target role enum
+        $targetRoleEnum = WorkspaceRole::fromString($validated['role']);
+
+        // Check if current user can assign this role
+        if ($currentUserRole && !$currentUserRole->getAssignableRoles()->contains($targetRoleEnum)) {
             return response()->json([
-                'message' => 'You cannot assign a role higher than your own',
+                'message' => 'You cannot assign this role',
             ], 403);
         }
 
         // Prevent owners from being demoted by non-owners
-        if ($targetUserRole === 'owner' && $currentUserRole !== 'owner') {
+        if ($targetUserRole->isOwner() && (!$currentUserRole || !$currentUserRole->isOwner())) {
             return response()->json([
                 'message' => 'Only owners can modify owner roles',
             ], 403);
@@ -111,8 +162,8 @@ class WorkspaceMemberController extends Controller
         Gate::authorize('removeMembers', $workspace);
 
         $currentUser = auth()->user();
-        $currentUserRole = $workspace->getUserRole($currentUser);
-        $targetUserRole = $workspace->getUserRole($user);
+        $currentUserRole = WorkspacePermissionHelper::getUserRole($currentUser, $workspace);
+        $targetUserRole = WorkspacePermissionHelper::getUserRole($user, $workspace);
 
         // Check if target user is a member of the workspace
         if (!$targetUserRole) {
@@ -122,14 +173,14 @@ class WorkspaceMemberController extends Controller
         }
 
         // Prevent removal of workspace owners by non-owners
-        if ($targetUserRole === 'owner' && $currentUserRole !== 'owner') {
+        if ($targetUserRole->isOwner() && (!$currentUserRole || !$currentUserRole->isOwner())) {
             return response()->json([
                 'message' => 'Only owners can remove other owners',
             ], 403);
         }
 
         // Prevent self-removal of the last owner
-        if ($currentUser->id === $user->id && $targetUserRole === 'owner') {
+        if ($currentUser->id === $user->id && $targetUserRole->isOwner()) {
             $ownerCount = $workspace->users()->wherePivot('role', 'owner')->count();
             if ($ownerCount <= 1) {
                 return response()->json([
@@ -155,14 +206,30 @@ class WorkspaceMemberController extends Controller
         Gate::authorize('view', $workspace);
 
         $user = auth()->user();
-        $role = $workspace->getUserRole($user);
+        $roleEnum = WorkspacePermissionHelper::getUserRole($user, $workspace);
 
-        // Define permissions based on role
-        $permissions = $this->getRolePermissions($role);
+        if (!$roleEnum) {
+            return response()->json([
+                'role' => null,
+                'permissions' => [],
+            ], 404);
+        }
+
+        $role = $roleEnum->value;
+        $permissions = $roleEnum->getPermissions()->toArray();
+        $displayName = $roleEnum->getDisplayName();
 
         return response()->json([
             'role' => $role,
+            'role_display_name' => $displayName,
             'permissions' => $permissions,
+            'can_invite_members' => $roleEnum->canInviteMembers(),
+            'can_manage_members' => $roleEnum->hasPermission('members.manage'),
+            'can_manage_boards' => $roleEnum->canManageBoards(),
+            'can_create_tasks' => $roleEnum->canCreateTasks(),
+            'can_view_analytics' => $roleEnum->canViewAnalytics(),
+            'is_owner' => $roleEnum->isOwner(),
+            'is_admin_or_above' => $roleEnum->isAdminOrAbove(),
         ]);
     }
 
@@ -177,11 +244,11 @@ class WorkspaceMemberController extends Controller
         ]);
 
         $currentUser = auth()->user();
-        $currentUserRole = $workspace->getUserRole($currentUser);
-        $targetUserRole = $workspace->getUserRole($user);
+        $currentUserRole = WorkspacePermissionHelper::getUserRole($currentUser, $workspace);
+        $targetUserRole = WorkspacePermissionHelper::getUserRole($user, $workspace);
 
         // Check if current user is the owner
-        if ($currentUserRole !== 'owner') {
+        if (!$currentUserRole || !$currentUserRole->isOwner()) {
             return response()->json([
                 'message' => 'Only owners can transfer ownership',
             ], 403);
@@ -224,70 +291,5 @@ class WorkspaceMemberController extends Controller
             'message' => 'Ownership transferred successfully',
             'members' => WorkspaceMemberResource::collection($members),
         ]);
-    }
-
-    /**
-     * Check if a role is higher than another role.
-     */
-    private function isRoleHigher(string $role1, string $role2): bool
-    {
-        $roleHierarchy = [
-            'viewer' => 1,
-            'member' => 2,
-            'admin' => 3,
-            'owner' => 4,
-        ];
-
-        return $roleHierarchy[$role1] > $roleHierarchy[$role2];
-    }
-
-    /**
-     * Get permissions based on role.
-     */
-    private function getRolePermissions(?string $role): array
-    {
-        $permissions = [
-            'viewer' => [
-                'view_workspace' => true,
-                'view_boards' => true,
-                'view_members' => true,
-                'create_boards' => false,
-            ],
-            'member' => [
-                'view_workspace' => true,
-                'view_boards' => true,
-                'view_members' => true,
-                'create_boards' => true,
-                'manage_members' => false,
-            ],
-            'admin' => [
-                'view_workspace' => true,
-                'view_boards' => true,
-                'view_members' => true,
-                'create_boards' => true,
-                'manage_workspace' => true,
-                'manage_members' => true,
-                'manage_settings' => true,
-                'view_analytics' => true,
-                'invite_members' => true,
-                'transfer_ownership' => false,
-                'delete_workspace' => false,
-            ],
-            'owner' => [
-                'view_workspace' => true,
-                'view_boards' => true,
-                'view_members' => true,
-                'create_boards' => true,
-                'manage_workspace' => true,
-                'manage_members' => true,
-                'manage_settings' => true,
-                'view_analytics' => true,
-                'invite_members' => true,
-                'transfer_ownership' => true,
-                'delete_workspace' => true,
-            ],
-        ];
-
-        return $permissions[$role] ?? [];
     }
 }

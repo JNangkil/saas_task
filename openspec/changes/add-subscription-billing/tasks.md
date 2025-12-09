@@ -6,21 +6,21 @@
 - [x] 1.2 Create `subscriptions` table (id, tenant_id, plan_id, status, billing_period_start, billing_period_end, trial_ends_at, cancel_at, cancelled_at, external_customer_id, external_subscription_id, created_at, updated_at)
 - [x] 1.3 Create `subscription_events` table (id, subscription_id, tenant_id, event_type, payload JSON, external_event_id, processed_at, created_at)
 - [x] 1.4 Add indexes for tenant_id, plan_id, status, external IDs
-- [ ] 1.5 Create default plans seeder (Free, Starter, Pro, Enterprise)
+- [x] 1.5 Create default plans seeder (Free, Starter, Pro, Enterprise)
 
 ## 2. Laravel Models & Relationships
 
 - [x] 2.1 Create Plan model with feature limit accessors
 - [x] 2.2 Create Subscription model with status scopes and relationships
-- [ ] 2.3 Create SubscriptionEvent model for audit logging
+- [x] 2.3 Create SubscriptionEvent model for audit logging
 - [x] 2.4 Update Tenant model with subscription relationship
-- [ ] 2.5 Add model factories for testing
+- [x] 2.5 Add model factories for testing
 
 ## 3. Subscription State Management
 
 - [x] 3.1 Define subscription status enum (trialing, active, past_due, cancelled, expired)
 - [x] 3.2 Implement state transition validation
-- [ ] 3.3 Create subscription lifecycle events (Laravel Events)
+- [x] 3.3 Create subscription lifecycle events (Laravel Events)
 - [x] 3.4 Implement trial period handling
 
 ## 4. Payment Provider Integration
@@ -61,9 +61,9 @@
 ## 8. Limit Enforcement
 
 - [x] 8.1 Create SubscriptionLimitMiddleware
-- [ ] 8.2 Implement user limit checks (on user invite/create)
-- [ ] 8.3 Implement workspace limit checks (on workspace create)
-- [ ] 8.4 Implement storage limit checks (on file upload)
+- [x] 8.2 Implement user limit checks (on user invite/create)
+- [x] 8.3 Implement workspace limit checks (on workspace create)
+- [x] 8.4 Implement storage limit checks (on file upload)
 - [x] 8.5 Return appropriate error responses when limits exceeded
 - [x] 8.6 Create LimitService for centralized limit checking
 
@@ -118,10 +118,10 @@
 
 ## 15. Testing & Validation
 
-- [ ] 15.1 PHPUnit tests for Plan CRUD operations
-- [ ] 15.2 PHPUnit tests for subscription state transitions
-- [ ] 15.3 PHPUnit tests for webhook handling (mock provider)
-- [ ] 15.4 PHPUnit tests for limit enforcement
+- [x] 15.1 PHPUnit tests for Plan CRUD operations
+- [x] 15.2 PHPUnit tests for subscription state transitions
+- [x] 15.3 PHPUnit tests for webhook handling (mock provider)
+- [x] 15.4 PHPUnit tests for limit enforcement
 - [x] 15.5 Angular unit tests for BillingService
 - [x] 15.6 Angular unit tests for billing components
 - [ ] 15.7 E2E test: trial → checkout → active → cancel flow

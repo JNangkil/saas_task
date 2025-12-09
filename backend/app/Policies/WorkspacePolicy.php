@@ -2,6 +2,7 @@
 
 namespace App\Policies;
 
+use App\Helpers\WorkspacePermissionHelper;
 use App\Models\User;
 use App\Models\Workspace;
 use Illuminate\Auth\Access\Response;
@@ -21,7 +22,16 @@ class WorkspacePolicy
      */
     public function view(User $user, Workspace $workspace): bool
     {
-        return $workspace->canUserView($user);
+        // Owners can always view
+        if ($workspace->owner_id === $user->id) {
+            return true;
+        }
+
+        // Check if user is an active member
+        return $workspace->members()
+            ->where('user_id', $user->id)
+            ->where('status', 'active')
+            ->exists();
     }
 
     /**
@@ -51,7 +61,7 @@ class WorkspacePolicy
      */
     public function update(User $user, Workspace $workspace): bool
     {
-        return $workspace->canUserPerformAction($user, 'update');
+        return WorkspacePermissionHelper::userHasPermission($user, $workspace, 'workspace.manage');
     }
 
     /**
@@ -59,13 +69,7 @@ class WorkspacePolicy
      */
     public function delete(User $user, Workspace $workspace): bool
     {
-        // Only tenant owners or admins can delete workspaces
-        $tenant = $workspace->tenant;
-        if (!$tenant) {
-            return false;
-        }
-        
-        return $tenant->canUserPerformAction($user, 'delete');
+        return WorkspacePermissionHelper::canDeleteWorkspace($user, $workspace);
     }
 
     /**
@@ -73,7 +77,7 @@ class WorkspacePolicy
      */
     public function archive(User $user, Workspace $workspace): bool
     {
-        return $workspace->canUserPerformAction($user, 'archive');
+        return WorkspacePermissionHelper::userHasPermission($user, $workspace, 'workspace.manage');
     }
 
     /**
@@ -81,7 +85,7 @@ class WorkspacePolicy
      */
     public function restore(User $user, Workspace $workspace): bool
     {
-        return $workspace->canUserPerformAction($user, 'restore');
+        return WorkspacePermissionHelper::userHasPermission($user, $workspace, 'workspace.manage');
     }
 
     /**
@@ -89,7 +93,7 @@ class WorkspacePolicy
      */
     public function manageMembers(User $user, Workspace $workspace): bool
     {
-        return $workspace->canUserPerformAction($user, 'manage-members');
+        return WorkspacePermissionHelper::userHasPermission($user, $workspace, 'members.manage');
     }
 
     /**
@@ -97,7 +101,7 @@ class WorkspacePolicy
      */
     public function addMembers(User $user, Workspace $workspace): bool
     {
-        return $workspace->canUserPerformAction($user, 'add-members');
+        return WorkspacePermissionHelper::canInviteMembers($user, $workspace);
     }
 
     /**
@@ -105,7 +109,7 @@ class WorkspacePolicy
      */
     public function removeMembers(User $user, Workspace $workspace): bool
     {
-        return $workspace->canUserPerformAction($user, 'remove-members');
+        return WorkspacePermissionHelper::canRemoveMembers($user, $workspace);
     }
 
     /**
@@ -113,7 +117,7 @@ class WorkspacePolicy
      */
     public function updateMemberRoles(User $user, Workspace $workspace): bool
     {
-        return $workspace->canUserPerformAction($user, 'update-member-roles');
+        return WorkspacePermissionHelper::userHasPermission($user, $workspace, 'members.manage');
     }
 
     /**
@@ -121,7 +125,7 @@ class WorkspacePolicy
      */
     public function createBoards(User $user, Workspace $workspace): bool
     {
-        return $workspace->canUserPerformAction($user, 'create-boards');
+        return WorkspacePermissionHelper::canCreateBoards($user, $workspace);
     }
 
     /**
@@ -129,7 +133,8 @@ class WorkspacePolicy
      */
     public function viewBoards(User $user, Workspace $workspace): bool
     {
-        return $workspace->canUserPerformAction($user, 'view-boards');
+        // Anyone who can view the workspace can view boards
+        return $this->view($user, $workspace);
     }
 
     /**
@@ -137,7 +142,7 @@ class WorkspacePolicy
      */
     public function manageSettings(User $user, Workspace $workspace): bool
     {
-        return $workspace->canUserPerformAction($user, 'manage-settings');
+        return WorkspacePermissionHelper::canManageSettings($user, $workspace);
     }
 
     /**
@@ -145,7 +150,7 @@ class WorkspacePolicy
      */
     public function viewAnalytics(User $user, Workspace $workspace): bool
     {
-        return $workspace->canUserPerformAction($user, 'view-analytics');
+        return WorkspacePermissionHelper::canViewAnalytics($user, $workspace);
     }
 
     /**
@@ -153,7 +158,7 @@ class WorkspacePolicy
      */
     public function changeDefault(User $user, Workspace $workspace): bool
     {
-        return $workspace->canUserPerformAction($user, 'change-default');
+        return WorkspacePermissionHelper::userHasPermission($user, $workspace, 'workspace.manage');
     }
 
     /**
@@ -161,7 +166,8 @@ class WorkspacePolicy
      */
     public function viewActivityLogs(User $user, Workspace $workspace): bool
     {
-        return $workspace->canUserPerformAction($user, 'view');
+        // Anyone who can view the workspace can view activity logs
+        return $this->view($user, $workspace);
     }
 
     /**
@@ -169,7 +175,7 @@ class WorkspacePolicy
      */
     public function inviteUsers(User $user, Workspace $workspace): bool
     {
-        return $workspace->canUserPerformAction($user, 'invite-users');
+        return WorkspacePermissionHelper::canInviteMembers($user, $workspace);
     }
 
     /**
@@ -177,7 +183,7 @@ class WorkspacePolicy
      */
     public function manageTasks(User $user, Workspace $workspace): bool
     {
-        return $workspace->canUserPerformAction($user, 'manage-tasks');
+        return WorkspacePermissionHelper::canDeleteTasks($user, $workspace);
     }
 
     /**
@@ -185,7 +191,8 @@ class WorkspacePolicy
      */
     public function viewTasks(User $user, Workspace $workspace): bool
     {
-        return $workspace->canUserPerformAction($user, 'view-tasks');
+        // Anyone who can view the workspace can view tasks
+        return $this->view($user, $workspace);
     }
 
     /**
@@ -193,7 +200,7 @@ class WorkspacePolicy
      */
     public function exportData(User $user, Workspace $workspace): bool
     {
-        return $workspace->canUserPerformAction($user, 'export-data');
+        return WorkspacePermissionHelper::userHasPermission($user, $workspace, 'analytics.view');
     }
 
     /**
@@ -201,6 +208,6 @@ class WorkspacePolicy
      */
     public function duplicate(User $user, Workspace $workspace): bool
     {
-        return $workspace->canUserPerformAction($user, 'duplicate');
+        return WorkspacePermissionHelper::userHasPermission($user, $workspace, 'workspace.manage');
     }
 }

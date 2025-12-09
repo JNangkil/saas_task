@@ -14,9 +14,15 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->web(append: [
             \App\Http\Middleware\TenantResolution::class,
         ]);
-        
+
         $middleware->api(append: [
             \App\Http\Middleware\TenantResolution::class,
+        ]);
+
+        // Register route middleware aliases
+        $middleware->alias([
+            'workspace.permission' => \App\Http\Middleware\WorkspacePermission::class,
+            'subscription.limit' => \App\Http\Middleware\SubscriptionLimitMiddleware::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
