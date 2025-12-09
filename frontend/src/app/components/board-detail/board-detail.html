@@ -27,5 +27,11 @@
             </div>
 
         </ng-container>
+
+        <!-- Shared Task Details Panel -->
+        <div *ngIf="selectedTask" class="absolute inset-0 z-50 bg-black/25 flex justify-end">
+            <app-task-details-panel [task]="selectedTask" [visible]="true" (close)="onCloseDetails()">
+            </app-task-details-panel>
+        </div>
     </div>
 </div>

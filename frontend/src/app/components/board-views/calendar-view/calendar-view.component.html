@@ -1,37 +1,97 @@
-<div class="flex flex-col h-full bg-white">
-    <div class="flex items-center justify-between p-4 border-b">
-        <div class="flex items-center space-x-4">
-            <h2 class="text-lg font-semibold">{{ viewDate | date:'MMMM yyyy' }}</h2>
-            <div class="flex space-x-1">
-                <button (click)="previousMonth()" class="p-1 rounded hover:bg-gray-100">
-                    &lt; <!-- Icon placeholder -->
+<div class="h-full flex flex-col bg-white rounded-lg shadow-sm border border-gray-200">
+    <!-- Header -->
+    <div class="px-6 py-4 border-b border-gray-200 flex items-center justify-between bg-white rounded-t-lg">
+        <div class="flex items-center gap-4">
+            <h2 class="text-xl font-bold text-gray-800 flex items-center gap-2">
+                <svg class="w-6 h-6 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z">
+                    </path>
+                </svg>
+                <span *ngIf="viewMode === 'month'">{{ viewDate | date:'MMMM yyyy' }}</span>
+                <span *ngIf="viewMode === 'week'">{{ viewDate | date:'MMMM yyyy' }} (Week {{ viewDate | date:'w'
+                    }})</span>
+                <span *ngIf="viewMode === 'day'">{{ viewDate | date:'fullDate' }}</span>
+            </h2>
+
+            <div class="flex items-center bg-gray-100 rounded-lg p-1">
+                <button (click)="previous()"
+                    class="p-1 hover:bg-white hover:shadow rounded transition-all text-gray-600">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7">
+                        </path>
+                    </svg>
                 </button>
-                <button (click)="nextMonth()" class="p-1 rounded hover:bg-gray-100">
-                    &gt; <!-- Icon placeholder -->
+                <button (click)="today()"
+                    class="px-3 py-1 text-sm font-medium text-gray-600 hover:text-gray-900 border-x border-gray-200 mx-1">
+                    Today
+                </button>
+                <button (click)="next()" class="p-1 hover:bg-white hover:shadow rounded transition-all text-gray-600">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+                    </svg>
+                </button>
+            </div>
+        </div>
+
+        <div class="flex items-center gap-3">
+            <!-- Date Mode Toggle -->
+            <div class="flex bg-gray-100 p-1 rounded-lg mr-2">
+                <button (click)="onDateDisplayModeChange('due_date')" [class.bg-white]="dateDisplayMode === 'due_date'"
+                    [class.shadow]="dateDisplayMode === 'due_date'"
+                    [class.text-blue-600]="dateDisplayMode === 'due_date'"
+                    class="px-3 py-1.5 rounded-md text-xs font-medium text-gray-500 transition-all flex items-center gap-1">
+                    <span>Due Date</span>
+                </button>
+                <button (click)="onDateDisplayModeChange('start_date')"
+                    [class.bg-white]="dateDisplayMode === 'start_date'"
+                    [class.shadow]="dateDisplayMode === 'start_date'"
+                    [class.text-blue-600]="dateDisplayMode === 'start_date'"
+                    class="px-3 py-1.5 rounded-md text-xs font-medium text-gray-500 transition-all flex items-center gap-1">
+                    <span>Start Date</span>
+                </button>
+            </div>
+
+            <div class="flex bg-gray-100 p-1 rounded-lg">
+                <button (click)="onViewModeChange('month')" [class.bg-white]="viewMode === 'month'"
+                    [class.shadow]="viewMode === 'month'" [class.text-blue-600]="viewMode === 'month'"
+                    class="px-4 py-1.5 rounded-md text-sm font-medium text-gray-500 transition-all">
+                    Month
+                </button>
+                <button (click)="onViewModeChange('week')" [class.bg-white]="viewMode === 'week'"
+                    [class.shadow]="viewMode === 'week'" [class.text-blue-600]="viewMode === 'week'"
+                    class="px-4 py-1.5 rounded-md text-sm font-medium text-gray-500 transition-all">
+                    Week
+                </button>
+                <button (click)="onViewModeChange('day')" [class.bg-white]="viewMode === 'day'"
+                    [class.shadow]="viewMode === 'day'" [class.text-blue-600]="viewMode === 'day'"
+                    class="px-4 py-1.5 rounded-md text-sm font-medium text-gray-500 transition-all">
+                    Day
                 </button>
             </div>
         </div>
     </div>
 
-    <div class="grid grid-cols-7 gap-px bg-gray-200 flex-1 overflow-y-auto">
-        <!-- Check day headers -->
-        <div *ngFor="let day of ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']"
-            class="bg-gray-50 p-2 text-center text-xs font-medium text-gray-500">
-            {{ day }}
+    <!-- Filter Bar -->
+    <app-board-filter-bar [filters]="filters" [members]="members" (filtersChange)="onFiltersChange($event)">
+    </app-board-filter-bar>
+
+    <!-- Content -->
+    <div class="flex-1 overflow-hidden relative">
+        <div *ngIf="loading" class="absolute inset-0 z-50 bg-white/50 flex items-center justify-center">
+            <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
         </div>
 
-        <!-- Calendar Grid -->
-        <div *ngFor="let day of calendarDays" class="bg-white min-h-[120px] p-2 relative">
-            <div [class.text-blue-600]="day.isToday" [class.font-bold]="day.isToday" class="text-sm mb-1">
-                {{ day.date | date:'d' }}
-            </div>
+        <app-calendar-month *ngIf="viewMode === 'month'" [tasks]="tasks" [viewDate]="viewDate"
+            [dateDisplayMode]="dateDisplayMode" (taskClick)="onTaskClick($event)" (taskDrop)="onTaskDrop($event)">
+        </app-calendar-month>
 
-            <div class="space-y-1">
-                <div *ngFor="let task of day.tasks"
-                    class="text-xs p-1 bg-blue-50 text-blue-700 rounded border border-blue-100 truncate cursor-pointer hover:bg-blue-100">
-                    {{ task.title }}
-                </div>
-            </div>
-        </div>
+        <app-calendar-week *ngIf="viewMode === 'week'" [tasks]="tasks" [viewDate]="viewDate"
+            [dateDisplayMode]="dateDisplayMode" (taskClick)="onTaskClick($event)" (taskDrop)="onTaskDrop($event)">
+        </app-calendar-week>
+
+        <app-calendar-day *ngIf="viewMode === 'day'" [tasks]="tasks" [viewDate]="viewDate"
+            [dateDisplayMode]="dateDisplayMode" (taskClick)="onTaskClick($event)">
+        </app-calendar-day>
     </div>
 </div>

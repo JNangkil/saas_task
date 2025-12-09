@@ -401,16 +401,33 @@ class TaskController extends Controller
         // View-specific logic
         if (!empty($params['view'])) {
             if ($params['view'] === 'calendar' && !empty($params['start']) && !empty($params['end'])) {
-                // Default to due_date for calendar, can be customized later or via explicit params
-                $dateField = $params['date_field'] ?? 'due_date';
+                // For calendar view, we want to include tasks that overlap with the view range.
+                // Overlap condition: (StartA <= EndB) and (EndA >= StartB)
+                // Here A is the task and B is the view range.
                 
-                if ($dateField === 'due_date') {
-                     $query->whereDate('due_date', '>=', $params['start'])
-                           ->whereDate('due_date', '<=', $params['end']);
-                } elseif ($dateField === 'start_date') {
-                     $query->whereDate('start_date', '>=', $params['start'])
-                           ->whereDate('start_date', '<=', $params['end']);
-                }
+                $query->where(function ($q) use ($params) {
+                    // 1. Tasks with both start and due date causing overlap
+                    $q->where(function ($sub) use ($params) {
+                        $sub->whereNotNull('start_date')
+                            ->whereNotNull('due_date')
+                            ->whereDate('start_date', '<=', $params['end'])
+                            ->whereDate('due_date', '>=', $params['start']);
+                    })
+                    // 2. Tasks with only due date (treat point as range [due, due])
+                    ->orWhere(function ($sub) use ($params) {
+                        $sub->whereNull('start_date')
+                            ->whereNotNull('due_date')
+                            ->whereDate('due_date', '>=', $params['start'])
+                            ->whereDate('due_date', '<=', $params['end']);
+                    })
+                    // 3. Tasks with only start date (treat point as range [start, start])
+                    ->orWhere(function ($sub) use ($params) {
+                        $sub->whereNotNull('start_date')
+                            ->whereNull('due_date')
+                            ->whereDate('start_date', '>=', $params['start'])
+                            ->whereDate('start_date', '<=', $params['end']);
+                    });
+                });
             }
         }
 

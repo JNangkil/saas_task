@@ -9,6 +9,9 @@ import { BoardViewPreferenceService } from '../../services/board-view-preference
 import { WorkspaceContextService } from '../../services/workspace-context.service';
 import { Subject, combineLatest } from 'rxjs';
 import { takeUntil, filter } from 'rxjs/operators';
+import { Task } from '../../models/task.model';
+import { BoardStateService } from '../../services/board-state.service';
+import { TaskDetailsPanelComponent } from '../task-table/task-details-panel.component';
 
 @Component({
   selector: 'app-board-detail',
@@ -18,7 +21,8 @@ import { takeUntil, filter } from 'rxjs/operators';
     DynamicTaskTableComponent,
     ViewSwitcherComponent,
     KanbanViewComponent,
-    CalendarViewComponent
+    CalendarViewComponent,
+    TaskDetailsPanelComponent
   ],
   templateUrl: './board-detail.html',
   styleUrl: './board-detail.css',
@@ -26,6 +30,7 @@ import { takeUntil, filter } from 'rxjs/operators';
 export class BoardDetail implements OnInit, OnDestroy {
   boardId: number | undefined;
   currentView: ViewType = 'table';
+  selectedTask: Task | null = null;
 
   private destroy$ = new Subject<void>();
 
@@ -33,7 +38,8 @@ export class BoardDetail implements OnInit, OnDestroy {
     private route: ActivatedRoute,
     private router: Router,
     private viewPreferenceService: BoardViewPreferenceService,
-    private workspaceContextService: WorkspaceContextService
+    private workspaceContextService: WorkspaceContextService,
+    private boardStateService: BoardStateService
   ) { }
 
   ngOnInit(): void {
@@ -44,7 +50,7 @@ export class BoardDetail implements OnInit, OnDestroy {
     ]).pipe(
       takeUntil(this.destroy$),
       filter(([params, query, context]) => !!context.currentTenant && !!context.currentWorkspace)
-    ).subscribe(([params, query, context]) => {
+    ).subscribe(([params, query, context]: [any, any, any]) => {
       const id = params.get('boardId');
       if (id) {
         const bid = parseInt(id, 10);
@@ -61,6 +67,17 @@ export class BoardDetail implements OnInit, OnDestroy {
         this.currentView = query['view'] as ViewType;
       }
     });
+
+    // Subscribe to selected task
+    this.boardStateService.selectedTask$
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(task => {
+        this.selectedTask = task;
+      });
+  }
+
+  onCloseDetails() {
+    this.boardStateService.selectTask(null);
   }
 
   loadViewPreferences(tenantId: string, workspaceId: string, boardId: string) {

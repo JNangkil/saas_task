@@ -1,4 +1,23 @@
-<div class="flex h-full overflow-x-auto p-4 space-x-4 bg-gray-50 items-start" cdkDropListGroup>
-    <app-kanban-column *ngFor="let col of columns$ | async" [column]="col"
-        (taskDropped)="drop($event)"></app-kanban-column>
+<div class="flex flex-col h-full bg-gray-50">
+    <!-- View Toolbar -->
+    <div class="flex items-center justify-between px-4 py-3 border-b border-gray-200 bg-white">
+        <div class="flex items-center space-x-2">
+            <span class="text-sm font-medium text-gray-700">Group by:</span>
+            <div class="relative inline-block text-left">
+                <select [ngModel]="currentGroupBy" (ngModelChange)="setGroupBy($event)"
+                    class="block w-full rounded-md border-gray-300 py-1.5 pl-3 pr-10 text-gray-900 ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-indigo-600 sm:text-sm sm:leading-6">
+                    <option *ngFor="let opt of groupByOptions" [value]="opt.value">
+                        {{ opt.label }}
+                    </option>
+                </select>
+            </div>
+        </div>
+        <!-- Future config items like expand/collapse all could go here -->
+    </div>
+
+    <!-- Kanban Board -->
+    <div class="flex-1 overflow-x-auto p-4 flex space-x-4 items-start" cdkDropListGroup>
+        <app-kanban-column *ngFor="let col of columns$ | async" [column]="col" [isCollapsed]="isColumnCollapsed(col.id)"
+            (toggleCollapse)="toggleColumn(col.id)" (taskDropped)="drop($event)"></app-kanban-column>
+    </div>
 </div>

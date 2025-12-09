@@ -3,6 +3,8 @@ import { HttpClient } from '@angular/common/http';
 import { Observable, BehaviorSubject, of } from 'rxjs';
 import { tap, catchError } from 'rxjs/operators';
 
+import { TaskFilters } from '../models';
+
 export interface ViewPreference {
     id?: string;
     preferred_view: 'table' | 'kanban' | 'calendar';
@@ -15,7 +17,7 @@ export interface ViewPreference {
         mode?: 'month' | 'week' | 'day';
         date_field?: 'due_date' | 'start_date';
     };
-    filters?: any;
+    filters?: TaskFilters;
 }
 
 @Injectable({

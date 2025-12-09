@@ -1,0 +1,52 @@
+<div class="h-full flex flex-col">
+    <!-- Days of week header -->
+    <div class="grid grid-cols-7 border-b border-gray-200">
+        <div *ngFor="let day of ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']"
+            class="py-2 text-center text-xs font-semibold text-gray-500 uppercase">
+            {{day}}
+        </div>
+    </div>
+
+    <!-- Calendar Grid -->
+    <div class="flex-1 grid grid-cols-7 grid-rows-6 h-full" cdkDropListGroup>
+        <div *ngFor="let day of calendarDays"
+            class="border-b border-r border-gray-200 min-h-[100px] relative p-1 group transition-colors"
+            [class.bg-gray-50]="!isSameMonth(day.date)" [class.bg-blue-50]="day.isToday">
+
+            <!-- Date number -->
+            <div class="flex justify-between items-start mb-1">
+                <span class="text-sm font-medium w-6 h-6 flex items-center justify-center rounded-full"
+                    [class.bg-blue-600]="day.isToday" [class.text-white]="day.isToday"
+                    [class.text-gray-400]="!isSameMonth(day.date)" [class.text-gray-700]="isSameMonth(day.date)">
+                    {{day.date | date:'d'}}
+                </span>
+
+                <!-- Add button (visible on hover) -->
+                <button
+                    class="opacity-0 group-hover:opacity-100 p-1 text-gray-400 hover:text-blue-600 transition-opacity">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+                    </svg>
+                </button>
+            </div>
+
+            <!-- Tasks Container -->
+            <div class="space-y-1 min-h-[60px]" cdkDropList [cdkDropListData]="day.tasks" [id]="day.id"
+                (cdkDropListDropped)="onDrop($event, day.id)">
+
+                <div *ngFor="let task of day.tasks" cdkDrag [cdkDragData]="task" (click)="onTaskClick(task, $event)"
+                    [class]="getTaskClass(task)">
+
+                    <div class="flex items-center gap-1">
+                        <span class="truncate font-medium">{{task.title}}</span>
+                    </div>
+
+                    <!-- Drag Preview -->
+                    <div *cdkDragPreview class="bg-white p-2 rounded shadow-lg border border-blue-200 w-48 opacity-90">
+                        <span class="text-sm font-medium text-gray-900">{{task.title}}</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

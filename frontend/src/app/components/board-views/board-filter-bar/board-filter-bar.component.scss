@@ -1,0 +1,9 @@
+:host {
+    display: block;
+}
+
+/* Simple hover dropdown implementation without JS for simplicity, 
+   since we used group-hover in Tailwind classes but sometimes tricky with z-index */
+.group:hover .group-hover\:block {
+    display: block;
+}

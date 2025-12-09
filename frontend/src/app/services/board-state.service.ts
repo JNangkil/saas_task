@@ -40,6 +40,9 @@ export class BoardStateService {
     private currentChannelName: string | null = null;
     private currentPresenceChannelName: string | null = null;
 
+    // UI State
+    public selectedTask$ = new BehaviorSubject<Task | null>(null);
+
     private currentContext: any = {};
 
     constructor(
@@ -245,5 +248,12 @@ export class BoardStateService {
             },
             error: (err) => console.error('Polling error:', err)
         });
+    }
+
+    /**
+     * Set the currently selected task for details panel
+     */
+    public selectTask(task: Task | null): void {
+        this.selectedTask$.next(task);
     }
 }

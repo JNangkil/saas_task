@@ -10,12 +10,14 @@ use Illuminate\Support\Facades\Auth;
 
 class BoardViewPreferenceController extends Controller
 {
-    public function show(Request $request, Board $board): JsonResponse
+    public function show(Request $request, string $tenant, string $workspace, string $board): JsonResponse
     {
+        $boardModel = Board::findOrFail($board);
+        
         $preference = UserBoardViewPreference::firstOrCreate(
             [
                 'user_id' => Auth::id(),
-                'board_id' => $board->id,
+                'board_id' => $boardModel->id,
             ],
             [
                 'preferred_view' => 'table',
@@ -28,8 +30,10 @@ class BoardViewPreferenceController extends Controller
         return response()->json($preference);
     }
 
-    public function update(Request $request, Board $board): JsonResponse
+    public function update(Request $request, string $tenant, string $workspace, string $board): JsonResponse
     {
+        $boardModel = Board::findOrFail($board);
+
         $validated = $request->validate([
             'preferred_view' => 'sometimes|string|in:table,kanban,calendar',
             'kanban_config' => 'sometimes|array',
@@ -40,7 +44,7 @@ class BoardViewPreferenceController extends Controller
         $preference = UserBoardViewPreference::updateOrCreate(
             [
                 'user_id' => Auth::id(),
-                'board_id' => $board->id,
+                'board_id' => $boardModel->id,
             ],
             $validated
         );

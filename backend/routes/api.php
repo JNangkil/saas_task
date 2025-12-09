@@ -185,14 +185,16 @@ Route::middleware(['auth:sanctum'])->group(function () {
             Route::put('/reset-column', [UserBoardPreferenceController::class, 'resetColumn'])->name('boards.preferences.reset-column');
         });
 
-        // Board View Preference routes
-        Route::prefix('tenants/{tenant}/workspaces/{workspace}/boards/{board}/view-preferences')->group(function () {
-            Route::get('/', [BoardViewPreferenceController::class, 'show'])->name('boards.view-preferences.show');
-            Route::put('/', [BoardViewPreferenceController::class, 'update'])->name('boards.view-preferences.update');
-        });
+
 
         // Board Template routes (Workspace scoped creation)
         Route::post('/{workspace}/board-templates', [\App\Http\Controllers\BoardTemplateController::class, 'store'])->name('workspaces.board-templates.store');
+    });
+
+    // Board View Preference routes
+    Route::prefix('tenants/{tenant}/workspaces/{workspace}/boards/{board}/view-preferences')->group(function () {
+        Route::get('/', [BoardViewPreferenceController::class, 'show'])->name('boards.view-preferences.show');
+        Route::put('/', [BoardViewPreferenceController::class, 'update'])->name('boards.view-preferences.update');
     });
     
     // Board Templates (Global/Tenant scoped)
