@@ -120,6 +120,51 @@ class AuthController extends Controller
     }
 
     /**
+     * Handle user registration.
+     */
+    public function register(Request $request): JsonResponse
+    {
+        $validator = Validator::make($request->all(), [
+            'name' => 'required|string|min:2|max:255',
+            'email' => 'required|email|unique:users,email',
+            'password' => 'required|string|min:8|confirmed',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'error' => 'Validation failed',
+                'message' => 'Please check your input.',
+                'errors' => $validator->errors(),
+            ], 422);
+        }
+
+        $validated = $validator->validated();
+
+        // Create the user
+        $user = \App\Models\User::create([
+            'name' => $validated['name'],
+            'email' => $validated['email'],
+            'password' => Hash::make($validated['password']),
+        ]);
+
+        // Create a default tenant for the user (free mode)
+        $tenant = \App\Models\Tenant::create([
+            'name' => $validated['name'] . "'s Organization",
+            'slug' => Str::slug($validated['name']) . '-' . $user->id,
+        ]);
+
+        // Attach user to tenant as owner
+        $tenant->users()->attach($user->id, [
+            'role' => 'owner',
+            'joined_at' => now(),
+        ]);
+
+        return response()->json([
+            'message' => 'Account created successfully. Please log in.',
+        ], 201);
+    }
+
+    /**
      * Handle user logout.
      */
     public function logout(Request $request): JsonResponse

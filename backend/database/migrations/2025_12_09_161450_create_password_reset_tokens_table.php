@@ -11,6 +11,9 @@ return new class extends Migration
      */
     public function up(): void
     {
+        // Drop the default Laravel password_reset_tokens table if it exists
+        Schema::dropIfExists('password_reset_tokens');
+        
         Schema::create('password_reset_tokens', function (Blueprint $table) {
             $table->id();
             $table->foreignId('user_id')->constrained()->onDelete('cascade');
