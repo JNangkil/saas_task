@@ -6,14 +6,46 @@ import { AcceptInvitationComponent } from './components/accept-invitation/accept
 import { PricingPageComponent } from './components/pricing-page/pricing-page.component';
 import { BillingSettingsComponent } from './components/billing-settings/billing-settings.component';
 import { AuthGuard } from './guards/auth.guard';
+import { AdminGuard } from './guards/admin.guard';
 import { superAdminGuard } from './guards/super-admin-guard';
 import { ForgotPasswordComponent } from './auth/components/forgot-password/forgot-password.component';
 import { ResetPasswordComponent } from './auth/components/reset-password/reset-password.component';
 import { LoginComponent } from './auth/components/login/login.component';
 import { MfaSetupComponent } from './auth/components/mfa-setup/mfa-setup.component';
 import { MfaVerifyComponent } from './auth/components/mfa-verify/mfa-verify.component';
+import { LandingPageComponent } from './pages/landing/landing-page.component';
 
 export const routes: Routes = [
+    // Landing page - public
+    {
+        path: '',
+        component: LandingPageComponent,
+        pathMatch: 'full',
+        title: 'TaskFlow - Modern Task Management'
+    },
+    // Admin Dashboard - for tenant owners/admins
+    {
+        path: 'dashboard',
+        loadComponent: () => import('./pages/admin-dashboard/admin-layout.component').then(m => m.AdminLayoutComponent),
+        canActivate: [AuthGuard, AdminGuard],
+        title: 'Admin Dashboard',
+        children: [
+            {
+                path: '',
+                loadComponent: () => import('./pages/admin-dashboard/admin-dashboard.component').then(m => m.AdminDashboardComponent)
+            },
+            {
+                path: 'team',
+                loadComponent: () => import('./pages/admin-dashboard/admin-dashboard.component').then(m => m.AdminDashboardComponent),
+                title: 'Team Overview'
+            },
+            {
+                path: 'settings',
+                loadComponent: () => import('./pages/admin-dashboard/admin-dashboard.component').then(m => m.AdminDashboardComponent),
+                title: 'Organization Settings'
+            }
+        ]
+    },
     {
         path: 'workspaces',
         component: WorkspaceManagementComponent,
@@ -120,10 +152,5 @@ export const routes: Routes = [
         loadChildren: () => import('./modules/super-admin/super-admin-module').then(m => m.SuperAdminModule),
         canActivate: [superAdminGuard],
         title: 'Super Admin Panel'
-    },
-    {
-        path: '',
-        redirectTo: '/workspaces',
-        pathMatch: 'full'
     }
 ];

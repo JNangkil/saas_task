@@ -31,6 +31,17 @@ export class TenantService {
     }
 
     /**
+     * Get the current active tenant for the user.
+     * Returns the first tenant in the list.
+     */
+    getCurrentTenant(): Observable<ITenant | null> {
+        return this.getTenants().pipe(
+            map(tenants => tenants.length > 0 ? tenants[0] : null),
+            catchError(() => of(null))
+        );
+    }
+
+    /**
      * Get a specific tenant by ID.
      */
     getTenant(id: string): Observable<ITenant> {

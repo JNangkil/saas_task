@@ -1,0 +1,260 @@
+<div class="landing-page">
+    <!-- Navigation -->
+    <nav class="landing-nav">
+        <div class="nav-container">
+            <a routerLink="/" class="logo">
+                <span class="logo-icon">✓</span>
+                <span class="logo-text">TaskFlow</span>
+            </a>
+            <div class="nav-links">
+                <a (click)="scrollToSection('features')" class="nav-link">Features</a>
+                <a (click)="scrollToSection('pricing')" class="nav-link">Pricing</a>
+                <a (click)="scrollToSection('testimonials')" class="nav-link">Testimonials</a>
+            </div>
+            <div class="nav-actions">
+                <a routerLink="/login" class="btn btn-ghost">Sign In</a>
+                <a routerLink="/login" class="btn btn-primary">Get Started Free</a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <section class="hero">
+        <div class="hero-bg">
+            <div class="hero-gradient"></div>
+            <div class="hero-pattern"></div>
+        </div>
+        <div class="hero-content">
+            <div class="hero-badge">
+                <span class="badge-icon">🚀</span>
+                <span>Trusted by 10,000+ teams worldwide</span>
+            </div>
+            <h1 class="hero-title">
+                Manage Projects<br>
+                <span class="gradient-text">Like Never Before</span>
+            </h1>
+            <p class="hero-subtitle">
+                The modern task management platform that helps teams collaborate,
+                track progress, and deliver projects on time.
+            </p>
+            <div class="hero-actions">
+                <a routerLink="/login" class="btn btn-primary btn-lg">
+                    <span>Start Free Trial</span>
+                    <span class="btn-icon">→</span>
+                </a>
+                <a (click)="scrollToSection('features')" class="btn btn-outline btn-lg">
+                    See How It Works
+                </a>
+            </div>
+            <div class="hero-stats">
+                <div class="stat">
+                    <span class="stat-value">10K+</span>
+                    <span class="stat-label">Active Teams</span>
+                </div>
+                <div class="stat-divider"></div>
+                <div class="stat">
+                    <span class="stat-value">500K+</span>
+                    <span class="stat-label">Tasks Completed</span>
+                </div>
+                <div class="stat-divider"></div>
+                <div class="stat">
+                    <span class="stat-value">99.9%</span>
+                    <span class="stat-label">Uptime</span>
+                </div>
+            </div>
+        </div>
+        <div class="hero-visual">
+            <div class="dashboard-preview">
+                <div class="preview-header">
+                    <div class="preview-dots">
+                        <span></span><span></span><span></span>
+                    </div>
+                    <span class="preview-title">TaskFlow Dashboard</span>
+                </div>
+                <div class="preview-content">
+                    <div class="preview-sidebar">
+                        <div class="sidebar-item active"></div>
+                        <div class="sidebar-item"></div>
+                        <div class="sidebar-item"></div>
+                    </div>
+                    <div class="preview-board">
+                        <div class="board-column">
+                            <div class="column-header">To Do</div>
+                            <div class="task-card"></div>
+                            <div class="task-card"></div>
+                        </div>
+                        <div class="board-column">
+                            <div class="column-header">In Progress</div>
+                            <div class="task-card highlight"></div>
+                            <div class="task-card"></div>
+                        </div>
+                        <div class="board-column">
+                            <div class="column-header">Done</div>
+                            <div class="task-card"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Features Section -->
+    <section id="features" class="features-section">
+        <div class="section-container">
+            <div class="section-header">
+                <span class="section-badge">Features</span>
+                <h2 class="section-title">Everything you need to succeed</h2>
+                <p class="section-subtitle">
+                    Powerful features to help your team work smarter, not harder.
+                </p>
+            </div>
+            <div class="features-grid">
+                <div class="feature-card" *ngFor="let feature of features">
+                    <div class="feature-icon">
+                        <span class="material-icon">{{ feature.icon }}</span>
+                    </div>
+                    <h3 class="feature-title">{{ feature.title }}</h3>
+                    <p class="feature-description">{{ feature.description }}</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Pricing Preview Section -->
+    <section id="pricing" class="pricing-section">
+        <div class="section-container">
+            <div class="section-header">
+                <span class="section-badge">Pricing</span>
+                <h2 class="section-title">Simple, transparent pricing</h2>
+                <p class="section-subtitle">
+                    Start free and scale as you grow. No hidden fees.
+                </p>
+            </div>
+            <div class="pricing-grid">
+                <div class="pricing-card" *ngFor="let plan of pricingHighlights" [class.popular]="plan.popular">
+                    <div class="popular-badge" *ngIf="plan.popular">Most Popular</div>
+                    <h3 class="plan-name">{{ plan.plan }}</h3>
+                    <div class="plan-price">
+                        <span class="price">{{ plan.price }}</span>
+                        <span class="period" *ngIf="plan.price !== 'Custom'">/mo</span>
+                    </div>
+                    <ul class="plan-features">
+                        <li *ngFor="let feature of plan.features">
+                            <span class="check-icon">✓</span>
+                            {{ feature }}
+                        </li>
+                    </ul>
+                    <a routerLink="/pricing" class="btn" [class.btn-primary]="plan.popular"
+                        [class.btn-outline]="!plan.popular">
+                        {{ plan.price === 'Custom' ? 'Contact Sales' : 'Get Started' }}
+                    </a>
+                </div>
+            </div>
+            <div class="pricing-cta">
+                <a routerLink="/pricing" class="link">Compare all plans →</a>
+            </div>
+        </div>
+    </section>
+
+    <!-- Testimonials Section -->
+    <section id="testimonials" class="testimonials-section">
+        <div class="section-container">
+            <div class="section-header">
+                <span class="section-badge">Testimonials</span>
+                <h2 class="section-title">Loved by teams everywhere</h2>
+            </div>
+            <div class="testimonial-carousel">
+                <button class="carousel-btn prev" (click)="prevTestimonial()">←</button>
+                <div class="testimonial-card">
+                    <div class="testimonial-stars">
+                        <span *ngFor="let star of getStars(testimonials[currentTestimonialIndex].rating)"
+                            class="star">★</span>
+                    </div>
+                    <p class="testimonial-content">"{{ testimonials[currentTestimonialIndex].content }}"</p>
+                    <div class="testimonial-author">
+                        <div class="author-avatar">{{ testimonials[currentTestimonialIndex].avatar }}</div>
+                        <div class="author-info">
+                            <div class="author-name">{{ testimonials[currentTestimonialIndex].name }}</div>
+                            <div class="author-role">{{ testimonials[currentTestimonialIndex].role }}</div>
+                        </div>
+                    </div>
+                </div>
+                <button class="carousel-btn next" (click)="nextTestimonial()">→</button>
+            </div>
+            <div class="carousel-dots">
+                <span *ngFor="let t of testimonials; let i = index" class="dot"
+                    [class.active]="i === currentTestimonialIndex" (click)="currentTestimonialIndex = i">
+                </span>
+            </div>
+        </div>
+    </section>
+
+    <!-- CTA Section -->
+    <section class="cta-section">
+        <div class="cta-container">
+            <div class="cta-bg"></div>
+            <div class="cta-content">
+                <h2 class="cta-title">Ready to transform your workflow?</h2>
+                <p class="cta-subtitle">Join thousands of teams already using TaskFlow to ship faster.</p>
+                <div class="cta-actions">
+                    <a routerLink="/login" class="btn btn-white btn-lg">
+                        Start Your Free Trial
+                    </a>
+                    <span class="cta-note">No credit card required • 14-day free trial</span>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="landing-footer">
+        <div class="footer-container">
+            <div class="footer-main">
+                <div class="footer-brand">
+                    <a routerLink="/" class="logo">
+                        <span class="logo-icon">✓</span>
+                        <span class="logo-text">TaskFlow</span>
+                    </a>
+                    <p class="footer-tagline">Modern project management for modern teams.</p>
+                </div>
+                <div class="footer-links">
+                    <div class="footer-column">
+                        <h4>Product</h4>
+                        <a (click)="scrollToSection('features')">Features</a>
+                        <a routerLink="/pricing">Pricing</a>
+                        <a href="#">Integrations</a>
+                        <a href="#">API</a>
+                    </div>
+                    <div class="footer-column">
+                        <h4>Company</h4>
+                        <a href="#">About</a>
+                        <a href="#">Blog</a>
+                        <a href="#">Careers</a>
+                        <a href="#">Contact</a>
+                    </div>
+                    <div class="footer-column">
+                        <h4>Resources</h4>
+                        <a href="#">Help Center</a>
+                        <a href="#">Documentation</a>
+                        <a href="#">Community</a>
+                        <a href="#">Status</a>
+                    </div>
+                    <div class="footer-column">
+                        <h4>Legal</h4>
+                        <a href="#">Privacy</a>
+                        <a href="#">Terms</a>
+                        <a href="#">Security</a>
+                    </div>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; 2024 TaskFlow. All rights reserved.</p>
+                <div class="social-links">
+                    <a href="#" class="social-link">Twitter</a>
+                    <a href="#" class="social-link">LinkedIn</a>
+                    <a href="#" class="social-link">GitHub</a>
+                </div>
+            </div>
+        </div>
+    </footer>
+</div>

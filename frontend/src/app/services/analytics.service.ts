@@ -196,4 +196,23 @@ export class AnalyticsService {
             `${this.baseUrl}/tenants/${tenantId}/workspaces/${workspaceId}/boards/${boardId}/analytics/cache`
         );
     }
+
+    /**
+     * Get dashboard stats for the current tenant
+     * Returns aggregate statistics for admin dashboard
+     * 
+     * @returns Observable<DashboardStats>
+     */
+    getDashboardStats(): Observable<DashboardStats> {
+        return this.http.get<DashboardStats>(`${this.baseUrl}/tenant/dashboard/stats`);
+    }
+}
+
+export interface DashboardStats {
+    workspaces_count: number;
+    boards_count: number;
+    tasks_count: number;
+    active_users_count: number;
+    tasks_completed_this_week: number;
+    tasks_in_progress: number;
 }

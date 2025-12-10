@@ -1,0 +1,156 @@
+<div class="dashboard">
+    <!-- Welcome Header -->
+    <div class="dashboard-header">
+        <div class="welcome-section">
+            <h1>Welcome back! 👋</h1>
+            <p>Here's what's happening with your team today.</p>
+        </div>
+        <div class="header-actions">
+            <a routerLink="/workspaces/create" class="btn btn-primary">
+                <span class="material-icon">add</span>
+                New Workspace
+            </a>
+        </div>
+    </div>
+
+    <!-- Stats Grid -->
+    <div class="stats-grid">
+        <div class="stat-card">
+            <div class="stat-icon workspaces">
+                <span class="material-icon">folder</span>
+            </div>
+            <div class="stat-content">
+                <div class="stat-value">{{ stats.totalWorkspaces }}</div>
+                <div class="stat-label">Workspaces</div>
+            </div>
+        </div>
+
+        <div class="stat-card">
+            <div class="stat-icon boards">
+                <span class="material-icon">view_kanban</span>
+            </div>
+            <div class="stat-content">
+                <div class="stat-value">{{ stats.totalBoards }}</div>
+                <div class="stat-label">Active Boards</div>
+            </div>
+        </div>
+
+        <div class="stat-card">
+            <div class="stat-icon tasks">
+                <span class="material-icon">task_alt</span>
+            </div>
+            <div class="stat-content">
+                <div class="stat-value">{{ stats.totalTasks }}</div>
+                <div class="stat-label">Total Tasks</div>
+            </div>
+        </div>
+
+        <div class="stat-card">
+            <div class="stat-icon users">
+                <span class="material-icon">people</span>
+            </div>
+            <div class="stat-content">
+                <div class="stat-value">{{ stats.activeUsers }}</div>
+                <div class="stat-label">Active Users</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Content Grid -->
+    <div class="content-grid">
+        <!-- Quick Actions -->
+        <div class="card">
+            <div class="card-header">
+                <h2>Quick Actions</h2>
+            </div>
+            <div class="card-body">
+                <div class="quick-actions">
+                    <a *ngFor="let action of quickActions" [routerLink]="action.route" class="quick-action"
+                        [class]="'color-' + action.color">
+                        <span class="material-icon">{{ action.icon }}</span>
+                        <span class="action-label">{{ action.label }}</span>
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Progress Overview -->
+        <div class="card">
+            <div class="card-header">
+                <h2>This Week's Progress</h2>
+            </div>
+            <div class="card-body">
+                <div class="progress-stats">
+                    <div class="progress-item">
+                        <div class="progress-header">
+                            <span class="progress-label">Tasks Completed</span>
+                            <span class="progress-value">{{ stats.tasksCompletedThisWeek }}</span>
+                        </div>
+                        <div class="progress-bar">
+                            <div class="progress-fill completed"
+                                [style.width.%]="(stats.tasksCompletedThisWeek / (stats.tasksCompletedThisWeek + stats.tasksInProgress)) * 100">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="progress-item">
+                        <div class="progress-header">
+                            <span class="progress-label">In Progress</span>
+                            <span class="progress-value">{{ stats.tasksInProgress }}</span>
+                        </div>
+                        <div class="progress-bar">
+                            <div class="progress-fill in-progress"
+                                [style.width.%]="(stats.tasksInProgress / (stats.tasksCompletedThisWeek + stats.tasksInProgress)) * 100">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Recent Activity -->
+        <div class="card activity-card">
+            <div class="card-header">
+                <h2>Recent Activity</h2>
+                <a routerLink="/dashboard/activity" class="view-all">View All →</a>
+            </div>
+            <div class="card-body">
+                <div class="activity-list">
+                    <div class="activity-item" *ngFor="let activity of recentActivity">
+                        <div class="activity-icon">
+                            <span class="material-icon">{{ getActivityIcon(activity.type) }}</span>
+                        </div>
+                        <div class="activity-content">
+                            <div class="activity-text">
+                                <span class="activity-user">{{ activity.user }}</span>
+                                {{ activity.description }}
+                            </div>
+                            <div class="activity-time">{{ getTimeAgo(activity.timestamp) }}</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Team Overview -->
+        <div class="card">
+            <div class="card-header">
+                <h2>Team Overview</h2>
+                <a routerLink="/dashboard/team" class="view-all">Manage →</a>
+            </div>
+            <div class="card-body">
+                <div class="team-summary">
+                    <div class="team-stat">
+                        <span class="team-stat-value">{{ stats.activeUsers }}</span>
+                        <span class="team-stat-label">Team Members</span>
+                    </div>
+                    <div class="team-actions">
+                        <a routerLink="/users" class="btn btn-outline btn-sm">
+                            <span class="material-icon">person_add</span>
+                            Invite
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

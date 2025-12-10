@@ -1,0 +1,64 @@
+<div class="admin-layout" [class.sidebar-collapsed]="isSidebarCollapsed">
+    <!-- Sidebar -->
+    <aside class="admin-sidebar">
+        <div class="sidebar-header">
+            <a routerLink="/dashboard" class="sidebar-logo">
+                <span class="logo-icon">✓</span>
+                <span class="logo-text" *ngIf="!isSidebarCollapsed">TaskFlow</span>
+            </a>
+            <button class="collapse-btn" (click)="toggleSidebar()">
+                <span class="material-icon">{{ isSidebarCollapsed ? 'chevron_right' : 'chevron_left' }}</span>
+            </button>
+        </div>
+
+        <div class="sidebar-tenant" *ngIf="!isSidebarCollapsed">
+            <div class="tenant-badge">
+                <span class="tenant-icon">🏢</span>
+                <span class="tenant-name">{{ tenantName }}</span>
+            </div>
+        </div>
+
+        <nav class="sidebar-nav">
+            <a *ngFor="let item of navItems" [routerLink]="item.path" routerLinkActive="active"
+                [routerLinkActiveOptions]="{ exact: item.exact || false }" class="nav-item" [title]="item.label">
+                <span class="material-icon">{{ item.icon }}</span>
+                <span class="nav-label" *ngIf="!isSidebarCollapsed">{{ item.label }}</span>
+            </a>
+        </nav>
+
+        <div class="sidebar-footer">
+            <a routerLink="/" class="nav-item back-link" title="Back to Home">
+                <span class="material-icon">home</span>
+                <span class="nav-label" *ngIf="!isSidebarCollapsed">Back to Home</span>
+            </a>
+            <div class="user-menu" *ngIf="currentUser">
+                <div class="user-avatar">{{ getUserInitials() }}</div>
+                <div class="user-info" *ngIf="!isSidebarCollapsed">
+                    <div class="user-name">{{ currentUser.name }}</div>
+                    <div class="user-role">Administrator</div>
+                </div>
+            </div>
+        </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="admin-main">
+        <header class="admin-header">
+            <div class="header-left">
+                <h1 class="page-title">Admin Dashboard</h1>
+            </div>
+            <div class="header-right">
+                <a routerLink="/notifications" class="header-btn" title="Notifications">
+                    <span class="material-icon">notifications</span>
+                </a>
+                <a routerLink="/profile" class="header-btn" title="Profile">
+                    <span class="material-icon">account_circle</span>
+                </a>
+            </div>
+        </header>
+
+        <div class="admin-content">
+            <router-outlet></router-outlet>
+        </div>
+    </main>
+</div>
