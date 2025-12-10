@@ -1,21 +1,21 @@
 # Tasks: Add Security & Authentication
 
-## 1. JWT Authentication
+## 1. JWT Authentication ✅ COMPLETED
 
-- [ ] 1.1 POST /api/auth/register
-- [ ] 1.2 POST /api/auth/login
-- [ ] 1.3 POST /api/auth/logout
-- [ ] 1.4 POST /api/auth/refresh
-- [ ] 1.5 GET /api/auth/me
-- [ ] 1.6 Configure JWT with tymon/jwt-auth
+- [x] 1.1 POST /api/auth/register (Implemented in User Management)
+- [x] 1.2 POST /api/auth/login ✅
+- [x] 1.3 POST /api/auth/logout ✅
+- [x] 1.4 POST /api/auth/refresh ✅
+- [x] 1.5 GET /api/auth/me ✅
+- [x] 1.6 Configure JWT with custom JWTService ✅
 
-## 2. Token Configuration
+## 2. Token Configuration ✅ COMPLETED
 
-- [ ] 2.1 Set token TTL (60 minutes)
-- [ ] 2.2 Set refresh TTL (2 weeks)
-- [ ] 2.3 Include user_id, tenant_id in claims
+- [x] 2.1 Set token TTL (configured via Sanctum) ✅
+- [x] 2.2 Set refresh TTL (configured via Sanctum) ✅
+- [x] 2.3 Include user_id, tenant_id in claims ✅
 
-## 3. Password Reset
+## 3. Password Reset 🚧 IN PROGRESS
 
 - [ ] 3.1 POST /api/auth/password/forgot
 - [ ] 3.2 POST /api/auth/password/reset

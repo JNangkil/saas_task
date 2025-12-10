@@ -37,11 +37,20 @@ use Illuminate\Support\Facades\Route;
 |
 */
 
-Route::middleware(['auth:sanctum'])->group(function () {
-    // Authentication routes
+// Public authentication routes
+Route::prefix('auth')->group(function () {
     Route::post('/login', [AuthController::class, 'login']);
-    Route::post('/logout', [AuthController::class, 'logout'])->middleware('auth:sanctum');
-    Route::get('/me', [AuthController::class, 'me'])->middleware('auth:sanctum');
+    Route::post('/password/forgot', [AuthController::class, 'forgotPassword']);
+    Route::post('/password/reset', [AuthController::class, 'resetPassword']);
+    Route::get('/password/verify', [AuthController::class, 'verifyResetToken']);
+});
+
+Route::middleware(['auth:sanctum'])->group(function () {
+    // Protected authentication routes
+    Route::post('/logout', [AuthController::class, 'logout']);
+    Route::get('/me', [AuthController::class, 'me']);
+    Route::post('/refresh', [AuthController::class, 'refresh']);
+    Route::post('/switch-tenant/{tenantId}', [AuthController::class, 'switchTenant']);
 
     // User profile routes
     Route::prefix('users')->group(function () {

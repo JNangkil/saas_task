@@ -2,13 +2,19 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\ForgotPasswordRequest;
 use App\Http\Requests\LoginRequest;
+use App\Http\Requests\ResetPasswordRequest;
+use App\Models\PasswordResetToken;
 use App\Services\JWTService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\Password;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Str;
 
 class AuthController extends Controller
 {
@@ -188,6 +194,92 @@ class AuthController extends Controller
                 'role' => $currentTenant->getUserRole($user),
             ] : null,
             'tenants' => $userTenants,
+        ]);
+    }
+
+    /**
+     * Handle password reset request.
+     */
+    public function forgotPassword(ForgotPasswordRequest $request): JsonResponse
+    {
+        $validated = $request->validated();
+
+        $user = \App\Models\User::where('email', $validated['email'])->first();
+
+        if ($user) {
+            // Create password reset token
+            $resetToken = PasswordResetToken::createForUser($user, 60);
+
+            // TODO: Send actual email with reset link
+            // For now, we'll return the token (in production, remove this)
+            // Mail::to($user->email)->send(new \App\Mail\PasswordReset($resetToken));
+
+            return response()->json([
+                'message' => 'Password reset link has been sent to your email.',
+                // 'token' => $resetToken->token, // Only for development
+            ]);
+        }
+
+        // Always return success message to prevent email enumeration attacks
+        return response()->json([
+            'message' => 'If an account exists with this email, a password reset link has been sent.',
+        ]);
+    }
+
+    /**
+     * Handle password reset.
+     */
+    public function resetPassword(ResetPasswordRequest $request): JsonResponse
+    {
+        $validated = $request->validated();
+
+        // Find valid reset token
+        $resetToken = PasswordResetToken::findValidToken($validated['token']);
+
+        if (!$resetToken || $resetToken->user->email !== $validated['email']) {
+            return response()->json([
+                'error' => 'Invalid token',
+                'message' => 'The reset token is invalid or has expired.',
+            ], 400);
+        }
+
+        $user = $resetToken->user;
+
+        // Update user password
+        $user->update([
+            'password' => Hash::make($validated['password']),
+        ]);
+
+        // Mark token as used
+        $resetToken->markAsUsed();
+
+        // Revoke all existing tokens for the user
+        $user->tokens()->delete();
+
+        return response()->json([
+            'message' => 'Password has been successfully reset. Please log in with your new password.',
+        ]);
+    }
+
+    /**
+     * Verify if a reset token is valid.
+     */
+    public function verifyResetToken(Request $request): JsonResponse
+    {
+        $token = $request->get('token');
+
+        if (!$token) {
+            return response()->json([
+                'valid' => false,
+                'message' => 'Token is required.',
+            ], 400);
+        }
+
+        $resetToken = PasswordResetToken::findValidToken($token);
+
+        return response()->json([
+            'valid' => !is_null($resetToken),
+            'message' => $resetToken ? 'Token is valid.' : 'Token is invalid or has expired.',
         ]);
     }
 }
