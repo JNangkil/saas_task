@@ -1,5 +1,6 @@
 export const environment = {
     production: false,
-    apiUrl: '/api',
-    // Add other environment variables as needed
+    apiUrl: 'http://localhost:8000/api',
+    // Set to true to allow free registration without subscription
+    freeMode: true,
 };

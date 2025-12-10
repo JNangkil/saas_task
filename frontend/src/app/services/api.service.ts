@@ -14,6 +14,7 @@ import {
     IInvoice,
     IBillingSummary
 } from '../models/subscription.model';
+import { environment } from '../environments/environment';
 
 /**
  * API service provides a centralized way to make HTTP requests
@@ -23,7 +24,7 @@ import {
     providedIn: 'root'
 })
 export class ApiService {
-    private readonly baseUrl = '/api';
+    private readonly baseUrl = environment.apiUrl;
     private readonly defaultHeaders = new HttpHeaders({
         'Content-Type': 'application/json',
         'Accept': 'application/json'

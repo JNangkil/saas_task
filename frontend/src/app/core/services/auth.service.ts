@@ -70,6 +70,13 @@ export interface MfaState {
     email?: string;
 }
 
+export interface RegisterRequest {
+    name: string;
+    email: string;
+    password: string;
+    password_confirmation: string;
+}
+
 @Injectable({
     providedIn: 'root'
 })
@@ -141,6 +148,18 @@ export class AuthService {
             }),
             catchError(error => {
                 console.error('Login failed:', error);
+                return throwError(() => error);
+            })
+        );
+    }
+
+    /**
+     * Register a new user account
+     */
+    register(userData: RegisterRequest): Observable<{ message: string }> {
+        return this.apiService.post<{ message: string }>('auth/register', userData).pipe(
+            catchError(error => {
+                console.error('Registration failed:', error);
                 return throwError(() => error);
             })
         );

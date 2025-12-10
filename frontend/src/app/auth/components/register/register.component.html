@@ -1,0 +1,83 @@
+<div class="register-page">
+    <div class="register-container">
+        <div class="register-card">
+            <div class="register-header">
+                <a routerLink="/" class="logo">
+                    <span class="logo-icon">✓</span>
+                    <span class="logo-text">TaskFlow</span>
+                </a>
+                <h1>Create your account</h1>
+                <p *ngIf="isFreeMode" class="free-badge">🎉 Free registration available!</p>
+                <p class="subtitle">Start managing your projects today</p>
+            </div>
+
+            <form [formGroup]="registerForm" (ngSubmit)="onSubmit()" class="register-form">
+                <div class="form-group">
+                    <label for="name">Full Name</label>
+                    <input id="name" type="text" formControlName="name" placeholder="John Doe"
+                        [class.error]="hasError('name', 'required') || hasError('name', 'minlength')">
+                    <div class="error-message" *ngIf="hasError('name', 'required')">Name is required</div>
+                    <div class="error-message" *ngIf="hasError('name', 'minlength')">Name must be at least 2 characters
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="email">Email Address</label>
+                    <input id="email" type="email" formControlName="email" placeholder="you@example.com"
+                        [class.error]="hasError('email', 'required') || hasError('email', 'email')">
+                    <div class="error-message" *ngIf="hasError('email', 'required')">Email is required</div>
+                    <div class="error-message" *ngIf="hasError('email', 'email')">Please enter a valid email</div>
+                </div>
+
+                <div class="form-group">
+                    <label for="password">Password</label>
+                    <div class="password-input">
+                        <input id="password" [type]="showPassword ? 'text' : 'password'" formControlName="password"
+                            placeholder="••••••••"
+                            [class.error]="hasError('password', 'required') || hasError('password', 'minlength')">
+                        <button type="button" class="toggle-password" (click)="togglePasswordVisibility()">
+                            {{ showPassword ? '🙈' : '👁️' }}
+                        </button>
+                    </div>
+                    <div class="error-message" *ngIf="hasError('password', 'required')">Password is required</div>
+                    <div class="error-message" *ngIf="hasError('password', 'minlength')">Password must be at least 8
+                        characters</div>
+                </div>
+
+                <div class="form-group">
+                    <label for="confirmPassword">Confirm Password</label>
+                    <div class="password-input">
+                        <input id="confirmPassword" [type]="showConfirmPassword ? 'text' : 'password'"
+                            formControlName="confirmPassword" placeholder="••••••••"
+                            [class.error]="hasError('confirmPassword', 'required') || hasPasswordMismatch">
+                        <button type="button" class="toggle-password" (click)="toggleConfirmPasswordVisibility()">
+                            {{ showConfirmPassword ? '🙈' : '👁️' }}
+                        </button>
+                    </div>
+                    <div class="error-message" *ngIf="hasError('confirmPassword', 'required')">Please confirm your
+                        password</div>
+                    <div class="error-message" *ngIf="hasPasswordMismatch">Passwords do not match</div>
+                </div>
+
+                <div class="form-group checkbox-group">
+                    <label class="checkbox-label">
+                        <input type="checkbox" formControlName="agreeToTerms">
+                        <span>I agree to the <a href="#" (click)="$event.preventDefault()">Terms of Service</a> and <a
+                                href="#" (click)="$event.preventDefault()">Privacy Policy</a></span>
+                    </label>
+                    <div class="error-message" *ngIf="hasError('agreeToTerms', 'required')">You must agree to continue
+                    </div>
+                </div>
+
+                <button type="submit" class="btn btn-primary btn-block" [disabled]="isSubmitting">
+                    <span *ngIf="!isSubmitting">Create Account</span>
+                    <span *ngIf="isSubmitting">Creating account...</span>
+                </button>
+            </form>
+
+            <div class="register-footer">
+                <p>Already have an account? <a routerLink="/login">Sign in</a></p>
+            </div>
+        </div>
+    </div>
+</div>
