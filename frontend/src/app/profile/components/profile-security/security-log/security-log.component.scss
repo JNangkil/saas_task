@@ -1,0 +1,230 @@
+.security-log {
+    .log-timeline {
+        position: relative;
+        padding-left: 2rem;
+
+        &::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0;
+            height: 100%;
+            width: 2px;
+            background: #e9ecef;
+            border-radius: 1px;
+        }
+    }
+
+    .log-entry {
+        position: relative;
+        margin-bottom: 1.5rem;
+        padding-left: 2rem;
+        border-radius: 0.5rem;
+        background: #fff;
+        border: 1px solid #e9ecef;
+        transition: all 0.2s ease-in-out;
+
+        &:hover {
+            box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+            transform: translateY(-1px);
+        }
+
+        &::before {
+            content: '';
+            position: absolute;
+            left: -1.5rem;
+            top: 1.25rem;
+            width: 1rem;
+            height: 1rem;
+            border-radius: 50%;
+            background: #fff;
+            border: 2px solid;
+            z-index: 1;
+        }
+
+        .log-icon {
+            position: absolute;
+            left: -1.75rem;
+            top: 1.25rem;
+            width: 1.5rem;
+            height: 1.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            background: #fff;
+            z-index: 2;
+
+            i {
+                font-size: 0.875rem;
+            }
+        }
+
+        .log-content {
+            padding: 1rem 1.25rem;
+
+            .log-header {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                margin-bottom: 0.5rem;
+
+                .event-type {
+                    font-weight: 600;
+                    color: #495057;
+                }
+
+                .log-time {
+                    font-size: 0.875rem;
+                    color: #6c757d;
+                    white-space: nowrap;
+                }
+            }
+
+            .log-description {
+                color: #495057;
+                line-height: 1.5;
+                margin-bottom: 0.5rem;
+            }
+
+            .log-meta {
+                border-top: 1px solid #f1f3f4;
+                padding-top: 0.5rem;
+                margin-top: 0.5rem;
+
+                small {
+                    font-size: 0.75rem;
+                }
+            }
+        }
+    }
+
+    .spinner-border {
+        border-color: #0d6efd;
+        border-right-color: #0d6efd;
+        border-bottom-color: #0d6efd;
+        border-left-color: #0d6efd;
+    }
+}
+
+@media (max-width: 768px) {
+    .security-log {
+        .log-timeline {
+            padding-left: 1.5rem;
+
+            &::before {
+                width: 1px;
+            }
+        }
+
+        .log-entry {
+            margin-bottom: 1rem;
+            padding-left: 1.5rem;
+
+            &::before {
+                left: -1.25rem;
+                top: 1rem;
+                width: 0.75rem;
+                height: 0.75rem;
+            }
+
+            .log-icon {
+                left: -1.5rem;
+                top: 1rem;
+                width: 1.25rem;
+                height: 1.25rem;
+
+                i {
+                    font-size: 0.75rem;
+                }
+            }
+
+            .log-content {
+                padding: 0.75rem 1rem;
+
+                .log-header {
+                    flex-direction: column;
+                    align-items: flex-start;
+                    gap: 0.25rem;
+
+                    .log-time {
+                        font-size: 0.75rem;
+                    }
+                }
+
+                .log-description {
+                    font-size: 0.875rem;
+                }
+            }
+        }
+    }
+}
+
+// Event type specific colors
+.log-entry {
+    &.login-event {
+        &::before {
+            border-color: #198754;
+        }
+
+        .log-icon {
+            background: #198754;
+            color: #fff;
+        }
+    }
+
+    &.failed-login-event {
+        &::before {
+            border-color: #ffc107;
+        }
+
+        .log-icon {
+            background: #ffc107;
+            color: #000;
+        }
+    }
+
+    &.password-changed-event {
+        &::before {
+            border-color: #0dcaf0;
+        }
+
+        .log-icon {
+            background: #0dcaf0;
+            color: #fff;
+        }
+    }
+
+    &.mfa-enabled-event {
+        &::before {
+            border-color: #0dcaf0;
+        }
+
+        .log-icon {
+            background: #0dcaf0;
+            color: #fff;
+        }
+    }
+
+    &.mfa-disabled-event {
+        &::before {
+            border-color: #6f42c1;
+        }
+
+        .log-icon {
+            background: #6f42c1;
+            color: #fff;
+        }
+    }
+
+    &.session-revoked-event {
+        &::before {
+            border-color: #6f42c1;
+        }
+
+        .log-icon {
+            background: #6f42c1;
+            color: #fff;
+        }
+    }
+}

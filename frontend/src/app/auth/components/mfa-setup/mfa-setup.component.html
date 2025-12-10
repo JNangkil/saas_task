@@ -1,0 +1,121 @@
+<div class="auth-container">
+    <div class="auth-card">
+        <div class="auth-header">
+            <h2 class="auth-title">Multi-Factor Authentication Setup</h2>
+            <p class="auth-subtitle">
+                <span *ngIf="!showVerificationStep">
+                    Set up multi-factor authentication to add an extra layer of security to your account.
+                </span>
+                <span *ngIf="showVerificationStep">
+                    Scan the QR code with your authenticator app and enter the verification code.
+                </span>
+            </p>
+        </div>
+
+        <!-- Alert Messages -->
+        <div *ngIf="errorMessage" class="alert alert-danger">
+            {{ errorMessage }}
+        </div>
+
+        <div *ngIf="successMessage" class="alert alert-success">
+            {{ successMessage }}
+        </div>
+
+        <!-- Step 1: Password Verification -->
+        <div *ngIf="!showVerificationStep">
+            <form [formGroup]="setupForm" (ngSubmit)="startMfaSetup()">
+                <div class="form-group">
+                    <label for="password">Confirm Your Password</label>
+                    <input type="password" id="password" formControlName="password" class="form-control"
+                        placeholder="Enter your password"
+                        [class.is-invalid]="setupForm.get('password')?.invalid && setupForm.get('password')?.touched" />
+                    <div *ngIf="setupForm.get('password')?.invalid && setupForm.get('password')?.touched"
+                        class="invalid-feedback">
+                        Password is required to continue with MFA setup.
+                    </div>
+                </div>
+
+                <div class="form-actions">
+                    <button type="button" class="btn btn-secondary" (click)="goBack()">Cancel</button>
+                    <button type="submit" class="btn btn-primary" [disabled]="isLoading">
+                        <span *ngIf="isLoading" class="spinner-border spinner-border-sm me-2"></span>
+                        Set Up MFA
+                    </button>
+                </div>
+            </form>
+        </div>
+
+        <!-- Step 2: QR Code and Verification -->
+        <div *ngIf="showVerificationStep">
+            <div class="mfa-setup-content">
+                <div class="qr-code-section">
+                    <h3>Step 1: Scan QR Code</h3>
+                    <p>Use your authenticator app (like Google Authenticator, Authy, etc.) to scan this QR code:</p>
+
+                    <div class="qr-code-container">
+                        <qrcode [value]="qrCodeUrl || ''" [width]="256" [errorCorrectionLevel]="'M'"></qrcode>
+                    </div>
+
+                    <div class="manual-entry">
+                        <p>Can't scan? Enter this code manually in your app:</p>
+                        <div class="secret-code">
+                            <code>{{ secret }}</code>
+                            <button type="button" class="btn btn-sm btn-outline-primary"
+                                (click)="copyToClipboard(secret || '')">
+                                Copy
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="verification-section">
+                    <h3>Step 2: Enter Verification Code</h3>
+
+                    <form [formGroup]="verifyForm" (ngSubmit)="verifyAndEnableMfa()">
+                        <div class="form-group">
+                            <label for="code">6-Digit Code</label>
+                            <input type="text" id="code" formControlName="code" class="form-control"
+                                placeholder="000000" maxlength="6"
+                                [class.is-invalid]="verifyForm.get('code')?.invalid && verifyForm.get('code')?.touched" />
+                            <div *ngIf="verifyForm.get('code')?.invalid && verifyForm.get('code')?.touched"
+                                class="invalid-feedback">
+                                Please enter a valid 6-digit verification code.
+                            </div>
+                        </div>
+
+                        <div class="form-actions">
+                            <button type="button" class="btn btn-secondary" (click)="goBack()">Back</button>
+                            <button type="submit" class="btn btn-primary" [disabled]="isLoading">
+                                <span *ngIf="isLoading" class="spinner-border spinner-border-sm me-2"></span>
+                                Verify and Enable
+                            </button>
+                        </div>
+                    </form>
+                </div>
+
+                <div class="recovery-codes-section">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h3>Step 3: Save Recovery Codes</h3>
+                        <button type="button" class="btn btn-sm btn-outline-secondary" (click)="toggleRecoveryCodes()">
+                            {{ showRecoveryCodes ? 'Hide' : 'Show' }} Codes
+                        </button>
+                    </div>
+
+                    <div class="alert alert-warning">
+                        <strong>Important:</strong> Save these recovery codes in a safe place. You can use them to
+                        access your account if you lose your authenticator device.
+                    </div>
+
+                    <div *ngIf="showRecoveryCodes" class="recovery-codes">
+                        <div class="recovery-codes-list">
+                            <div *ngFor="let code of recoveryCodes" class="recovery-code">{{ code }}</div>
+                        </div>
+                        <button type="button" class="btn btn-outline-primary" (click)="copyRecoveryCodes()">
+                            Copy All Codes
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

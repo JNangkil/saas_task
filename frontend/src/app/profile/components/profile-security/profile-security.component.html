@@ -1,0 +1,91 @@
+<div class="profile-security">
+    <div class="container">
+        <div class="row">
+            <div class="col-md-8 col-lg-6 mx-auto">
+                <div class="card">
+                    <div class="card-header">
+                        <ul class="nav nav-tabs card-header-tabs">
+                            <li class="nav-item">
+                                <button class="nav-link" [class.active]="activeTab === 'profile'"
+                                    (click)="switchTab('profile')">
+                                    <i class="bi bi-person me-2"></i>Profile
+                                </button>
+                            </li>
+                            <li class="nav-item">
+                                <button class="nav-link" [class.active]="activeTab === 'security'"
+                                    (click)="switchTab('security')">
+                                    <i class="bi bi-shield-lock me-2"></i>Security
+                                </button>
+                            </li>
+                        </ul>
+                    </div>
+                    <div class="card-body">
+                        <!-- Profile Tab -->
+                        <div *ngIf="activeTab === 'profile'">
+                            <app-profile-basic [user]="user" [isLoading]="isLoadingUser"
+                                (profileUpdated)="onProfileUpdated()"></app-profile-basic>
+                        </div>
+
+                        <!-- Security Tab -->
+                        <div *ngIf="activeTab === 'security'">
+                            <div class="d-flex justify-content-between align-items-center mb-4">
+                                <h4 class="mb-0">Security Settings</h4>
+                                <button class="btn btn-outline-secondary btn-sm" (click)="refreshSecurityData()"
+                                    [disabled]="isLoadingMfa || isLoadingSessions || isLoadingLogs || isLoadingBackupCodes">
+                                    <i class="bi bi-arrow-clockwise me-1"></i>Refresh
+                                </button>
+                            </div>
+
+                            <!-- Password Change Section -->
+                            <div class="security-section mb-4">
+                                <h5 class="section-title">
+                                    <i class="bi bi-key me-2"></i>Password
+                                </h5>
+                                <app-password-change></app-password-change>
+                            </div>
+
+                            <!-- MFA Section -->
+                            <div class="security-section mb-4">
+                                <h5 class="section-title">
+                                    <i class="bi bi-shield-check me-2"></i>Two-Factor Authentication
+                                </h5>
+                                <app-mfa-settings [mfaStatus]="mfaStatus" [isLoading]="isLoadingMfa"
+                                    (statusChanged)="onMfaStatusChanged()">
+                                </app-mfa-settings>
+                            </div>
+
+                            <!-- Active Sessions Section -->
+                            <div class="security-section mb-4">
+                                <h5 class="section-title">
+                                    <i class="bi bi-laptop me-2"></i>Active Sessions
+                                </h5>
+                                <app-active-sessions [sessions]="sessions" [isLoading]="isLoadingSessions"
+                                    (sessionRevoked)="onSessionRevoked()" (allSessionsRevoked)="onAllSessionsRevoked()">
+                                </app-active-sessions>
+                            </div>
+
+                            <!-- Security Log Section -->
+                            <div class="security-section mb-4">
+                                <h5 class="section-title">
+                                    <i class="bi bi-clock-history me-2"></i>Security Log
+                                </h5>
+                                <app-security-log [logs]="securityLogs" [isLoading]="isLoadingLogs">
+                                </app-security-log>
+                            </div>
+
+                            <!-- Backup Codes Section -->
+                            <div class="security-section mb-4" *ngIf="mfaStatus?.enabled">
+                                <h5 class="section-title">
+                                    <i class="bi bi-arrow-repeat me-2"></i>Backup Codes
+                                </h5>
+                                <app-backup-codes [backupCodes]="backupCodes" [isLoading]="isLoadingBackupCodes"
+                                    (codesRegenerated)="onBackupCodesRegenerated()">
+                                </app-backup-codes>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

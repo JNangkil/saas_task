@@ -6,7 +6,12 @@ import { AcceptInvitationComponent } from './components/accept-invitation/accept
 import { PricingPageComponent } from './components/pricing-page/pricing-page.component';
 import { BillingSettingsComponent } from './components/billing-settings/billing-settings.component';
 import { AuthGuard } from './guards/auth.guard';
-import { superAdminGuard } from './guards/super-admin.guard';
+import { superAdminGuard } from './guards/super-admin-guard';
+import { ForgotPasswordComponent } from './auth/components/forgot-password/forgot-password.component';
+import { ResetPasswordComponent } from './auth/components/reset-password/reset-password.component';
+import { LoginComponent } from './auth/components/login/login.component';
+import { MfaSetupComponent } from './auth/components/mfa-setup/mfa-setup.component';
+import { MfaVerifyComponent } from './auth/components/mfa-verify/mfa-verify.component';
 
 export const routes: Routes = [
     {
@@ -51,6 +56,32 @@ export const routes: Routes = [
         component: AcceptInvitationComponent
     },
     {
+        path: 'login',
+        component: LoginComponent,
+        title: 'Login'
+    },
+    {
+        path: 'forgot-password',
+        component: ForgotPasswordComponent,
+        title: 'Forgot Password'
+    },
+    {
+        path: 'reset-password',
+        component: ResetPasswordComponent,
+        title: 'Reset Password'
+    },
+    {
+        path: 'mfa-setup',
+        component: MfaSetupComponent,
+        canActivate: [AuthGuard],
+        title: 'MFA Setup'
+    },
+    {
+        path: 'mfa-verify',
+        component: MfaVerifyComponent,
+        title: 'MFA Verification'
+    },
+    {
         path: 'pricing',
         component: PricingPageComponent
     },
@@ -65,6 +96,12 @@ export const routes: Routes = [
         loadComponent: () => import('./pages/profile/profile-page.component').then(m => m.ProfilePageComponent),
         canActivate: [AuthGuard],
         title: 'Profile Settings'
+    },
+    {
+        path: 'profile/security',
+        loadComponent: () => import('./pages/profile/profile-page.component').then(m => m.ProfilePageComponent),
+        canActivate: [AuthGuard],
+        title: 'Security Settings'
     },
     {
         path: 'users',

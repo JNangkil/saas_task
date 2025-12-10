@@ -30,6 +30,7 @@
     "@angular/forms": "^20.2.0",
     "@angular/platform-browser": "^20.2.0",
     "@angular/router": "^20.2.0",
+    "angularx-qrcode": "^21.0.4",
     "chart.js": "^4.5.1",
     "laravel-echo": "^2.2.6",
     "ng2-charts": "^8.0.0",

@@ -40,9 +40,12 @@ use Illuminate\Support\Facades\Route;
 // Public authentication routes
 Route::prefix('auth')->group(function () {
     Route::post('/login', [AuthController::class, 'login']);
-    Route::post('/password/forgot', [AuthController::class, 'forgotPassword']);
-    Route::post('/password/reset', [AuthController::class, 'resetPassword']);
-    Route::get('/password/verify', [AuthController::class, 'verifyResetToken']);
+    Route::post('/password/forgot', [AuthController::class, 'forgotPassword'])
+        ->middleware('throttle:password-forgot');
+    Route::post('/password/reset', [AuthController::class, 'resetPassword'])
+        ->middleware('throttle:password-reset');
+    Route::get('/password/verify', [AuthController::class, 'verifyResetToken'])
+        ->middleware('throttle:password-verify');
 });
 
 Route::middleware(['auth:sanctum'])->group(function () {
@@ -51,6 +54,26 @@ Route::middleware(['auth:sanctum'])->group(function () {
     Route::get('/me', [AuthController::class, 'me']);
     Route::post('/refresh', [AuthController::class, 'refresh']);
     Route::post('/switch-tenant/{tenantId}', [AuthController::class, 'switchTenant']);
+
+    // MFA routes
+    Route::prefix('auth/mfa')->group(function () {
+        Route::post('/setup', [AuthController::class, 'mfaSetup']);
+        Route::post('/enable', [AuthController::class, 'mfaEnable']);
+        Route::post('/disable', [AuthController::class, 'mfaDisable']);
+        Route::post('/verify', [AuthController::class, 'mfaVerify']);
+        Route::get('/status', [AuthController::class, 'mfaStatus']);
+    });
+
+    // Security routes
+    Route::prefix('auth/security')->group(function () {
+        Route::post('/change-password', [AuthController::class, 'changePassword']);
+        Route::get('/sessions', [AuthController::class, 'getActiveSessions']);
+        Route::delete('/sessions/{sessionId}', [AuthController::class, 'revokeSession']);
+        Route::post('/sessions/revoke-others', [AuthController::class, 'revokeAllOtherSessions']);
+        Route::get('/log', [AuthController::class, 'getSecurityLog']);
+        Route::get('/backup-codes', [AuthController::class, 'getBackupCodes']);
+        Route::post('/backup-codes/regenerate', [AuthController::class, 'regenerateBackupCodes']);
+    });
 
     // User profile routes
     Route::prefix('users')->group(function () {

@@ -1,0 +1,69 @@
+<div class="account-lockout" *ngIf="lockoutInfo">
+    <!-- Account Locked State -->
+    <div class="lockout-alert alert alert-warning" *ngIf="lockoutInfo.isLocked">
+        <div class="lockout-header">
+            <div class="lockout-icon">
+                <i class="fas fa-lock"></i>
+            </div>
+            <div class="lockout-title">
+                <h4>Account Temporarily Locked</h4>
+            </div>
+        </div>
+
+        <div class="lockout-message">
+            <p>{{ getLockoutMessage() }}</p>
+        </div>
+
+        <div class="lockout-countdown" *ngIf="remainingTime > 0">
+            <div class="countdown-display">
+                <span class="countdown-label">You can try again in:</span>
+                <span class="countdown-time">{{ formatTimeRemaining() }}</span>
+            </div>
+
+            <div class="countdown-progress">
+                <div class="progress">
+                    <div class="progress-bar bg-warning" role="progressbar"
+                        [style.width.%]="(remainingTime / (lockoutInfo.retryAfter || 1)) * 100">
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="lockout-actions">
+            <button type="button" class="btn btn-outline-primary" (click)="goToForgotPassword()">
+                <i class="fas fa-key me-2"></i>
+                Reset Password
+            </button>
+        </div>
+
+        <div class="lockout-help">
+            <small class="text-muted">
+                If you believe this is an error, please contact our support team.
+            </small>
+        </div>
+    </div>
+
+    <!-- Warning State (Failed Attempts) -->
+    <div class="warning-alert alert alert-danger"
+        *ngIf="!lockoutInfo.isLocked && lockoutInfo.failedAttempts && lockoutInfo.failedAttempts > 0">
+        <div class="warning-header">
+            <div class="warning-icon">
+                <i class="fas fa-exclamation-triangle"></i>
+            </div>
+            <div class="warning-title">
+                <h5>Login Attempt Warning</h5>
+            </div>
+        </div>
+
+        <div class="warning-message">
+            <p>{{ getLockoutMessage() }}</p>
+        </div>
+
+        <div class="warning-help">
+            <small class="text-muted">
+                Please ensure you're entering the correct credentials.
+                Multiple failed attempts will result in your account being temporarily locked.
+            </small>
+        </div>
+    </div>
+</div>

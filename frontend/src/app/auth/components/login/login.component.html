@@ -1,0 +1,56 @@
+<div class="auth-container">
+    <div class="auth-card">
+        <div class="auth-header">
+            <h2 class="auth-title">Welcome Back</h2>
+            <p class="auth-subtitle">Sign in to your account to continue</p>
+        </div>
+
+        <!-- Account Lockout Component -->
+        <app-account-lockout></app-account-lockout>
+
+        <div class="auth-body">
+            <form [formGroup]="loginForm" (ngSubmit)="onSubmit()" class="auth-form">
+                <div class="form-group">
+                    <label for="email" class="form-label">Email Address</label>
+                    <input type="email" id="email" name="email" class="form-control" formControlName="email"
+                        placeholder="Enter your email address"
+                        [class.is-invalid]="hasError('email', 'required') || hasError('email', 'email')"
+                        autocomplete="email" />
+                    <div *ngIf="hasError('email', 'required')" class="invalid-feedback">
+                        Email address is required
+                    </div>
+                    <div *ngIf="hasError('email', 'email')" class="invalid-feedback">
+                        Please enter a valid email address
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="password" class="form-label">Password</label>
+                    <input type="password" id="password" name="password" class="form-control" formControlName="password"
+                        placeholder="Enter your password" [class.is-invalid]="hasError('password', 'required')"
+                        autocomplete="current-password" />
+                    <div *ngIf="hasError('password', 'required')" class="invalid-feedback">
+                        Password is required
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <button type="submit" class="btn btn-primary btn-block"
+                        [disabled]="isSubmitting || loginForm.invalid || isAccountLocked">
+                        <span *ngIf="isSubmitting" class="spinner-border spinner-border-sm me-2" role="status"
+                            aria-hidden="true"></span>
+                        {{ isSubmitting ? 'Signing In...' : 'Sign In' }}
+                    </button>
+                </div>
+            </form>
+        </div>
+
+        <div class="auth-footer">
+            <p class="forgot-password">
+                <a href="javascript:void(0)" (click)="goToForgotPassword()" class="auth-link">
+                    Forgot your password?
+                </a>
+            </p>
+        </div>
+    </div>
+</div>

@@ -1,0 +1,108 @@
+<div class="backup-codes">
+    <!-- Status Card -->
+    <div class="card mb-3">
+        <div class="card-body">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h6 class="mb-1">Backup Codes</h6>
+                    <div class="d-flex align-items-center">
+                        <i class="bi bi-arrow-repeat me-2"></i>
+                        <span class="fw-bold" [ngClass]="getBackupCodesStatusColor()">
+                            {{ getBackupCodesStatusText() }}
+                        </span>
+                    </div>
+                </div>
+                <div class="text-end">
+                    <button class="btn btn-primary btn-sm" [disabled]="shouldDisableRegenerate()"
+                        (click)="regenerateBackupCodes()">
+                        <i class="bi bi-arrow-clockwise me-1" *ngIf="!isRegenerating"></i>
+                        <span class="spinner-border spinner-border-sm me-1" *ngIf="isRegenerating"></span>
+                        {{ isRegenerating ? 'Regenerating...' : 'Regenerate Codes' }}
+                    </button>
+                </div>
+            </div>
+
+            <!-- Loading State -->
+            <div class="text-center py-4" *ngIf="isLoading">
+                <div class="spinner-border" role="status">
+                    <span class="visually-hidden">Loading...</span>
+                </div>
+                <p class="mt-2 text-muted">Loading backup codes...</p>
+            </div>
+
+            <!-- No Backup Codes -->
+            <div class="alert alert-info" *ngIf="!isLoading && backupCodes?.codes_count === 0">
+                <i class="bi bi-info-circle me-2"></i>
+                <strong>No Backup Codes</strong>
+                <p class="mb-3 mt-2">
+                    You don't have any backup codes yet. Enable two-factor authentication
+                    to generate backup codes for account recovery.
+                </p>
+            </div>
+
+            <!-- Backup Codes Info -->
+            <div class="alert alert-success" *ngIf="!isLoading && backupCodes && backupCodes.codes_count > 0">
+                <i class="bi bi-check-circle me-2"></i>
+                <strong>{{ backupCodes?.codes_count }} Backup Codes Available</strong>
+                <p class="mb-3 mt-2">
+                    Keep these backup codes safe. Each code can only be used once
+                    when you can't access your authenticator app.
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Actions -->
+    <div class="text-center mt-3" *ngIf="!isLoading && backupCodes && backupCodes.codes_count > 0">
+        <button class="btn btn-outline-primary me-2" [disabled]="shouldDisableDownload()"
+            (click)="downloadBackupCodes()">
+            <i class="bi bi-download me-1"></i>
+            Download Codes
+        </button>
+        <button class="btn btn-outline-secondary" (click)="openHelpModal()">
+            <i class="bi bi-question-circle me-1"></i>
+            How to Use Backup Codes
+        </button>
+    </div>
+
+    <!-- Help Modal -->
+    <div class="modal fade" [class.show]="showHelpModal" [style.display]="showHelpModal ? 'block' : 'none'"
+        [style.background-color]="showHelpModal ? 'rgba(0,0,0,0.5)' : 'transparent'" tabindex="-1"
+        *ngIf="showHelpModal">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">How to Use Backup Codes</h5>
+                    <button type="button" class="btn-close" (click)="closeHelpModal()"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="alert alert-info">
+                        <h6><i class="bi bi-info-circle me-2"></i>When to Use Backup Codes</h6>
+                        <p>Use your backup codes when you can't access your authenticator app:</p>
+                        <ul>
+                            <li>You've lost your phone or can't install your authenticator app</li>
+                            <li>Your authenticator app is not working properly</li>
+                            <li>You're traveling and don't have access to your authenticator</li>
+                            <li>Your device's battery is dead and you can't open your authenticator</li>
+                        </ul>
+                    </div>
+
+                    <div class="alert alert-warning">
+                        <h6><i class="bi bi-exclamation-triangle me-2"></i>Important Security Notes</h6>
+                        <ul>
+                            <li>Each backup code can only be used once</li>
+                            <li>Store your backup codes in a secure location</li>
+                            <li>Don't share your backup codes with anyone</li>
+                            <li>Regenerate new codes if you suspect any have been compromised</li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-primary" (click)="closeHelpModal()">
+                        Got it
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

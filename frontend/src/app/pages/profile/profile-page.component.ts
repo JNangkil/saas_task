@@ -5,11 +5,12 @@ import { Subject, takeUntil } from 'rxjs';
 import { UserService } from '../../services/user.service';
 import { ToastService } from '../../services/toast.service';
 import { UserProfile, UserUpdate } from '../../models/user.model';
+import { ProfileSecurityComponent } from '../../profile/components/profile-security/profile-security.component';
 
 @Component({
     selector: 'app-profile-page',
     standalone: true,
-    imports: [CommonModule, ReactiveFormsModule],
+    imports: [CommonModule, ReactiveFormsModule, ProfileSecurityComponent],
     templateUrl: './profile-page.component.html',
     styleUrls: ['./profile-page.component.scss']
 })
@@ -97,7 +98,7 @@ export class ProfilePageComponent implements OnInit, OnDestroy {
                     });
                 },
                 error: (error) => {
-                    this.toastService.showError('Failed to load profile: ' + error.message);
+                    this.toastService.error('Failed to load profile: ' + error.message);
                 }
             });
     }
@@ -119,11 +120,11 @@ export class ProfilePageComponent implements OnInit, OnDestroy {
             .subscribe({
                 next: (updatedUser) => {
                     this.user = updatedUser;
-                    this.toastService.showSuccess('Profile updated successfully');
+                    this.toastService.success('Profile updated successfully');
                     this.isSaving = false;
                 },
                 error: (error) => {
-                    this.toastService.showError('Failed to update profile: ' + error.message);
+                    this.toastService.error('Failed to update profile: ' + error.message);
                     this.isSaving = false;
                 }
             });
@@ -138,13 +139,13 @@ export class ProfilePageComponent implements OnInit, OnDestroy {
         if (file) {
             // Validate file type
             if (!file.type.startsWith('image/')) {
-                this.toastService.showError('Please select an image file');
+                this.toastService.error('Please select an image file');
                 return;
             }
 
             // Validate file size (max 5MB)
             if (file.size > 5 * 1024 * 1024) {
-                this.toastService.showError('Image size must be less than 5MB');
+                this.toastService.error('Image size must be less than 5MB');
                 return;
             }
 
@@ -166,7 +167,7 @@ export class ProfilePageComponent implements OnInit, OnDestroy {
         const file = this.avatarForm.get('avatar')?.value;
 
         if (!file) {
-            this.toastService.showError('Please select an image first');
+            this.toastService.error('Please select an image first');
             return;
         }
 
@@ -178,12 +179,12 @@ export class ProfilePageComponent implements OnInit, OnDestroy {
                 next: (updatedUser) => {
                     this.user = updatedUser;
                     this.avatarPreview = updatedUser.avatar_url || null;
-                    this.toastService.showSuccess('Avatar updated successfully');
+                    this.toastService.success('Avatar updated successfully');
                     this.isUploadingAvatar = false;
                     this.avatarForm.reset();
                 },
                 error: (error) => {
-                    this.toastService.showError('Failed to update avatar: ' + error.message);
+                    this.toastService.error('Failed to update avatar: ' + error.message);
                     this.isUploadingAvatar = false;
                     // Reset preview to current avatar
                     this.avatarPreview = this.user?.avatar_url || null;
@@ -207,12 +208,12 @@ export class ProfilePageComponent implements OnInit, OnDestroy {
                 next: (updatedUser) => {
                     this.user = updatedUser;
                     this.avatarPreview = null;
-                    this.toastService.showSuccess('Avatar removed successfully');
+                    this.toastService.success('Avatar removed successfully');
                     this.isRemovingAvatar = false;
                     this.avatarForm.reset();
                 },
                 error: (error) => {
-                    this.toastService.showError('Failed to remove avatar: ' + error.message);
+                    this.toastService.error('Failed to remove avatar: ' + error.message);
                     this.isRemovingAvatar = false;
                 }
             });

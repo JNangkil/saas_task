@@ -28,6 +28,37 @@ class RouteServiceProvider extends ServiceProvider
             return Limit::perMinute(60)->by($request->user()?->id ?: $request->ip());
         });
 
+        // Rate limiters for password reset endpoints
+        RateLimiter::for('password-forgot', function (Request $request) {
+            return Limit::perMinute(3)->by($request->ip())->response(function () {
+                return response()->json([
+                    'error' => 'Too many password reset requests',
+                    'message' => 'You have made too many password reset requests. Please try again later.',
+                    'retry_after' => 60, // seconds
+                ], 429);
+            });
+        });
+
+        RateLimiter::for('password-reset', function (Request $request) {
+            return Limit::perMinute(5)->by($request->ip())->response(function () {
+                return response()->json([
+                    'error' => 'Too many password reset attempts',
+                    'message' => 'You have made too many password reset attempts. Please try again later.',
+                    'retry_after' => 60, // seconds
+                ], 429);
+            });
+        });
+
+        RateLimiter::for('password-verify', function (Request $request) {
+            return Limit::perMinute(10)->by($request->ip())->response(function () {
+                return response()->json([
+                    'error' => 'Too many token verification attempts',
+                    'message' => 'You have made too many token verification attempts. Please try again later.',
+                    'retry_after' => 60, // seconds
+                ], 429);
+            });
+        });
+
         $this->routes(function () {
             Route::middleware('api')
                 ->prefix('api')

@@ -1,0 +1,177 @@
+<div class="mfa-settings">
+    <!-- MFA Status Card -->
+    <div class="card mb-3">
+        <div class="card-body">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h6 class="mb-1">Two-Factor Authentication</h6>
+                    <div class="d-flex align-items-center">
+                        <i class="bi me-2" [ngClass]="getMfaStatusIcon()"></i>
+                        <span class="fw-bold" [ngClass]="getMfaStatusColor()">
+                            {{ getMfaStatusText() }}
+                        </span>
+                    </div>
+                </div>
+                <div class="text-end">
+                    <ng-container *ngIf="mfaStatus">
+                        <!-- Enable/Setup Button -->
+                        <button class="btn btn-primary btn-sm" *ngIf="!mfaStatus.enabled" [disabled]="isLoading"
+                            (click)="openSetupModal()">
+                            <i class="bi bi-plus-circle me-1"></i>
+                            {{ mfaStatus.setup ? 'Complete Setup' : 'Enable MFA' }}
+                        </button>
+
+                        <!-- Disable Button -->
+                        <button class="btn btn-outline-danger btn-sm" *ngIf="mfaStatus.enabled" [disabled]="isLoading"
+                            (click)="openDisableModal()">
+                            <i class="bi bi-shield-x me-1"></i>
+                            Disable MFA
+                        </button>
+                    </ng-container>
+
+                    <!-- Loading State -->
+                    <div class="spinner-border spinner-border-sm" *ngIf="isLoading"></div>
+                </div>
+            </div>
+
+            <!-- Backup Codes Status -->
+            <div class="mt-3 pt-3 border-top" *ngIf="mfaStatus?.enabled">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <small class="text-muted">Backup Codes</small>
+                        <div class="fw-bold" [ngClass]="getBackupCodesStatusColor()">
+                            {{ getBackupCodesStatusText() }}
+                        </div>
+                    </div>
+                    <div>
+                        <small class="text-info">
+                            <i class="bi bi-info-circle me-1"></i>
+                            Use these codes when you can't access your authenticator
+                        </small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MFA Setup Modal -->
+    <div class="modal fade" [class.show]="showSetupModal" [style.display]="showSetupModal ? 'block' : 'none'"
+        [style.background-color]="showSetupModal ? 'rgba(0,0,0,0.5)' : 'transparent'" tabindex="-1"
+        *ngIf="showSetupModal">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Setup Two-Factor Authentication</h5>
+                    <button type="button" class="btn-close" (click)="closeSetupModal()"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="row" *ngIf="setupData">
+                        <div class="col-md-6">
+                            <h6>Step 1: Scan QR Code</h6>
+                            <p class="text-muted">
+                                Use your authenticator app (like Google Authenticator, Authy, or 1Password)
+                                to scan the QR code below:
+                            </p>
+                            <div class="qr-code-container text-center">
+                                <div [innerHTML]="setupData.qr_code" class="qr-code"></div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <h6>Step 2: Enter Secret Manually</h6>
+                            <p class="text-muted">
+                                If you can't scan the QR code, you can enter this secret manually:
+                            </p>
+                            <div class="secret-container">
+                                <code class="secret">{{ setupData.secret }}</code>
+                                <button class="btn btn-outline-secondary btn-sm ms-2"
+                                    (click)="copyToClipboard(setupData.secret)" title="Copy to clipboard">
+                                    <i class="bi bi-clipboard"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <hr>
+
+                    <div class="row" *ngIf="setupData">
+                        <div class="col-12">
+                            <h6>Step 3: Verify and Enable</h6>
+                            <p class="text-muted">
+                                Enter the 6-digit code from your authenticator app to enable MFA:
+                            </p>
+                            <div class="verification-container">
+                                <input type="text" class="form-control form-control-lg text-center" placeholder="000000"
+                                    maxlength="6" [(ngModel)]="verificationCode" (keyup.enter)="enableMfa()">
+                                <div class="mt-3">
+                                    <button class="btn btn-primary w-100"
+                                        [disabled]="isEnabling || !verificationCode || verificationCode.length !== 6"
+                                        (click)="enableMfa()">
+                                        <i class="bi bi-check-circle me-2" *ngIf="!isEnabling"></i>
+                                        <span class="spinner-border spinner-border-sm me-2" *ngIf="isEnabling"></span>
+                                        {{ isEnabling ? 'Enabling...' : 'Enable MFA' }}
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Backup Codes -->
+                    <div class="row mt-4" *ngIf="setupData?.recovery_codes">
+                        <div class="col-12">
+                            <div class="alert alert-warning">
+                                <h6><i class="bi bi-exclamation-triangle me-2"></i>Save Your Backup Codes</h6>
+                                <p class="mb-3">
+                                    These are your one-time backup codes. Save them somewhere safe.
+                                    Each code can only be used once.
+                                </p>
+                                <div class="backup-codes-grid">
+                                    <div class="backup-code" *ngFor="let code of setupData.recovery_codes">
+                                        <code>{{ code }}</code>
+                                    </div>
+                                </div>
+                                <button class="btn btn-outline-secondary btn-sm"
+                                    (click)="downloadBackupCodes(setupData.recovery_codes)">
+                                    <i class="bi bi-download me-1"></i>Download Codes
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MFA Disable Modal -->
+    <div class="modal fade" [class.show]="showDisableModal" [style.display]="showDisableModal ? 'block' : 'none'"
+        [style.background-color]="showDisableModal ? 'rgba(0,0,0,0.5)' : 'transparent'" tabindex="-1"
+        *ngIf="showDisableModal">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Disable Two-Factor Authentication</h5>
+                    <button type="button" class="btn-close" (click)="closeDisableModal()"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="alert alert-warning">
+                        <i class="bi bi-exclamation-triangle me-2"></i>
+                        <strong>Warning:</strong> Disabling MFA will make your account less secure.
+                    </div>
+                    <p>
+                        Are you sure you want to disable two-factor authentication?
+                        This will remove the extra layer of security for your account.
+                    </p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" (click)="closeDisableModal()">
+                        Cancel
+                    </button>
+                    <button type="button" class="btn btn-danger" [disabled]="isDisabling" (click)="disableMfa()">
+                        <i class="bi bi-shield-x me-2" *ngIf="!isDisabling"></i>
+                        <span class="spinner-border spinner-border-sm me-2" *ngIf="isDisabling"></span>
+                        {{ isDisabling ? 'Disabling...' : 'Disable MFA' }}
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

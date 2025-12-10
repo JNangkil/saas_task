@@ -1,0 +1,184 @@
+.active-sessions {
+    .sessions-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+        gap: 1rem;
+    }
+
+    .session-card {
+        border: 1px solid #e9ecef;
+        border-radius: 0.5rem;
+        padding: 1rem;
+        background: #fff;
+        transition: all 0.2s ease-in-out;
+
+        &:hover {
+            box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+            transform: translateY(-2px);
+        }
+
+        &.current-session {
+            border-color: #198754;
+            background-color: #f8f9fa;
+
+            .session-header {
+                background-color: #e7f5ff;
+            }
+        }
+
+        .session-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            border-radius: 0.375rem;
+            background-color: #f8f9fa;
+
+            .device-info {
+                display: flex;
+                flex-direction: column;
+                gap: 0.25rem;
+
+                .device-type {
+                    display: flex;
+                    align-items: center;
+                    font-weight: 600;
+                    color: #495057;
+
+                    i {
+                        font-size: 1.25rem;
+                        color: #6c757d;
+                    }
+                }
+
+                .browser-platform {
+                    display: flex;
+                    align-items: center;
+                    font-size: 0.875rem;
+                    color: #6c757d;
+
+                    i {
+                        font-size: 0.875rem;
+                        margin-right: 0.25rem;
+                    }
+
+                    span.text-muted {
+                        margin: 0 0.25rem;
+                    }
+                }
+            }
+
+            .session-status {
+                .badge {
+                    font-size: 0.75rem;
+                    padding: 0.375rem 0.625rem;
+                }
+            }
+        }
+
+        .session-body {
+            display: flex;
+            justify-content: space-between;
+            gap: 1rem;
+
+            .session-details {
+                flex: 1;
+
+                .detail-item {
+                    display: flex;
+                    margin-bottom: 0.5rem;
+
+                    .detail-label {
+                        font-weight: 600;
+                        color: #495057;
+                        min-width: 100px;
+                        font-size: 0.875rem;
+                    }
+
+                    .detail-value {
+                        color: #6c757d;
+                        font-size: 0.875rem;
+                        word-break: break-all;
+                    }
+                }
+            }
+
+            .session-actions {
+                display: flex;
+                align-items: flex-end;
+
+                .btn-sm {
+                    padding: 0.25rem 0.5rem;
+                    font-size: 0.75rem;
+                }
+            }
+        }
+    }
+
+    .badge {
+        &.success {
+            background-color: #198754;
+            color: #fff;
+        }
+
+        &.secondary {
+            background-color: #6c757d;
+            color: #fff;
+        }
+    }
+
+    .spinner-border {
+        border-color: #0d6efd;
+        border-right-color: #0d6efd;
+        border-bottom-color: #0d6efd;
+        border-left-color: #0d6efd;
+    }
+
+    .spinner-border-sm {
+        width: 1rem;
+        height: 1rem;
+        border-width: 0.125em;
+    }
+}
+
+@media (max-width: 768px) {
+    .active-sessions {
+        .sessions-grid {
+            grid-template-columns: 1fr;
+            gap: 0.75rem;
+        }
+
+        .session-card {
+            padding: 0.75rem;
+
+            .session-header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 0.5rem;
+                padding: 0.5rem;
+            }
+
+            .session-body {
+                flex-direction: column;
+                gap: 0.75rem;
+
+                .session-details {
+                    .detail-item {
+                        flex-direction: column;
+                        align-items: flex-start;
+
+                        .detail-label {
+                            min-width: auto;
+                            margin-bottom: 0.25rem;
+                        }
+                    }
+                }
+
+                .session-actions {
+                    align-self: stretch;
+                }
+            }
+        }
+    }
+}

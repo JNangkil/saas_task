@@ -126,6 +126,46 @@ class User extends Authenticatable
     }
 
     /**
+     * Get the user's MFA settings.
+     */
+    public function mfa()
+    {
+        return $this->hasOne(UserMFA::class);
+    }
+
+    /**
+     * Get the user's account lockout information.
+     */
+    public function accountLockout()
+    {
+        return $this->hasOne(AccountLockout::class);
+    }
+
+    /**
+     * Get the user's sessions.
+     */
+    public function sessions()
+    {
+        return $this->hasMany(UserSession::class);
+    }
+
+    /**
+     * Get the user's security logs.
+     */
+    public function securityLogs()
+    {
+        return $this->hasMany(SecurityLog::class);
+    }
+
+    /**
+     * Check if the user has MFA enabled.
+     */
+    public function hasMfaEnabled(): bool
+    {
+        return $this->mfa && $this->mfa->isEnabled();
+    }
+
+    /**
      * Get the user's role in a specific tenant.
      */
     public function getTenantRole(Tenant $tenant): ?string

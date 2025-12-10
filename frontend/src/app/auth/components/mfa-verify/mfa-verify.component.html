@@ -1,0 +1,98 @@
+<div class="auth-container">
+    <div class="auth-card">
+        <div class="auth-header">
+            <h2 class="auth-title">Multi-Factor Authentication</h2>
+            <p class="auth-subtitle">
+                Enter your verification code to complete the sign-in process.
+            </p>
+            <div class="user-email" *ngIf="userEmail">
+                <strong>{{ userEmail }}</strong>
+            </div>
+        </div>
+
+        <!-- Account Lockout Component -->
+        <app-account-lockout></app-account-lockout>
+
+        <!-- Alert Messages -->
+        <div *ngIf="errorMessage" class="alert alert-danger">
+            {{ errorMessage }}
+        </div>
+
+        <!-- Toggle between verification code and recovery code -->
+        <div class="toggle-container">
+            <div class="btn-group" role="group">
+                <button type="button" class="btn" [class.btn-primary]="!useRecoveryCode"
+                    [class.btn-outline-primary]="useRecoveryCode" (click)="toggleInputType()">
+                    Verification Code
+                </button>
+                <button type="button" class="btn" [class.btn-primary]="useRecoveryCode"
+                    [class.btn-outline-primary]="!useRecoveryCode" (click)="toggleInputType()">
+                    Recovery Code
+                </button>
+            </div>
+        </div>
+
+        <!-- Verification Code Form -->
+        <form [formGroup]="verifyForm" (ngSubmit)="verifyMfa()">
+            <!-- Verification Code Input -->
+            <div *ngIf="!useRecoveryCode" class="form-group">
+                <label for="code">6-Digit Verification Code</label>
+                <input type="text" id="code" formControlName="code" class="form-control" placeholder="000000"
+                    maxlength="6" autocomplete="one-time-code"
+                    [class.is-invalid]="verifyForm.get('code')?.invalid && verifyForm.get('code')?.touched" autofocus />
+                <div *ngIf="verifyForm.get('code')?.invalid && verifyForm.get('code')?.touched"
+                    class="invalid-feedback">
+                    Please enter a valid 6-digit verification code.
+                </div>
+                <small class="form-text text-muted">
+                    Open your authenticator app and enter the 6-digit code.
+                </small>
+            </div>
+
+            <!-- Recovery Code Input -->
+            <div *ngIf="useRecoveryCode" class="form-group">
+                <label for="recoveryCode">Recovery Code</label>
+                <textarea id="recoveryCode" formControlName="recoveryCode" class="form-control" rows="3"
+                    placeholder="Enter one of your recovery codes"
+                    [class.is-invalid]="verifyForm.get('recoveryCode')?.invalid && verifyForm.get('recoveryCode')?.touched"
+                    autofocus></textarea>
+                <div *ngIf="verifyForm.get('recoveryCode')?.invalid && verifyForm.get('recoveryCode')?.touched"
+                    class="invalid-feedback">
+                    Please enter a valid recovery code.
+                </div>
+                <small class="form-text text-muted">
+                    Enter one of your 8-character recovery codes. Each code can only be used once.
+                </small>
+            </div>
+
+            <div class="form-actions">
+                <button type="button" class="btn btn-secondary" (click)="cancel()">
+                    Cancel
+                </button>
+                <button type="submit" class="btn btn-primary" [disabled]="isLoading || isAccountLocked">
+                    <span *ngIf="isLoading" class="spinner-border spinner-border-sm me-2"></span>
+                    Verify
+                </button>
+            </div>
+        </form>
+
+        <!-- Help Section -->
+        <div class="help-section">
+            <h4>Having trouble?</h4>
+            <ul>
+                <li>
+                    <strong>Can't access your authenticator app?</strong>
+                    Use one of your recovery codes above.
+                </li>
+                <li>
+                    <strong>Lost all your recovery codes?</strong>
+                    Contact support to regain access to your account.
+                </li>
+                <li>
+                    <strong>Code not working?</strong>
+                    Make sure your device's time is synchronized and try generating a new code.
+                </li>
+            </ul>
+        </div>
+    </div>
+</div>

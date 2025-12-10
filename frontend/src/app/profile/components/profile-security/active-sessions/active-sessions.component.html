@@ -1,0 +1,91 @@
+<div class="active-sessions">
+    <!-- Loading State -->
+    <div class="text-center py-4" *ngIf="isLoading">
+        <div class="spinner-border" role="status">
+            <span class="visually-hidden">Loading...</span>
+        </div>
+        <p class="mt-2 text-muted">Loading active sessions...</p>
+    </div>
+
+    <!-- Sessions List -->
+    <div *ngIf="!isLoading">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <h6 class="mb-0">Active Sessions</h6>
+            <button class="btn btn-outline-danger btn-sm" [disabled]="shouldDisableRevokeAll()"
+                (click)="revokeAllOtherSessions()">
+                <i class="bi bi-x-circle me-1"></i>
+                Revoke All Other Sessions
+            </button>
+        </div>
+
+        <!-- No Sessions -->
+        <div class="alert alert-info" *ngIf="sessions.length === 0">
+            <i class="bi bi-info-circle me-2"></i>
+            No active sessions found.
+        </div>
+
+        <!-- Sessions Grid -->
+        <div class="sessions-grid">
+            <div class="session-card" *ngFor="let session of sessions" [class.current-session]="session.is_current">
+                <div class="session-header">
+                    <div class="device-info">
+                        <div class="device-type">
+                            <i class="bi me-2" [ngClass]="getDeviceIcon(session.device)"></i>
+                            <span class="fw-bold">{{ session.device }}</span>
+                        </div>
+                        <div class="browser-platform">
+                            <i class="bi me-1" [ngClass]="getBrowserIcon(session.browser)"></i>
+                            <span>{{ session.browser }}</span>
+                            <span class="text-muted">on</span>
+                            <i class="bi me-1" [ngClass]="getPlatformIcon(session.platform)"></i>
+                            <span>{{ session.platform }}</span>
+                        </div>
+                    </div>
+                    <div class="session-status">
+                        <span class="badge" [ngClass]="getSessionStatusColor(session)">
+                            {{ getSessionStatusText(session) }}
+                        </span>
+                    </div>
+                </div>
+
+                <div class="session-body">
+                    <div class="session-details">
+                        <div class="detail-item">
+                            <label class="detail-label">IP Address:</label>
+                            <span class="detail-value">{{ formatIpAddress(session.ip_address) }}</span>
+                        </div>
+                        <div class="detail-item">
+                            <label class="detail-label">Last Activity:</label>
+                            <span class="detail-value">{{ session.formatted_last_activity }}</span>
+                        </div>
+                        <div class="detail-item">
+                            <label class="detail-label">Session Started:</label>
+                            <span class="detail-value">{{ session.created_at | date:'medium' }}</span>
+                        </div>
+                    </div>
+
+                    <div class="session-actions" *ngIf="!session.is_current">
+                        <button class="btn btn-outline-danger btn-sm" [disabled]="!canRevokeSession(session)"
+                            (click)="revokeSession(session.id)">
+                            <i class="bi bi-x-circle me-1" *ngIf="selectedSessionId !== session.id"></i>
+                            <span class="spinner-border spinner-border-sm me-1"
+                                *ngIf="selectedSessionId === session.id"></span>
+                            {{ selectedSessionId === session.id ? 'Revoking...' : 'Revoke' }}
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Sessions Info -->
+        <div class="alert alert-info mt-3">
+            <i class="bi bi-info-circle me-2"></i>
+            <strong>Session Information:</strong>
+            <ul class="mb-0 mt-2">
+                <li>Your current session is highlighted and cannot be revoked.</li>
+                <li>Revoking a session will immediately log out that device.</li>
+                <li>Sessions are automatically expired after {{ 30 * 24 }} hours of inactivity.</li>
+            </ul>
+        </div>
+    </div>
+</div>

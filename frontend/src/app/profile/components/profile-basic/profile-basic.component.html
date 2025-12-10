@@ -1,0 +1,127 @@
+<div class="profile-basic">
+    <!-- Avatar Section -->
+    <div class="avatar-section mb-4">
+        <div class="d-flex align-items-center">
+            <div class="avatar-container me-4">
+                <img [src]="avatarPreview || 'assets/images/default-avatar.png'" alt="User Avatar"
+                    class="avatar-preview">
+                <div class="avatar-overlay" *ngIf="avatarPreview && avatarPreview !== user?.avatar_url">
+                    <button type="button" class="btn btn-sm btn-light" (click)="resetAvatarPreview()">
+                        <i class="bi bi-x"></i>
+                    </button>
+                </div>
+            </div>
+            <div class="avatar-actions">
+                <div class="mb-2">
+                    <input type="file" id="avatar-input" class="form-control" accept="image/*"
+                        (change)="onAvatarSelect($event)">
+                </div>
+                <div class="d-flex gap-2">
+                    <button type="button" class="btn btn-primary btn-sm"
+                        [disabled]="!avatarForm.get('avatar')?.value || isUploadingAvatar" (click)="uploadAvatar()">
+                        <i class="bi bi-upload me-1" *ngIf="!isUploadingAvatar"></i>
+                        <span class="spinner-border spinner-border-sm me-1" *ngIf="isUploadingAvatar"></span>
+                        {{ isUploadingAvatar ? 'Uploading...' : 'Upload' }}
+                    </button>
+                    <button type="button" class="btn btn-outline-danger btn-sm"
+                        [disabled]="!user?.avatar_url || isRemovingAvatar" (click)="removeAvatar()">
+                        <i class="bi bi-trash me-1" *ngIf="!isRemovingAvatar"></i>
+                        <span class="spinner-border spinner-border-sm me-1" *ngIf="isRemovingAvatar"></span>
+                        {{ isRemovingAvatar ? 'Removing...' : 'Remove' }}
+                    </button>
+                </div>
+            </div>
+            <div class="form-text mt-2">
+                Accepted formats: JPG, PNG, GIF. Maximum size: 5MB
+            </div>
+        </div>
+    </div>
+
+    <!-- Profile Form -->
+    <form [formGroup]="profileForm" (ngSubmit)="onSubmit()">
+        <!-- Name -->
+        <div class="mb-3">
+            <label for="name" class="form-label">Name</label>
+            <input type="text" id="name" class="form-control" formControlName="name" placeholder="Enter your full name">
+
+            <div class="invalid-feedback" *ngIf="hasError('name')">
+                {{ getErrorMessage('name') }}
+            </div>
+        </div>
+
+        <!-- Job Title -->
+        <div class="mb-3">
+            <label for="job_title" class="form-label">Job Title</label>
+            <input type="text" id="job_title" class="form-control" formControlName="job_title"
+                placeholder="e.g. Product Manager">
+
+            <div class="form-text">Optional: Your role or position in the company</div>
+        </div>
+
+        <!-- Timezone -->
+        <div class="mb-3">
+            <label for="timezone" class="form-label">Timezone</label>
+            <select id="timezone" class="form-select" formControlName="timezone">
+                <option *ngFor="let tz of timezones" [value]="tz.value">
+                    {{ tz.label }}
+                </option>
+            </select>
+            <div class="form-text">Set your local timezone for date/time display</div>
+        </div>
+
+        <!-- Locale -->
+        <div class="mb-4">
+            <label for="locale" class="form-label">Language</label>
+            <select id="locale" class="form-select" formControlName="locale">
+                <option *ngFor="let locale of locales" [value]="locale.value">
+                    {{ locale.label }}
+                </option>
+            </select>
+            <div class="form-text">Choose your preferred language for the interface</div>
+        </div>
+
+        <!-- Form Actions -->
+        <div class="d-flex justify-content-between align-items-center">
+            <div class="text-muted small">
+                Member since: {{ user?.created_at ? formatDate(user.created_at) : 'Loading...' }}
+            </div>
+            <div>
+                <button type="submit" class="btn btn-primary" [disabled]="profileForm.invalid || isSubmitting">
+                    <i class="bi bi-check-circle me-1" *ngIf="!isSubmitting"></i>
+                    <span class="spinner-border spinner-border-sm me-1" *ngIf="isSubmitting"></span>
+                    {{ isSubmitting ? 'Saving...' : 'Save Changes' }}
+                </button>
+            </div>
+        </div>
+    </form>
+
+    <!-- Account Info -->
+    <hr class="my-4">
+
+    <div class="account-info">
+        <h5>Account Information</h5>
+        <div class="row">
+            <div class="col-sm-4">
+                <label class="text-muted">Email</label>
+            </div>
+            <div class="col-sm-8">
+                <span>{{ user?.email }}</span>
+                <span class="badge bg-success ms-2" *ngIf="user?.email_verified_at">Verified</span>
+            </div>
+        </div>
+        <div class="row mt-2">
+            <div class="col-sm-4">
+                <label class="text-muted">Status</label>
+            </div>
+            <div class="col-sm-8">
+                <span class="badge" [ngClass]="{
+                          'bg-success': user?.status === 'active',
+                          'bg-warning': user?.status === 'pending',
+                          'bg-danger': user?.status === 'suspended'
+                      }">
+                    {{ user?.status || 'unknown' | titlecase }}
+                </span>
+            </div>
+        </div>
+    </div>
+</div>
