@@ -105,7 +105,8 @@
                             <!-- Select All Checkbox -->
                             <th class="select-column" *ngIf="tableConfig.allowRowSelection">
                                 <input type="checkbox" [checked]="areAllTasksSelected()"
-                                    (change)="onSelectAllTasks($any($event).target?.checked)" class="select-checkbox">
+                                    (change)="onSelectAllTasks($any($event).target?.checked || false)"
+                                    class="select-checkbox">
                             </th>
 
                             <!-- Column Headers -->
@@ -129,7 +130,7 @@
                             [selected]="(selectedTasks$ | async)?.has(task.id) || false"
                             [selectable]="tableConfig.allowRowSelection" [showCheckbox]="tableConfig.allowRowSelection"
                             (taskClick)="onTaskSelect(task, true)" (taskDoubleClick)="onTaskDoubleClick(task)"
-                            (selectionChange)="onTaskSelect($any($event).task, $any($event).selected)"
+                            (selectionChange)="onTaskSelect($any($event).task, $any($event).selected || false)"
                             (taskUpdate)="onTaskUpdate($any($event))">
                         </app-task-row>
                     </tbody>
@@ -142,41 +143,42 @@
     <ng-container *ngIf="tasks$ | async as tasks">
         <div class="pagination-container"
             *ngIf="tableConfig.showPagination && !(loading$ | async) && !(error$ | async) && tasks.length > 0">
-        <div class="pagination-info" *ngIf="pagination$ | async as pagination">
-            Showing {{ (((pagination$ | async)?.currentPage || 1) - 1) * tableConfig.pageSize + 1 }}-{{
-            Math.min(((pagination$ | async)?.currentPage || 1) * tableConfig.pageSize, (pagination$ | async)?.total ||
-            0)
-            }} of {{ (pagination$ | async)?.total || 0 }} tasks
-        </div>
-
-        <div class="pagination-controls" *ngIf="pagination$ | async as pagination">
-            <button class="pagination-btn" (click)="onPageChange(1)" [disabled]="pagination.currentPage === 1">
-                First
-            </button>
-            <button class="pagination-btn" (click)="onPageChange(pagination.currentPage - 1)"
-                [disabled]="!pagination.hasPrev">
-                Previous
-            </button>
-
-            <div class="page-numbers">
-                <button class="pagination-btn page-number"
-                    *ngFor="let page of getPageNumbers(pagination.currentPage, pagination.totalPages)"
-                    [class.active]="page === pagination.currentPage" [disabled]="page === '...'"
-                    (click)="onPageClick(page)">
-                    {{ page }}
-                </button>
+            <div class="pagination-info" *ngIf="pagination$ | async as pagination">
+                Showing {{ (((pagination$ | async)?.currentPage || 1) - 1) * tableConfig.pageSize + 1 }}-{{
+                Math.min(((pagination$ | async)?.currentPage || 1) * tableConfig.pageSize, (pagination$ | async)?.total
+                ||
+                0)
+                }} of {{ (pagination$ | async)?.total || 0 }} tasks
             </div>
 
-            <button class="pagination-btn" (click)="onPageChange(pagination.currentPage + 1)"
-                [disabled]="!pagination.hasNext">
-                Next
-            </button>
-            <button class="pagination-btn" (click)="onPageChange(pagination.totalPages)"
-                [disabled]="pagination.currentPage === pagination.totalPages">
-                Last
-            </button>
+            <div class="pagination-controls" *ngIf="pagination$ | async as pagination">
+                <button class="pagination-btn" (click)="onPageChange(1)" [disabled]="pagination.currentPage === 1">
+                    First
+                </button>
+                <button class="pagination-btn" (click)="onPageChange(pagination.currentPage - 1)"
+                    [disabled]="!pagination.hasPrev">
+                    Previous
+                </button>
+
+                <div class="page-numbers">
+                    <button class="pagination-btn page-number"
+                        *ngFor="let page of getPageNumbers(pagination.currentPage, pagination.totalPages)"
+                        [class.active]="page === pagination.currentPage" [disabled]="page === '...'"
+                        (click)="onPageClick(page)">
+                        {{ page }}
+                    </button>
+                </div>
+
+                <button class="pagination-btn" (click)="onPageChange(pagination.currentPage + 1)"
+                    [disabled]="!pagination.hasNext">
+                    Next
+                </button>
+                <button class="pagination-btn" (click)="onPageChange(pagination.totalPages)"
+                    [disabled]="pagination.currentPage === pagination.totalPages">
+                    Last
+                </button>
+            </div>
         </div>
-    </div>
     </ng-container>
     <!-- Task Details Panel -->
     <app-task-details-panel *ngIf="selectedTaskForDetails" [task]="selectedTaskForDetails"

@@ -1,6 +1,6 @@
-import { Injectable } from '@angular/core';
-import { BehaviorSubject, Observable, combineLatest, of } from 'rxjs';
-import { map, distinctUntilChanged, take } from 'rxjs/operators';
+import { Injectable, OnDestroy } from '@angular/core';
+import { BehaviorSubject, Observable, combineLatest, of, Subject } from 'rxjs';
+import { map, distinctUntilChanged, take, takeUntil } from 'rxjs/operators';
 
 import { BillingService } from './billing.service';
 import { ISubscription, IUsageStatistics } from '../models/subscription.model';
@@ -37,13 +37,15 @@ export interface NotificationState {
 @Injectable({
     providedIn: 'root'
 })
-export class NotificationService {
+export class NotificationService implements OnDestroy {
     // Private state subjects
     private readonly notificationState$ = new BehaviorSubject<NotificationState>({
         type: 'none',
         isVisible: false,
         isUrgent: false
     });
+
+    private destroy$ = new Subject<void>();
 
     // Public observables
     public readonly notificationState = this.notificationState$.asObservable();
@@ -69,6 +71,11 @@ export class NotificationService {
         private billingService: BillingService
     ) { }
 
+    ngOnDestroy(): void {
+        this.destroy$.next();
+        this.destroy$.complete();
+    }
+
     /**
      * Initialize notification service and start monitoring subscription changes
      */
@@ -86,7 +93,8 @@ export class NotificationService {
             this.billingService.loading$
         ]).pipe(
             distinctUntilChanged(),
-            take(1)
+            take(1),
+            takeUntil(this.destroy$)
         ).subscribe(([subscription, loading]) => {
             if (!loading) {
                 this.evaluateNotificationState(subscription);
@@ -295,7 +303,10 @@ export class NotificationService {
         this.removeNotificationDismissed(storageKey);
 
         // Re-evaluate notification state
-        this.billingService.currentSubscription$.pipe(take(1)).subscribe(subscription => {
+        this.billingService.currentSubscription$.pipe(
+            take(1),
+            takeUntil(this.destroy$)
+        ).subscribe(subscription => {
             if (subscription) {
                 this.evaluateNotificationState(subscription);
             }

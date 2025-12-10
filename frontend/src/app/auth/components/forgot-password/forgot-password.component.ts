@@ -1,9 +1,11 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { AuthService, ForgotPasswordRequest } from '../../../core/services/auth.service';
 import { ToastService } from '../../../services/toast.service';
+import { Subject } from 'rxjs';
+import { takeUntil } from 'rxjs/operators';
 
 @Component({
     selector: 'app-forgot-password',
@@ -12,10 +14,12 @@ import { ToastService } from '../../../services/toast.service';
     templateUrl: './forgot-password.component.html',
     styleUrls: ['./forgot-password.component.css']
 })
-export class ForgotPasswordComponent implements OnInit {
+export class ForgotPasswordComponent implements OnInit, OnDestroy {
     forgotPasswordForm: FormGroup;
     isSubmitting = false;
     submitted = false;
+
+    private destroy$ = new Subject<void>();
 
     constructor(
         private formBuilder: FormBuilder,
@@ -32,6 +36,11 @@ export class ForgotPasswordComponent implements OnInit {
         // Component initialization logic if needed
     }
 
+    ngOnDestroy(): void {
+        this.destroy$.next();
+        this.destroy$.complete();
+    }
+
     /**
      * Handle form submission
      */
@@ -46,7 +55,9 @@ export class ForgotPasswordComponent implements OnInit {
             email: this.forgotPasswordForm.value.email
         };
 
-        this.authService.forgotPassword(forgotPasswordRequest).subscribe({
+        this.authService.forgotPassword(forgotPasswordRequest).pipe(
+            takeUntil(this.destroy$)
+        ).subscribe({
             next: (response) => {
                 this.submitted = true;
                 this.isSubmitting = false;

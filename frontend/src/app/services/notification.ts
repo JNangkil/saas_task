@@ -1,6 +1,6 @@
-import { Injectable } from '@angular/core';
+import { Injectable, OnDestroy } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { BehaviorSubject, Observable } from 'rxjs';
+import { BehaviorSubject, Observable, Subject, takeUntil } from 'rxjs';
 import { environment } from '../../environments/environment';
 
 export interface NotificationData {
@@ -27,12 +27,18 @@ export interface NotificationPreferences {
 @Injectable({
   providedIn: 'root',
 })
-export class NotificationService {
+export class NotificationService implements OnDestroy {
   private apiUrl = environment.apiUrl;
   private unreadCountSubject = new BehaviorSubject<number>(0);
   public unreadCount$ = this.unreadCountSubject.asObservable();
+  private destroy$ = new Subject<void>();
 
-  constructor(private http: HttpClient) {}
+  constructor(private http: HttpClient) { }
+
+  ngOnDestroy(): void {
+    this.destroy$.next();
+    this.destroy$.complete();
+  }
 
   /**
    * Get notifications with pagination
@@ -61,7 +67,9 @@ export class NotificationService {
    * Update unread count
    */
   updateUnreadCount(): void {
-    this.getUnreadCount().subscribe({
+    this.getUnreadCount().pipe(
+      takeUntil(this.destroy$)
+    ).subscribe({
       next: (response) => {
         this.unreadCountSubject.next(response.count);
       },

@@ -239,20 +239,14 @@
                 <div class="tab-pane" data-tab-content="attachments">
                     <div class="attachments-section">
                         <!-- Upload Area -->
-                        <div class="upload-area"
-                             (drop)="onFilesDropped($event)"
-                             (dragover)="$event.preventDefault()"
-                             (dragenter)="$event.preventDefault()">
+                        <div class="upload-area" (drop)="onFilesDropped($event)" (dragover)="$event.preventDefault()"
+                            (dragenter)="$event.preventDefault()">
                             <div class="upload-content">
                                 <span class="upload-icon">📎</span>
                                 <p>Drop files here or click to upload</p>
                                 <button class="upload-btn" (click)="fileInput.click()">Choose Files</button>
-                                <input type="file"
-                                       #fileInput
-                                       class="file-input"
-                                       (change)="onFileSelected($event)"
-                                       multiple
-                                       accept="*/*">
+                                <input type="file" #fileInput class="file-input" (change)="onFileSelected($event)"
+                                    multiple accept="*/*">
                             </div>
                         </div>
 
@@ -269,11 +263,9 @@
                             <div class="attachment-item" *ngFor="let attachment of attachments">
                                 <div class="attachment-preview">
                                     <!-- Image Preview -->
-                                    <img *ngIf="isImageFile(attachment.mime_type)"
-                                         [src]="attachment.url"
-                                         [alt]="attachment.original_filename"
-                                         class="attachment-thumbnail"
-                                         (error)="$event.currentTarget.style.display='none'">
+                                    <img *ngIf="isImageFile(attachment.mime_type)" [src]="attachment.url"
+                                        [alt]="attachment.original_filename" class="attachment-thumbnail"
+                                        (error)="($any($event.target)).style.display='none'">
 
                                     <!-- File Icon -->
                                     <div *ngIf="!isImageFile(attachment.mime_type)" class="file-icon">
@@ -283,10 +275,8 @@
                                 </div>
 
                                 <div class="attachment-details">
-                                    <a [href]="getAttachmentDownloadUrl(attachment)"
-                                       class="attachment-name"
-                                       target="_blank"
-                                       rel="noopener noreferrer">
+                                    <a [href]="getAttachmentDownloadUrl(attachment)" class="attachment-name"
+                                        target="_blank" rel="noopener noreferrer">
                                         {{ attachment.original_filename }}
                                     </a>
                                     <div class="attachment-meta">
@@ -299,16 +289,12 @@
                                 </div>
 
                                 <div class="attachment-actions">
-                                    <a [href]="getAttachmentDownloadUrl(attachment)"
-                                       class="action-btn download-btn"
-                                       target="_blank"
-                                       rel="noopener noreferrer"
-                                       title="Download">
+                                    <a [href]="getAttachmentDownloadUrl(attachment)" class="action-btn download-btn"
+                                        target="_blank" rel="noopener noreferrer" title="Download">
                                         <span class="icon">⬇️</span>
                                     </a>
-                                    <button class="action-btn delete-btn"
-                                            (click)="deleteAttachment(attachment)"
-                                            title="Delete">
+                                    <button class="action-btn delete-btn" (click)="deleteAttachment(attachment)"
+                                        title="Delete">
                                         <span class="icon">🗑️</span>
                                     </button>
                                 </div>

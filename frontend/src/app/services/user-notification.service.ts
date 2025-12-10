@@ -1,5 +1,5 @@
-import { Injectable } from '@angular/core';
-import { Observable, BehaviorSubject } from 'rxjs';
+import { Injectable, OnDestroy } from '@angular/core';
+import { Observable, BehaviorSubject, Subject, takeUntil } from 'rxjs';
 import { ApiService } from './api.service';
 import { Notification, NotificationsPaginatedResponse, NotificationCount } from '../models/user.model';
 
@@ -9,11 +9,17 @@ import { Notification, NotificationsPaginatedResponse, NotificationCount } from 
 @Injectable({
     providedIn: 'root'
 })
-export class UserNotificationService {
+export class UserNotificationService implements OnDestroy {
     private unreadCount$ = new BehaviorSubject<number>(0);
+    private destroy$ = new Subject<void>();
 
     constructor(private apiService: ApiService) {
         this.loadUnreadCount();
+    }
+
+    ngOnDestroy(): void {
+        this.destroy$.next();
+        this.destroy$.complete();
     }
 
     /**
@@ -50,7 +56,9 @@ export class UserNotificationService {
      * Load and update unread count
      */
     loadUnreadCount(): void {
-        this.apiService.get<NotificationCount>('notifications/unread-count').subscribe(
+        this.apiService.get<NotificationCount>('notifications/unread-count').pipe(
+            takeUntil(this.destroy$)
+        ).subscribe(
             response => {
                 this.unreadCount$.next(response.count);
             },

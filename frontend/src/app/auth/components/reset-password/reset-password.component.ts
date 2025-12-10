@@ -2,7 +2,8 @@ import { Component, OnInit, OnDestroy } from '@angular/core';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
 import { Router, ActivatedRoute } from '@angular/router';
 import { CommonModule } from '@angular/common';
-import { Subscription } from 'rxjs';
+import { Subject } from 'rxjs';
+import { takeUntil } from 'rxjs/operators';
 import { AuthService, ResetPasswordRequest, VerifyTokenRequest } from '../../../core/services/auth.service';
 import { ToastService } from '../../../services/toast.service';
 
@@ -22,7 +23,7 @@ export class ResetPasswordComponent implements OnInit, OnDestroy {
     email = '';
     token = '';
 
-    private routeSub: Subscription;
+    private destroy$ = new Subject<void>();
 
     constructor(
         private formBuilder: FormBuilder,
@@ -31,7 +32,6 @@ export class ResetPasswordComponent implements OnInit, OnDestroy {
         private route: ActivatedRoute,
         private toastService: ToastService
     ) {
-        this.routeSub = new Subscription();
         this.resetPasswordForm = this.formBuilder.group({
             password: ['', [
                 Validators.required,
@@ -45,7 +45,9 @@ export class ResetPasswordComponent implements OnInit, OnDestroy {
     }
 
     ngOnInit(): void {
-        this.routeSub = this.route.queryParams.subscribe(params => {
+        this.route.queryParams.pipe(
+            takeUntil(this.destroy$)
+        ).subscribe(params => {
             this.email = params['email'] || '';
             this.token = params['token'] || '';
 
@@ -60,7 +62,8 @@ export class ResetPasswordComponent implements OnInit, OnDestroy {
     }
 
     ngOnDestroy(): void {
-        this.routeSub.unsubscribe();
+        this.destroy$.next();
+        this.destroy$.complete();
     }
 
     /**
@@ -72,7 +75,9 @@ export class ResetPasswordComponent implements OnInit, OnDestroy {
             token: this.token
         };
 
-        this.authService.verifyResetToken(request).subscribe({
+        this.authService.verifyResetToken(request).pipe(
+            takeUntil(this.destroy$)
+        ).subscribe({
             next: (response) => {
                 this.tokenVerificationInProgress = false;
                 if (response.valid) {
@@ -109,7 +114,9 @@ export class ResetPasswordComponent implements OnInit, OnDestroy {
             password_confirmation: this.resetPasswordForm.value.password_confirmation
         };
 
-        this.authService.resetPassword(resetPasswordRequest).subscribe({
+        this.authService.resetPassword(resetPasswordRequest).pipe(
+            takeUntil(this.destroy$)
+        ).subscribe({
             next: (response) => {
                 this.submitted = true;
                 this.isSubmitting = false;
@@ -182,6 +189,46 @@ export class ResetPasswordComponent implements OnInit, OnDestroy {
         }
 
         return '';
+    }
+
+    /**
+     * Check if password meets minimum length requirement
+     */
+    hasMinLength(): boolean {
+        const password = this.resetPasswordForm.get('password')?.value;
+        return password && password.length >= 8;
+    }
+
+    /**
+     * Check if password contains lowercase letter
+     */
+    hasLowercase(): boolean {
+        const password = this.resetPasswordForm.get('password')?.value;
+        return password && /[a-z]/.test(password);
+    }
+
+    /**
+     * Check if password contains uppercase letter
+     */
+    hasUppercase(): boolean {
+        const password = this.resetPasswordForm.get('password')?.value;
+        return password && /[A-Z]/.test(password);
+    }
+
+    /**
+     * Check if password contains number
+     */
+    hasNumber(): boolean {
+        const password = this.resetPasswordForm.get('password')?.value;
+        return password && /\d/.test(password);
+    }
+
+    /**
+     * Check if password contains special character
+     */
+    hasSpecialChar(): boolean {
+        const password = this.resetPasswordForm.get('password')?.value;
+        return password && /[@$!%*?&]/.test(password);
     }
 
     /**

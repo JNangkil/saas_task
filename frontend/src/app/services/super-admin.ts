@@ -17,6 +17,13 @@ export interface Tenant {
       name: string;
       price: number;
       billing_interval: 'monthly' | 'yearly';
+      features?: string[];
+      limits?: {
+        users: number;
+        workspaces: number;
+        boards_per_workspace: number;
+        storage_mb: number;
+      };
     };
     status: 'active' | 'cancelled' | 'past_due';
     ends_at?: string;
@@ -93,7 +100,7 @@ export interface PaginatedResponse<T> {
   providedIn: 'root',
 })
 export class SuperAdminService {
-  constructor(private apiService: ApiService) {}
+  constructor(private apiService: ApiService) { }
 
   // Tenant Management
   getTenants(params: {
@@ -108,7 +115,7 @@ export class SuperAdminService {
     if (params.per_page) httpParams = httpParams.set('per_page', params.per_page.toString());
     if (params.page) httpParams = httpParams.set('page', params.page.toString());
 
-    return this.apiService.get<PaginatedResponse<Tenant>>('super-admin/tenants', httpParams);
+    return this.apiService.get<PaginatedResponse<Tenant>>('super-admin/tenants', { params: httpParams });
   }
 
   getTenant(id: number): Observable<Tenant> {
@@ -159,7 +166,7 @@ export class SuperAdminService {
     if (params.search) httpParams = httpParams.set('search', params.search);
     if (params.type) httpParams = httpParams.set('type', params.type);
 
-    return this.apiService.get<SystemSettings>('super-admin/settings', httpParams);
+    return this.apiService.get<SystemSettings>('super-admin/settings', { params: httpParams });
   }
 
   updateSystemSettings(settings: SystemSettings): Observable<SystemSettings> {
@@ -191,7 +198,7 @@ export class SuperAdminService {
     if (params.per_page) httpParams = httpParams.set('per_page', params.per_page.toString());
     if (params.page) httpParams = httpParams.set('page', params.page.toString());
 
-    return this.apiService.get<PaginatedResponse<SystemLog>>('super-admin/system/logs', httpParams);
+    return this.apiService.get<PaginatedResponse<SystemLog>>('super-admin/system/logs', { params: httpParams });
   }
 
   // Subscription Management
@@ -217,6 +224,6 @@ export class SuperAdminService {
     if (params.per_page) httpParams = httpParams.set('per_page', params.per_page.toString());
     if (params.page) httpParams = httpParams.set('page', params.page.toString());
 
-    return this.apiService.get<PaginatedResponse<any>>('super-admin/subscriptions', httpParams);
+    return this.apiService.get<PaginatedResponse<any>>('super-admin/subscriptions', { params: httpParams });
   }
 }

@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { HttpClient, HttpHeaders, HttpErrorResponse } from '@angular/common/http';
+import { HttpClient, HttpHeaders, HttpErrorResponse, HttpParams } from '@angular/common/http';
 import { Observable, throwError } from 'rxjs';
 import { catchError, map } from 'rxjs/operators';
 import {
@@ -522,5 +522,26 @@ export class ApiService {
         }
 
         return this.get<IBillingOperation[]>('billing/operations', { params });
+    }
+
+    /**
+     * Build HttpParams from an object.
+     *
+     * @param params Object to convert to HttpParams
+     * @returns HttpParams instance
+     */
+    buildHttpParams(params: any): HttpParams {
+        let httpParams = new HttpParams();
+
+        if (params) {
+            Object.keys(params).forEach(key => {
+                const value = params[key];
+                if (value !== null && value !== undefined && value !== '') {
+                    httpParams = httpParams.set(key, value.toString());
+                }
+            });
+        }
+
+        return httpParams;
     }
 }

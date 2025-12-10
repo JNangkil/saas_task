@@ -1,6 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule, DecimalPipe } from '@angular/common';
-import { SuperAdminService, SystemMetrics } from '../../../../services/super-admin.service';
+import { SuperAdminService, SystemMetrics } from '../../../../services/super-admin';
 import { MatCardModule } from '@angular/material/card';
 import { MatIconModule } from '@angular/material/icon';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
@@ -8,6 +8,7 @@ import { MatButtonModule } from '@angular/material/button';
 
 @Component({
   selector: 'app-dashboard',
+  standalone: true,
   imports: [
     CommonModule,
     MatCardModule,
@@ -19,12 +20,12 @@ import { MatButtonModule } from '@angular/material/button';
   templateUrl: './dashboard.html',
   styleUrl: './dashboard.css',
 })
-export class Dashboard implements OnInit {
+export class DashboardComponent implements OnInit {
   metrics: SystemMetrics | null = null;
   loading = true;
   error: string | null = null;
 
-  constructor(private superAdminService: SuperAdminService) {}
+  constructor(private superAdminService: SuperAdminService) { }
 
   ngOnInit() {
     this.loadMetrics();
@@ -35,11 +36,11 @@ export class Dashboard implements OnInit {
     this.error = null;
 
     this.superAdminService.getSystemMetrics().subscribe({
-      next: (metrics) => {
+      next: (metrics: SystemMetrics) => {
         this.metrics = metrics;
         this.loading = false;
       },
-      error: (error) => {
+      error: (error: any) => {
         this.error = 'Failed to load system metrics. Please try again.';
         this.loading = false;
         console.error('Error loading system metrics:', error);

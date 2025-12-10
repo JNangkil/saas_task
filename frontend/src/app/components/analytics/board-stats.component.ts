@@ -1,16 +1,18 @@
 import { Component, Input, OnInit, OnDestroy, OnChanges } from '@angular/core';
 import { Subject } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
+import { CommonModule } from '@angular/common';
 import { AnalyticsService, BoardSummary, AnalyticsFilters } from '../../services/analytics.service';
-import { Board, Workspace, Tenant } from '../../models';
+import { Board } from '../../models';
+import { IWorkspace, ITenant } from '../../interfaces/workspace.interface';
 import { WorkspaceContextService } from '../../services/workspace-context.service';
-import { TenantService } from '../../services/tenant.service';
 
 @Component({
     selector: 'app-board-stats',
     templateUrl: './board-stats.component.html',
     styleUrls: ['./board-stats.component.css'],
-    standalone: true
+    standalone: true,
+    imports: [CommonModule]
 })
 export class BoardStatsComponent implements OnInit, OnDestroy, OnChanges {
     private destroy$ = new Subject<void>();
@@ -18,8 +20,8 @@ export class BoardStatsComponent implements OnInit, OnDestroy, OnChanges {
     @Input() board: Board | null = null;
     @Input() compact = false; // Compact mode for board header
 
-    currentWorkspace: Workspace | null = null;
-    currentTenant: Tenant | null = null;
+    currentWorkspace: IWorkspace | null = null;
+    currentTenant: ITenant | null = null;
     loading = false;
     summary: BoardSummary | null = null;
 
@@ -28,24 +30,15 @@ export class BoardStatsComponent implements OnInit, OnDestroy, OnChanges {
 
     constructor(
         private analyticsService: AnalyticsService,
-        private workspaceContext: WorkspaceContextService,
-        private tenantService: TenantService
+        private workspaceContext: WorkspaceContextService
     ) { }
 
     ngOnInit(): void {
-        this.workspaceContext.currentWorkspace$.pipe(
+        this.workspaceContext.context$.pipe(
             takeUntil(this.destroy$)
-        ).subscribe(workspace => {
-            this.currentWorkspace = workspace;
-            if (this.board) {
-                this.loadBoardStats();
-            }
-        });
-
-        this.tenantService.currentTenant$.pipe(
-            takeUntil(this.destroy$)
-        ).subscribe(tenant => {
-            this.currentTenant = tenant;
+        ).subscribe(context => {
+            this.currentWorkspace = context.currentWorkspace;
+            this.currentTenant = context.currentTenant;
             if (this.board) {
                 this.loadBoardStats();
             }
@@ -70,8 +63,8 @@ export class BoardStatsComponent implements OnInit, OnDestroy, OnChanges {
 
         this.analyticsService.getBoardSummary(
             this.board.id,
-            this.currentTenant.id,
-            this.currentWorkspace.id,
+            Number(this.currentTenant.id),
+            Number(this.currentWorkspace.id),
             this.filters
         ).pipe(
             takeUntil(this.destroy$)
@@ -96,8 +89,8 @@ export class BoardStatsComponent implements OnInit, OnDestroy, OnChanges {
 
         this.analyticsService.clearBoardCache(
             this.board.id,
-            this.currentTenant.id,
-            this.currentWorkspace.id
+            Number(this.currentTenant.id),
+            Number(this.currentWorkspace.id)
         ).subscribe({
             next: () => {
                 this.refreshStats();

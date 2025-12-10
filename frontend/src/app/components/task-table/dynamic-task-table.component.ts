@@ -26,11 +26,7 @@ import { BoardStateService } from '../../services/board-state.service';
 // Import cell renderers
 import {
     BaseCellRendererComponent
-} from '../cell-renderers';
-import { TextCellRendererComponent } from '../cell-renderers/text-cell-renderer.component';
-import { StatusCellRendererComponent } from '../cell-renderers/status-cell-renderer.component';
-import { DateCellRendererComponent } from '../cell-renderers/date-cell-renderer.component';
-import { CheckboxCellRendererComponent } from '../cell-renderers/checkbox-cell-renderer.component';
+} from '../cell-renderers/base-cell-renderer.component';
 
 /**
  * Dynamic TaskTableComponent with support for dynamic columns
@@ -131,8 +127,6 @@ export class DynamicTaskTableComponent implements OnInit, OnDestroy {
         this.initializeDataStreams();
         this.loadTasks();
         this.loadColumns();
-        this.loadFieldValues();
-        this.joinBoardChannel();
         this.loadFieldValues();
         this.joinBoardChannel();
         this.subscribeToRealtimeEvents();
@@ -292,7 +286,7 @@ export class DynamicTaskTableComponent implements OnInit, OnDestroy {
 
             // Get all task IDs from current board
             this.tasks$.pipe(
-                takeUntil(this.destroy$)
+                take(1) // Take only the current value to avoid nested subscription
             ).subscribe(tasks => {
                 const taskIds = tasks.map(task => task.id);
 
@@ -353,34 +347,24 @@ export class DynamicTaskTableComponent implements OnInit, OnDestroy {
         this.boardStateService.taskCreated$
             .pipe(takeUntil(this.destroy$))
             .subscribe(task => {
-                const currentTasks = this.tasks$ as BehaviorSubject<Task[]>;
-                const tasks = currentTasks.value;
-                // Add to beginning or end based on position/sort
-                // For simplicity, we prepend it
-                currentTasks.next([task, ...tasks]);
+                // Trigger refresh to get updated tasks
+                this.refreshTrigger$.next();
             });
 
         // Task Updated
         this.boardStateService.taskUpdated$
             .pipe(takeUntil(this.destroy$))
             .subscribe(updatedTask => {
-                const currentTasks = this.tasks$ as BehaviorSubject<Task[]>;
-                const tasks = currentTasks.value;
-                const index = tasks.findIndex(t => t.id === updatedTask.id);
-                if (index !== -1) {
-                    const newTasks = [...tasks];
-                    newTasks[index] = updatedTask;
-                    currentTasks.next(newTasks);
-                }
+                // Trigger refresh to get updated tasks
+                this.refreshTrigger$.next();
             });
 
         // Task Deleted
         this.boardStateService.taskDeleted$
             .pipe(takeUntil(this.destroy$))
             .subscribe(({ taskId }) => {
-                const currentTasks = this.tasks$ as BehaviorSubject<Task[]>;
-                const tasks = currentTasks.value;
-                currentTasks.next(tasks.filter(t => t.id !== taskId));
+                // Trigger refresh to get updated tasks
+                this.refreshTrigger$.next();
             });
 
         // Column Created
@@ -417,20 +401,8 @@ export class DynamicTaskTableComponent implements OnInit, OnDestroy {
             .pipe(takeUntil(this.destroy$))
             .subscribe(updates => {
                 if (updates.tasks && updates.tasks.length > 0) {
-                    // Merge tasks
-                    const currentTasks = this.tasks$ as BehaviorSubject<Task[]>;
-                    const tasks = [...currentTasks.value];
-
-                    updates.tasks.forEach(updatedTask => {
-                        const index = tasks.findIndex(t => t.id === updatedTask.id);
-                        if (index !== -1) {
-                            tasks[index] = updatedTask;
-                        } else {
-                            tasks.unshift(updatedTask);
-                        }
-                    });
-
-                    currentTasks.next(tasks);
+                    // Trigger refresh to get updated tasks
+                    this.refreshTrigger$.next();
                 }
 
                 if (updates.columns && updates.columns.length > 0) {
@@ -537,7 +509,7 @@ export class DynamicTaskTableComponent implements OnInit, OnDestroy {
         this.showBulkActionToolbar = currentSelected.size > 0;
 
         // Emit all selected tasks
-        this.tasks$.subscribe(tasks => {
+        this.tasks$.pipe(take(1)).subscribe(tasks => {
             const selectedTasks = tasks.filter(task => currentSelected.has(task.id));
             this.tasksSelected.emit(selectedTasks);
         });
@@ -556,19 +528,8 @@ export class DynamicTaskTableComponent implements OnInit, OnDestroy {
      * Handle task update from details panel
      */
     onTaskDetailsPanelUpdate(updatedTask: Task): void {
-        // Update the task in the current tasks observable
-        this.tasks$.pipe(
-            takeUntil(this.destroy$)
-        ).subscribe(currentTasks => {
-            const updatedTasks = currentTasks.map(task =>
-                task.id === updatedTask.id ? updatedTask : task
-            );
-
-            // Update tasks observable with the updated tasks
-            const currentTasksValue = this.tasks$ as BehaviorSubject<Task[]>;
-            currentTasksValue.next(updatedTasks);
-        });
-
+        // Trigger refresh to get updated tasks
+        this.refreshTrigger$.next();
         this.taskUpdate.emit(updatedTask);
     }
 
@@ -613,19 +574,8 @@ export class DynamicTaskTableComponent implements OnInit, OnDestroy {
      * Handle bulk action toolbar tasks update
      */
     onBulkActionToolbarTasksUpdate(updatedTasks: Task[]): void {
-        // Update the tasks in the current tasks observable
-        this.tasks$.pipe(
-            takeUntil(this.destroy$)
-        ).subscribe(currentTasks => {
-            const mergedTasks = currentTasks.map(task => {
-                const updatedTask = updatedTasks.find(ut => ut.id === task.id);
-                return updatedTask || task;
-            });
-
-            // Update tasks observable with the merged tasks
-            const currentTasksValue = this.tasks$ as BehaviorSubject<Task[]>;
-            currentTasksValue.next(mergedTasks);
-        });
+        // Trigger refresh to get updated tasks
+        this.refreshTrigger$.next();
 
         // Emit task updates
         updatedTasks.forEach(updatedTask => {
@@ -637,19 +587,8 @@ export class DynamicTaskTableComponent implements OnInit, OnDestroy {
      * Handle task update from inline editing
      */
     onTaskUpdate(updatedTask: Task): void {
-        // Update the task in the current tasks observable
-        this.tasks$.pipe(
-            takeUntil(this.destroy$)
-        ).subscribe(currentTasks => {
-            const updatedTasks = currentTasks.map(task =>
-                task.id === updatedTask.id ? updatedTask : task
-            );
-
-            // Update tasks observable with the updated tasks
-            const currentTasksValue = this.tasks$ as BehaviorSubject<Task[]>;
-            currentTasksValue.next(updatedTasks);
-        });
-
+        // Trigger refresh to get updated tasks
+        this.refreshTrigger$.next();
         this.taskUpdate.emit(updatedTask);
     }
 
@@ -664,11 +603,20 @@ export class DynamicTaskTableComponent implements OnInit, OnDestroy {
                 return;
             }
 
+            // Find the existing field value for this column
+            const currentFieldValues = this.fieldValues$.value.get(taskId) || [];
+            const existingFieldValue = currentFieldValues.find(fv => fv.board_column_id === columnId);
+
+            if (!existingFieldValue) {
+                console.error('No field value found for column:', columnId);
+                return;
+            }
+
             this.taskFieldValueService.updateTaskFieldValue(
                 parseInt(context.currentTenant?.id || '0', 10),
                 parseInt(context.currentWorkspace?.id || '0', 10),
                 taskId,
-                taskId, // Field value ID is the same as task ID in this simplified version
+                existingFieldValue.id, // Use the field value ID, not column ID
                 value
             ).subscribe({
                 next: (updatedFieldValue) => {
@@ -703,12 +651,12 @@ export class DynamicTaskTableComponent implements OnInit, OnDestroy {
         this.showColumnMenu = !this.showColumnMenu;
     }
 
-    onColumnVisibilityToggle(columnKey: number): void {
+    onColumnVisibilityToggle(columnId: number): void {
         // This would need to be implemented based on column visibility management
-        console.log('Toggle column visibility:', columnKey);
+        console.log('Toggle column visibility:', columnId);
     }
 
-    getColumnVisibility(columnKey: number): boolean {
+    getColumnVisibility(columnId: number): boolean {
         // This would need to be implemented based on column visibility management
         return true;
     }

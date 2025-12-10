@@ -1,11 +1,11 @@
 import { Component, Input, OnInit, OnDestroy, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { Subject, of } from 'rxjs';
+import { Subject, of, Observable } from 'rxjs';
 import { takeUntil, catchError, debounceTime, distinctUntilChanged } from 'rxjs/operators';
 import { IActivity, ActivityService, IActivityFilters, IActivityListResponse } from '../../services/activity.service';
 import { WorkspaceService } from '../../services/workspace.service';
-import { Workspace } from '../../models/workspace.model';
+import { Workspace } from '../../models';
 
 @Component({
     selector: 'app-activity-feed',
@@ -18,7 +18,7 @@ export class ActivityFeedComponent implements OnInit, OnDestroy {
     private destroy$ = new Subject<void>();
     private searchSubject = new Subject<string>();
 
-    @Input() type: 'workspace' | 'board' | 'tenant' | 'recent' = 'recent';
+    @Input() type: 'workspace' | 'board' | 'tenant' | 'recent' | 'task' = 'recent';
     @Input() entityId: number | null = null;
     @Input() limit: number = 20;
     @Input() showFilters: boolean = true;
@@ -65,7 +65,7 @@ export class ActivityFeedComponent implements OnInit, OnDestroy {
     ];
 
     constructor(
-        private activityService: ActivityService,
+        public activityService: ActivityService,
         private workspaceService: WorkspaceService,
         private cdr: ChangeDetectorRef
     ) {
@@ -139,7 +139,7 @@ export class ActivityFeedComponent implements OnInit, OnDestroy {
                 this.cdr.detectChanges();
                 return of({ data: [], meta: { current_page: 1, last_page: 1, per_page: 20, total: 0 } } as IActivityListResponse);
             })
-        ).subscribe(response => {
+        ).subscribe((response: IActivityListResponse) => {
             if (append) {
                 this.activities = [...this.activities, ...response.data];
             } else {
@@ -188,7 +188,9 @@ export class ActivityFeedComponent implements OnInit, OnDestroy {
      * Load user's workspaces
      */
     private loadWorkspaces(): void {
-        this.workspaceService.getWorkspaces()
+        // Get current tenant ID - this would typically come from a service
+        const tenantId = 1; // Default fallback
+        this.workspaceService.getWorkspaces(tenantId.toString())
             .pipe(
                 takeUntil(this.destroy$),
                 catchError(error => {
@@ -196,8 +198,8 @@ export class ActivityFeedComponent implements OnInit, OnDestroy {
                     return of([]);
                 })
             )
-            .subscribe(response => {
-                this.workspaces = response.data || response;
+            .subscribe((response: any) => {
+                this.workspaces = Array.isArray(response) ? response : response.data || [];
                 this.cdr.detectChanges();
             });
     }
@@ -372,5 +374,19 @@ export class ActivityFeedComponent implements OnInit, OnDestroy {
 
         // For older dates, show the actual date
         return date.toLocaleDateString();
+    }
+
+    /**
+     * Check if any filters are applied
+     */
+    hasAnyFilters(): boolean {
+        return !!(
+            this.searchQuery ||
+            this.selectedWorkspaceId ||
+            this.filters.action ||
+            this.filters.subject_type ||
+            this.filters.date_from ||
+            this.filters.date_to
+        );
     }
 }

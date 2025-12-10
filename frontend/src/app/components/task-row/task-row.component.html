@@ -1,8 +1,8 @@
-<tr class="task-row" [class.selected]="selected" (click)="onRowClick($event)" (dblclick)="onRowDoubleClick()">
+<tr class="task-row" [class.selected]="selected" (click)="onRowClick($any($event))" (dblclick)="onRowDoubleClick()">
 
     <!-- Selection Checkbox -->
     <td class="select-cell" *ngIf="showCheckbox">
-        <input type="checkbox" [checked]="selected" (change)="onCheckboxChange($event)" class="task-checkbox"
+        <input type="checkbox" [checked]="selected" (change)="onCheckboxChange($any($event))" class="task-checkbox"
             [disabled]="!selectable">
     </td>
 
@@ -17,7 +17,7 @@
             <!-- Title Edit -->
             <div class="task-title-edit" *ngIf="isEditing('title')">
                 <input type="text" class="title-input" [ngModel]="editValue" (ngModelChange)="editValue = $event"
-                    (keydown)="onEditKeydown($event)" (blur)="onEditBlur()" data-edit-field="title"
+                    (keydown)="onEditKeydown($any($event))" (blur)="onEditBlur()" data-edit-field="title"
                     [disabled]="loading">
                 <div class="edit-actions" *ngIf="loading || error">
                     <span class="loading-spinner" *ngIf="loading">⏳</span>
@@ -71,7 +71,7 @@
         <div class="assignee-info editable-field" *ngIf="!isEditing('assignee_id')"
             (click)="startEditing('assignee_id', $event)" title="Click to edit">
             <div class="assignee-info" *ngIf="task.assignee; else noAssignee">
-                <div class="assignee-avatar" [style.background-color]="getAvatarColor(task.assignee.email)">
+                <div class="assignee-avatar" [style.background-color]="getAvatarColor(task.assignee?.email)">
                     {{ getUserInitials(task.assignee) }}
                 </div>
                 <div class="assignee-details">

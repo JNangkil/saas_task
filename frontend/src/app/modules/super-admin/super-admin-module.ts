@@ -38,13 +38,7 @@ import { MatGridListModule } from '@angular/material/grid-list';
 
 @NgModule({
   declarations: [
-    SuperAdminLayoutComponent,
-    DashboardComponent,
-    TenantsComponent,
-    TenantDetailComponent,
-    PlansComponent,
-    SystemSettingsComponent,
-    SystemLogsComponent
+    // Components are now standalone, no declarations needed
   ],
   imports: [
     CommonModule,
@@ -73,7 +67,7 @@ import { MatGridListModule } from '@angular/material/grid-list';
     MatGridListModule
   ],
   exports: [
-    SuperAdminLayoutComponent
+    // No exports needed for standalone components
   ]
 })
 export class SuperAdminModule { }

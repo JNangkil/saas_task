@@ -35,11 +35,13 @@
                         <button class="close-btn" (click)="showColumnMenu = false">×</button>
                     </div>
                     <div class="column-options">
-                        <label class="column-option" *ngFor="let column of (columns$ | async)">
-                            <input type="checkbox" [checked]="getColumnVisibility(column.id)"
-                                (change)="onColumnVisibilityToggle(column.id)" class="column-checkbox">
-                            <span class="column-label">{{ column.name }}</span>
-                        </label>
+                        <ng-container *ngIf="columns$ | async as columns">
+                            <label class="column-option" *ngFor="let column of columns">
+                                <input type="checkbox" [checked]="getColumnVisibility(column.id)"
+                                    (change)="onColumnVisibilityToggle(column.id)" class="column-checkbox">
+                                <span class="column-label">{{ column.name }}</span>
+                            </label>
+                        </ng-container>
                     </div>
                 </div>
             </div>
@@ -111,104 +113,114 @@
 
         <!-- Tasks Table -->
         <ng-container *ngIf="tasks$ | async as tasks">
-            <div class="tasks-table-wrapper" *ngIf="tasks.length > 0">
-                <table class="tasks-table">
-                    <thead>
-                        <tr>
-                            <!-- Select All Checkbox -->
-                            <th class="select-column" *ngIf="tableConfig.allowRowSelection">
-                                <input type="checkbox" [checked]="areAllTasksSelected()"
-                                    (change)="onSelectAllTasks($event.target.checked)" class="select-checkbox">
-                            </th>
+            <ng-container *ngIf="columns$ | async as columns">
+                <ng-container *ngIf="sort$ | async as sort">
+                    <ng-container *ngIf="selectedTasks$ | async as selectedTasks">
+                        <div class="tasks-table-wrapper" *ngIf="tasks.length > 0">
+                            <table class="tasks-table">
+                                <thead>
+                                    <tr>
+                                        <!-- Select All Checkbox -->
+                                        <th class="select-column" *ngIf="tableConfig.allowRowSelection">
+                                            <input type="checkbox" [checked]="areAllTasksSelected()"
+                                                (change)="onSelectAllTasks($any($event).target.checked || false)"
+                                                class="select-checkbox">
+                                        </th>
 
-                            <!-- Dynamic Column Headers -->
-                            <th *ngFor="let column of (columns$ | async)"
-                                [style.width]="column.width ? column.width + 'px' : 'auto'"
-                                [class.sortable]="column.type ? isSortable(column.type) : false"
-                                (click)="column.type ? onSortChange('column_' + column.id) : null">
-                                <div class="column-header">
-                                    <span class="column-title">{{ column.name }}</span>
-                                    <span class="sort-indicator"
-                                        *ngIf="(sort$ | async)?.sort_by === 'column_' + column.id">
-                                        <span class="sort-asc" *ngIf="(sort$ | async)?.sort_order === 'asc'">↑</span>
-                                        <span class="sort-desc" *ngIf="(sort$ | async)?.sort_order === 'desc'">↓</span>
-                                    </span>
-                                </div>
-                            </th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <!-- Dynamic Task Rows -->
-                        <tr *ngFor="let task of tasks; trackBy: trackByTaskId">
-                            <!-- Select Checkbox -->
-                            <td class="select-column" *ngIf="tableConfig.allowRowSelection">
-                                <input type="checkbox" [checked]="(selectedTasks$ | async)?.has(task.id) || false"
-                                    (change)="onTaskSelect(task, $event.target.checked)" class="select-checkbox">
-                            </td>
+                                        <!-- Dynamic Column Headers -->
+                                        <th *ngFor="let column of columns"
+                                            [style.width]="column.width ? column.width + 'px' : 'auto'"
+                                            [class.sortable]="column.type ? isSortable(column.type) : false"
+                                            (click)="column.type ? onSortChange('column_' + column.id) : null">
+                                            <div class="column-header">
+                                                <span class="column-title">{{ column.name }}</span>
+                                                <span class="sort-indicator"
+                                                    *ngIf="sort?.sort_by === 'column_' + column.id">
+                                                    <span class="sort-asc" *ngIf="sort?.sort_order === 'asc'">↑</span>
+                                                    <span class="sort-desc" *ngIf="sort?.sort_order === 'desc'">↓</span>
+                                                </span>
+                                            </div>
+                                        </th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <!-- Dynamic Task Rows -->
+                                    <tr *ngFor="let task of tasks; trackBy: trackByTaskId">
+                                        <!-- Select Checkbox -->
+                                        <td class="select-column" *ngIf="tableConfig.allowRowSelection">
+                                            <input type="checkbox" [checked]="selectedTasks?.has(task.id) || false"
+                                                (change)="onTaskSelect(task, $any($event).target.checked || false)"
+                                                class="select-checkbox">
+                                        </td>
 
-                            <!-- Dynamic Column Cells -->
-                            <td *ngFor="let column of (columns$ | async)"
-                                [style.width]="column.width ? column.width + 'px' : 'auto'" class="table-cell">
-                                <!-- Dynamic Cell Renderer Component -->
-                                <ng-container [ngSwitch]="column.type">
-                                    <!-- Text Cell Renderer -->
-                                    <ng-container *ngSwitchCase="'text'">
-                                        <div class="table-cell" [title]="column.name">
-                                            {{ getFieldValue(task, column.id) || '—' }}
-                                        </div>
-                                    </ng-container>
+                                        <!-- Dynamic Column Cells -->
+                                        <td *ngFor="let column of columns"
+                                            [style.width]="column.width ? column.width + 'px' : 'auto'"
+                                            class="table-cell">
+                                            <!-- Dynamic Cell Renderer Component -->
+                                            <ng-container [ngSwitch]="column.type">
+                                                <!-- Text Cell Renderer -->
+                                                <ng-container *ngSwitchCase="'text'">
+                                                    <div class="table-cell" [title]="column.name">
+                                                        {{ getFieldValue(task, column.id) || '—' }}
+                                                    </div>
+                                                </ng-container>
 
-                                    <ng-container *ngSwitchCase="'long_text'">
-                                        <div class="table-cell" [title]="column.name">
-                                            {{ getFieldValue(task, column.id) || '—' }}
-                                        </div>
-                                    </ng-container>
+                                                <ng-container *ngSwitchCase="'long_text'">
+                                                    <div class="table-cell" [title]="column.name">
+                                                        {{ getFieldValue(task, column.id) || '—' }}
+                                                    </div>
+                                                </ng-container>
 
-                                    <!-- Status Cell Renderer -->
-                                    <ng-container *ngSwitchCase="'status'">
-                                        <div class="table-cell" [title]="column.name">
-                                            {{ getFieldValue(task, column.id) || '—' }}
-                                        </div>
-                                    </ng-container>
+                                                <!-- Status Cell Renderer -->
+                                                <ng-container *ngSwitchCase="'status'">
+                                                    <div class="table-cell" [title]="column.name">
+                                                        {{ getFieldValue(task, column.id) || '—' }}
+                                                    </div>
+                                                </ng-container>
 
-                                    <ng-container *ngSwitchCase="'priority'">
-                                        <div class="table-cell" [title]="column.name">
-                                            {{ getFieldValue(task, column.id) || '—' }}
-                                        </div>
-                                    </ng-container>
+                                                <ng-container *ngSwitchCase="'priority'">
+                                                    <div class="table-cell" [title]="column.name">
+                                                        {{ getFieldValue(task, column.id) || '—' }}
+                                                    </div>
+                                                </ng-container>
 
-                                    <!-- Date Cell Renderer -->
-                                    <ng-container *ngSwitchCase="'date'">
-                                        <div class="table-cell" [title]="column.name">
-                                            {{ getFieldValue(task, column.id) || '—' }}
-                                        </div>
-                                    </ng-container>
+                                                <!-- Date Cell Renderer -->
+                                                <ng-container *ngSwitchCase="'date'">
+                                                    <div class="table-cell" [title]="column.name">
+                                                        {{ getFieldValue(task, column.id) || '—' }}
+                                                    </div>
+                                                </ng-container>
 
-                                    <ng-container *ngSwitchCase="'datetime'">
-                                        <div class="table-cell" [title]="column.name">
-                                            {{ getFieldValue(task, column.id) || '—' }}
-                                        </div>
-                                    </ng-container>
+                                                <ng-container *ngSwitchCase="'datetime'">
+                                                    <div class="table-cell" [title]="column.name">
+                                                        {{ getFieldValue(task, column.id) || '—' }}
+                                                    </div>
+                                                </ng-container>
 
-                                    <!-- Checkbox Cell Renderer -->
-                                    <ng-container *ngSwitchCase="'checkbox'">
-                                        <div class="table-cell" [title]="column.name">
-                                            {{ getFieldValue(task, column.id) || '—' }}
-                                        </div>
-                                    </ng-container>
+                                                <!-- Checkbox Cell Renderer -->
+                                                <ng-container *ngSwitchCase="'checkbox'">
+                                                    <div class="table-cell" [title]="column.name">
+                                                        {{ getFieldValue(task, column.id) || '—' }}
+                                                    </div>
+                                                </ng-container>
 
-                                    <!-- Default Text Cell Renderer for other types -->
-                                    <ng-container *ngSwitchDefault>
-                                        <div class="table-cell" [title]="column.name">
-                                            {{ getFieldValue(task, column.id) || '—' }}
-                                        </div>
-                                    </ng-container>
-                                </ng-container>
-                            </td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
+                                                <!-- Default Text Cell Renderer for other types -->
+                                                <ng-container *ngSwitchDefault>
+                                                    <div class="table-cell" [title]="column.name">
+                                                        {{ getFieldValue(task, column.id) || '—' }}
+                                                    </div>
+                                                </ng-container>
+                                            </ng-container>
+
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </ng-container>
+                </ng-container>
+            </ng-container>
         </ng-container>
     </div>
 </div>
@@ -249,16 +261,15 @@
             Last
         </button>
     </div>
-
-    <!-- Task Details Panel -->
-    <app-task-details-panel *ngIf="selectedTaskForDetails" [task]="selectedTaskForDetails"
-        [visible]="showTaskDetailsPanel" (close)="onTaskDetailsPanelClose()" (minimize)="onTaskDetailsPanelMinimize()"
-        (taskUpdate)="onTaskDetailsPanelUpdate($event)">
-    </app-task-details-panel>
-
-    <!-- Bulk Action Toolbar -->
-    <app-bulk-action-toolbar [selectedTasks]="getSelectedTasks()" [visible]="showBulkActionToolbar"
-        (tasksUpdated)="onBulkActionToolbarTasksUpdate($event)"
-        (selectionCleared)="onBulkActionToolbarSelectionClear()">
-    </app-bulk-action-toolbar>
 </div>
+
+<!-- Task Details Panel -->
+<app-task-details-panel *ngIf="selectedTaskForDetails" [task]="selectedTaskForDetails" [visible]="showTaskDetailsPanel"
+    (close)="onTaskDetailsPanelClose()" (minimize)="onTaskDetailsPanelMinimize()"
+    (taskUpdate)="onTaskDetailsPanelUpdate($event)">
+</app-task-details-panel>
+
+<!-- Bulk Action Toolbar -->
+<app-bulk-action-toolbar [selectedTasks]="getSelectedTasks()" [visible]="showBulkActionToolbar"
+    (tasksUpdated)="onBulkActionToolbarTasksUpdate($event)" (selectionCleared)="onBulkActionToolbarSelectionClear()">
+</app-bulk-action-toolbar>

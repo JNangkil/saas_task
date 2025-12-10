@@ -1,5 +1,5 @@
-import { Injectable } from '@angular/core';
-import { Subject, BehaviorSubject, Observable } from 'rxjs';
+import { Injectable, OnDestroy } from '@angular/core';
+import { Subject, BehaviorSubject, Observable, takeUntil } from 'rxjs';
 import { RealtimeService } from './realtime.service';
 import { Task, BoardColumn, TaskComment } from '../models';
 import { ApiService } from './api.service';
@@ -8,7 +8,7 @@ import { WorkspaceContextService } from './workspace-context.service';
 @Injectable({
     providedIn: 'root'
 })
-export class BoardStateService {
+export class BoardStateService implements OnDestroy {
     // Task Events
     public taskCreated$ = new Subject<Task>();
     public taskUpdated$ = new Subject<Task>();
@@ -44,6 +44,7 @@ export class BoardStateService {
     public selectedTask$ = new BehaviorSubject<Task | null>(null);
 
     private currentContext: any = {};
+    private destroy$ = new Subject<void>();
 
     constructor(
         private realtimeService: RealtimeService,
@@ -51,7 +52,9 @@ export class BoardStateService {
         private workspaceContextService: WorkspaceContextService
     ) {
         // Monitor connection status for fallback
-        this.realtimeService.connectionStatus$.subscribe(connected => {
+        this.realtimeService.connectionStatus$.pipe(
+            takeUntil(this.destroy$)
+        ).subscribe(connected => {
             if (connected) {
                 this.stopPolling();
             } else {
@@ -60,9 +63,17 @@ export class BoardStateService {
         });
 
         // Keep track of current context
-        this.workspaceContextService.context$.subscribe(context => {
+        this.workspaceContextService.context$.pipe(
+            takeUntil(this.destroy$)
+        ).subscribe(context => {
             this.currentContext = context;
         });
+    }
+
+    ngOnDestroy(): void {
+        this.destroy$.next();
+        this.destroy$.complete();
+        this.stopPolling();
     }
 
     /**
@@ -227,7 +238,9 @@ export class BoardStateService {
 
         this.apiService.get<any>(endpoint, {
             params: { since: this.lastPollTimestamp }
-        }).subscribe({
+        }).pipe(
+            takeUntil(this.destroy$)
+        ).subscribe({
             next: (response) => {
                 // Update timestamp for next poll
                 if (response.timestamp) {

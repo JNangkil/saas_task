@@ -11,14 +11,13 @@
                     <ng-container *ngSwitchCase="'workspace'">Workspace Activity</ng-container>
                     <ng-container *ngSwitchDefault>Activity Feed</ng-container>
                 </ng-container>
-                <span class="badge bg-secondary ms-2" *ngIf="totalActivities > 0 && !compact">{{ totalActivities }}</span>
+                <span class="badge bg-secondary ms-2" *ngIf="totalActivities > 0 && !compact">{{ totalActivities
+                    }}</span>
             </h6>
 
             <!-- Clear filters button -->
-            <button class="btn btn-outline-secondary btn-sm"
-                    *ngIf="(hasAnyFilters()) && !compact"
-                    (click)="clearFilters()"
-                    title="Clear all filters">
+            <button class="btn btn-outline-secondary btn-sm" *ngIf="(hasAnyFilters()) && !compact"
+                (click)="clearFilters()" title="Clear all filters">
                 <i class="bi bi-x-lg me-1"></i>
                 Clear
             </button>
@@ -33,19 +32,15 @@
                         <span class="input-group-text">
                             <i class="bi bi-search"></i>
                         </span>
-                        <input type="text"
-                               class="form-control"
-                               placeholder="Search activities..."
-                               [(ngModel)]="searchQuery"
-                               (input)="onSearchChange($any($event.target).value)">
+                        <input type="text" class="form-control" placeholder="Search activities..."
+                            [(ngModel)]="searchQuery" (input)="onSearchChange($any($event.target).value)">
                     </div>
                 </div>
 
                 <!-- Workspace filter (for tenant and recent feeds) -->
                 <div class="col-md-3" *ngIf="type === 'tenant' || type === 'recent'">
-                    <select class="form-select form-select-sm"
-                            [(ngModel)]="selectedWorkspaceId"
-                            (change)="onWorkspaceChange($any($event.target).value)">
+                    <select class="form-select form-select-sm" [(ngModel)]="selectedWorkspaceId"
+                        (change)="onWorkspaceChange($any($event.target).value)">
                         <option [ngValue]="null">All Workspaces</option>
                         <option *ngFor="let workspace of workspaces" [ngValue]="workspace.id">
                             {{ workspace.name }}
@@ -55,9 +50,8 @@
 
                 <!-- Action filter -->
                 <div class="col-md-2">
-                    <select class="form-select form-select-sm"
-                            [(ngModel)]="filters.action"
-                            (change)="onActionFilterChange($any($event.target).value)">
+                    <select class="form-select form-select-sm" [(ngModel)]="filters.action"
+                        (change)="onActionFilterChange($any($event.target).value)">
                         <option *ngFor="let action of actionFilters" [value]="action.value">
                             {{ action.label }}
                         </option>
@@ -66,9 +60,8 @@
 
                 <!-- Subject type filter (for tenant and workspace feeds) -->
                 <div class="col-md-2" *ngIf="type === 'tenant' || type === 'workspace'">
-                    <select class="form-select form-select-sm"
-                            [(ngModel)]="filters.subject_type"
-                            (change)="onSubjectTypeFilterChange($any($event.target).value)">
+                    <select class="form-select form-select-sm" [(ngModel)]="filters.subject_type"
+                        (change)="onSubjectTypeFilterChange($any($event.target).value)">
                         <option *ngFor="let subject of subjectTypeFilters" [value]="subject.value">
                             {{ subject.label }}
                         </option>
@@ -79,18 +72,12 @@
             <!-- Date range filter row -->
             <div class="row g-2 mt-1" *ngIf="!compact">
                 <div class="col-md-3">
-                    <input type="date"
-                           class="form-control form-control-sm"
-                           placeholder="From date"
-                           [(ngModel)]="filters.date_from"
-                           (ngModelChange)="onDateRangeChange()">
+                    <input type="date" class="form-control form-control-sm" placeholder="From date"
+                        [(ngModel)]="filters.date_from" (ngModelChange)="onDateRangeChange()">
                 </div>
                 <div class="col-md-3">
-                    <input type="date"
-                           class="form-control form-control-sm"
-                           placeholder="To date"
-                           [(ngModel)]="filters.date_to"
-                           (ngModelChange)="onDateRangeChange()">
+                    <input type="date" class="form-control form-control-sm" placeholder="To date"
+                        [(ngModel)]="filters.date_to" (ngModelChange)="onDateRangeChange()">
                 </div>
             </div>
         </div>
@@ -118,9 +105,8 @@
 
         <!-- Activity list -->
         <div class="activity-list">
-            <div *ngFor="let activity of activities; trackBy: trackByActivityId"
-                 class="activity-item"
-                 [class.compact]="compact">
+            <div *ngFor="let activity of activities; trackBy: trackByActivityId" class="activity-item"
+                [class.compact]="compact">
                 <!-- Activity icon -->
                 <div class="activity-icon-wrapper">
                     <i class="bi {{ getActivityIcon(activity) }} activity-icon bg-{{ getActivityColor(activity) }}"></i>
@@ -130,12 +116,8 @@
                 <div class="activity-details">
                     <!-- User and description -->
                     <div class="d-flex align-items-start">
-                        <img [src]="getAvatarUrl(activity.user)"
-                             [alt]="activity.user?.name || 'System'"
-                             class="activity-avatar me-2"
-                             [class.compact]="compact"
-                             width="32"
-                             height="32">
+                        <img [src]="getAvatarUrl(activity.user)" [alt]="activity.user?.name || 'System'"
+                            class="activity-avatar me-2" [class.compact]="compact" width="32" height="32">
 
                         <div class="flex-grow-1">
                             <!-- Main description -->
@@ -143,7 +125,8 @@
                                 <strong *ngIf="activity.user && !compact">{{ activity.user.name }}</strong>
                                 <span *ngIf="activity.user && compact">{{ activity.user.name }}</span>
                                 <span *ngIf="!activity.user" class="text-muted">System</span>
-                                <span class="action-text">{{ activity.description || activityService.formatActivityDescription(activity) }}</span>
+                                <span class="action-text">{{ activity.description ||
+                                    activityService.formatActivityDescription(activity) }}</span>
                             </div>
 
                             <!-- Metadata row -->
@@ -158,8 +141,7 @@
 
                             <!-- Activity changes (detailed view only) -->
                             <div *ngIf="activity.changes && !compact" class="activity-changes mt-2">
-                                <div *ngFor="let change of getFormattedChanges(activity); trackBy: $index"
-                                     class="change-item">
+                                <div *ngFor="let change of getFormattedChanges(activity)" class="change-item">
                                     <i class="bi bi-arrow-right-short text-muted me-1"></i>
                                     {{ change }}
                                 </div>
@@ -172,9 +154,7 @@
 
         <!-- Load more button -->
         <div *ngIf="hasMore && infiniteScroll && !compact" class="text-center mt-4">
-            <button class="btn btn-outline-primary"
-                    (click)="loadMore()"
-                    [disabled]="isLoading">
+            <button class="btn btn-outline-primary" (click)="loadMore()" [disabled]="isLoading">
                 <span *ngIf="!isLoading">
                     <i class="bi bi-arrow-down-circle me-1"></i>
                     Load More

@@ -6,6 +6,7 @@ import { TenantUserService } from '../../services/tenant-user.service';
 import { PermissionService } from '../../services/permission.service';
 import { ToastService } from '../../services/toast.service';
 import { TenantUser, TenantUserUpdate } from '../../models/user.model';
+import { Permission } from '../../models/user.model';
 
 @Component({
     selector: 'app-tenant-user-management-page',
@@ -141,8 +142,8 @@ export class TenantUserManagementPageComponent implements OnInit, OnDestroy {
             if (this.searchQuery) {
                 const query = this.searchQuery.toLowerCase();
                 const matchesSearch = user.name.toLowerCase().includes(query) ||
-                                     user.email.toLowerCase().includes(query) ||
-                                     (user.job_title && user.job_title.toLowerCase().includes(query));
+                    user.email.toLowerCase().includes(query) ||
+                    (user.job_title && user.job_title.toLowerCase().includes(query));
                 if (!matchesSearch) return false;
             }
 
@@ -212,26 +213,26 @@ export class TenantUserManagementPageComponent implements OnInit, OnDestroy {
             this.editingUser.id,
             updateData
         ).pipe(takeUntil(this.destroy$))
-        .subscribe({
-            next: (updatedUser) => {
-                // Update user in list
-                const index = this.users.findIndex(u => u.id === updatedUser.id);
-                if (index !== -1) {
-                    this.users[index] = updatedUser;
+            .subscribe({
+                next: (updatedUser) => {
+                    // Update user in list
+                    const index = this.users.findIndex(u => u.id === updatedUser.id);
+                    if (index !== -1) {
+                        this.users[index] = updatedUser;
+                    }
+
+                    // Reapply filters
+                    this.applyFilters();
+
+                    this.editingUser = null;
+                    this.isUpdating = false;
+                    this.toastService.showSuccess('User updated successfully');
+                },
+                error: (error) => {
+                    this.toastService.showError('Failed to update user: ' + error.message);
+                    this.isUpdating = false;
                 }
-
-                // Reapply filters
-                this.applyFilters();
-
-                this.editingUser = null;
-                this.isUpdating = false;
-                this.toastService.showSuccess('User updated successfully');
-            },
-            error: (error) => {
-                this.toastService.showError('Failed to update user: ' + error.message);
-                this.isUpdating = false;
-            }
-        });
+            });
     }
 
     /**
@@ -255,17 +256,17 @@ export class TenantUserManagementPageComponent implements OnInit, OnDestroy {
             this.currentTenantId,
             user.id
         ).pipe(takeUntil(this.destroy$))
-        .subscribe({
-            next: () => {
-                // Remove user from list
-                this.users = this.users.filter(u => u.id !== user.id);
-                this.applyFilters();
-                this.toastService.showSuccess('User removed successfully');
-            },
-            error: (error) => {
-                this.toastService.showError('Failed to remove user: ' + error.message);
-            }
-        });
+            .subscribe({
+                next: () => {
+                    // Remove user from list
+                    this.users = this.users.filter(u => u.id !== user.id);
+                    this.applyFilters();
+                    this.toastService.showSuccess('User removed successfully');
+                },
+                error: (error) => {
+                    this.toastService.showError('Failed to remove user: ' + error.message);
+                }
+            });
     }
 
     /**
@@ -313,9 +314,7 @@ export class TenantUserManagementPageComponent implements OnInit, OnDestroy {
      * Can manage users check
      */
     get canManageUsers(): boolean {
-        return this.permissionService.hasPermission('tenant:manage_users');
+        return this.permissionService.hasPermission(Permission.TENANT_MANAGE_USERS);
     }
 
-    // Property to store current tenant ID
-    private currentTenantId: number | null = null;
 }

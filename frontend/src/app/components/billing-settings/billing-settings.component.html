@@ -49,7 +49,7 @@
                         <div class="subscription-status">
                             <span class="status-badge">{{ currentSubscription.status_display }}</span>
                             <span class="next-billing" *ngIf="currentSubscription.current_period_end">
-                                Next billing: {{ formatDate(currentSubscription.current_period_end) }}
+                                Next billing: {{ formatDate(currentSubscription.current_period_end || '') }}
                                 ({{ getDaysRemaining() }} days)
                             </span>
                         </div>
@@ -529,12 +529,14 @@
 
                     <div class="cancel-timing">
                         <label class="radio-label">
-                            <input type="radio" name="cancelTiming" [value]="false" [(ngModel)]="cancelImmediately">
+                            <input type="radio" name="cancelTiming" [value]="false" [(ngModel)]="cancelImmediately"
+                                [ngModelOptions]="{standalone: true}">
                             <span class="radio-mark"></span>
                             Cancel at end of billing period
                         </label>
                         <label class="radio-label">
-                            <input type="radio" name="cancelTiming" [value]="true" [(ngModel)]="cancelImmediately">
+                            <input type="radio" name="cancelTiming" [value]="true" [(ngModel)]="cancelImmediately"
+                                [ngModelOptions]="{standalone: true}">
                             <span class="radio-mark"></span>
                             Cancel immediately
                         </label>

@@ -216,6 +216,7 @@
         .feed-header {
             .feed-filters {
                 .row {
+
                     .col-md-4,
                     .col-md-3,
                     .col-md-2 {
@@ -265,11 +266,3 @@
 }
 
 // Helper method check (would be in component)
-.hasAnyFilters() {
-    return this.searchQuery ||
-           this.selectedWorkspaceId ||
-           this.filters.action ||
-           this.filters.subject_type ||
-           this.filters.date_from ||
-           this.filters.date_to;
-}

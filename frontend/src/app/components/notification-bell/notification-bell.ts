@@ -1,11 +1,12 @@
 import { Component, OnInit, OnDestroy } from '@angular/core';
 import { Router } from '@angular/router';
 import { Observable, Subscription } from 'rxjs';
+import { CommonModule } from '@angular/common';
 import { NotificationService, NotificationData } from '../../services/notification';
 
 @Component({
   selector: 'app-notification-bell',
-  imports: [],
+  imports: [CommonModule],
   templateUrl: './notification-bell.html',
   styleUrl: './notification-bell.css',
 })

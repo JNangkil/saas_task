@@ -256,7 +256,7 @@
     </div>
 
     <!-- Confirmation Dialog -->
-    <div class="modal-overlay" *ngIf="showConfirmDialog" (click)="closeConfirmDialog()">
+    <div class="modal-overlay" *ngIf="showConfirmDialog && confirmDialogData" (click)="closeConfirmDialog()">
         <div class="modal-content confirm-dialog" (click)="$event.stopPropagation()">
             <div class="modal-header">
                 <h3>{{ confirmDialogData?.title }}</h3>
@@ -265,7 +265,7 @@
                 <p>{{ confirmDialogData?.message }}</p>
             </div>
             <div class="modal-footer">
-                <button class="confirm-btn" (click)="confirmDialogData?.action()">
+                <button class="confirm-btn" (click)="confirmDialogData.action()">
                     Confirm
                 </button>
                 <button class="cancel-btn" (click)="closeConfirmDialog()">

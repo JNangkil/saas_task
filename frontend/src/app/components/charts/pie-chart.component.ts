@@ -66,8 +66,12 @@ export class PieChartComponent implements OnChanges {
           label: (context) => {
             const label = context.label || '';
             const value = context.parsed || 0;
-            const total = context.dataset.data.reduce((a: number, b: number) => a + b, 0);
-            const percentage = ((value / total) * 100).toFixed(1);
+            // FIX: Handle null values and type safety with proper reduce function
+            const total = context.dataset.data.reduce((prev: number, curr: any) => {
+              const currValue = curr || 0;
+              return prev + currValue;
+            }, 0);
+            const percentage = total > 0 ? (((value as number) / total) * 100).toFixed(1) : '0.0';
             return `${label}: ${value} (${percentage}%)`;
           }
         }
@@ -102,22 +106,25 @@ export class PieChartComponent implements OnChanges {
   }
 
   private updateChartOptions(): void {
-    this.chartOptions = {
-      ...this.chartOptions,
-      plugins: {
-        ...this.chartOptions.plugins,
-        title: {
-          display: !!this.title,
-          text: this.title || '',
-          font: {
-            size: 16,
-            weight: 'bold'
-          },
-          padding: {
-            bottom: 20
+    // FIX: Use proper spread operator with null check
+    if (this.chartOptions) {
+      this.chartOptions = {
+        ...this.chartOptions,
+        plugins: {
+          ...this.chartOptions.plugins,
+          title: {
+            display: !!this.title,
+            text: this.title || '',
+            font: {
+              size: 16,
+              weight: 'bold'
+            },
+            padding: {
+              bottom: 20
+            }
           }
         }
-      }
-    };
+      };
+    }
   }
 }

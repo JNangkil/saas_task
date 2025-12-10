@@ -87,7 +87,7 @@ export class TaskWatchersComponent implements OnInit, OnDestroy {
             .pipe(takeUntil(this.destroy$))
             .subscribe({
                 next: (response) => {
-                    this.watchers = response.data.map(watcher => ({
+                    this.watchers = response.data.map((watcher: any) => ({
                         ...watcher,
                         isWatching: true,
                         isCurrent: watcher.isCurrent || false
@@ -132,25 +132,25 @@ export class TaskWatchersComponent implements OnInit, OnDestroy {
 
         return this.workspaceMemberService.getMembers(this.workspaceId).pipe(
             map(response => {
-                let users = response.data.map(member => ({
-                    id: member.user.id,
-                    name: member.user.name,
-                    email: member.user.email,
-                    avatar_url: member.user.avatar_url,
-                    job_title: member.user.job_title,
-                    status: member.user.status,
-                    created_at: member.user.created_at,
-                    updated_at: member.user.updated_at,
-                    isCurrent: member.current_user || false
+                let users = response.members.map((member: any) => ({
+                    id: parseInt(member.user_id, 10),
+                    name: member.name,
+                    email: member.email,
+                    avatar_url: undefined, // Not available in IWorkspaceMember
+                    job_title: undefined, // Not available in IWorkspaceMember
+                    status: 'active', // Not available in IWorkspaceMember
+                    created_at: member.created_at,
+                    updated_at: member.updated_at,
+                    isCurrent: false // Not available in IWorkspaceMember
                 } as WatcherUser));
 
                 // Filter out existing watchers
-                users = users.filter(user => !this.watchers.some(watcher => watcher.id === user.id));
+                users = users.filter((user: any) => !this.watchers.some(watcher => watcher.id === user.id));
 
                 // Filter by search query if provided
                 if (query) {
                     const lowerQuery = query.toLowerCase();
-                    users = users.filter(user =>
+                    users = users.filter((user: any) =>
                         user.name.toLowerCase().includes(lowerQuery) ||
                         user.email.toLowerCase().includes(lowerQuery) ||
                         (user.job_title && user.job_title.toLowerCase().includes(lowerQuery))

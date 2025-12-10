@@ -1,6 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { SuperAdminService, Plan } from '../../../../services/super-admin.service';
+import { SuperAdminService, Plan } from '../../../../services/super-admin';
 import { MatCardModule } from '@angular/material/card';
 import { MatIconModule } from '@angular/material/icon';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
@@ -11,6 +11,7 @@ import { MatSnackBar } from '@angular/material/snack-bar';
 
 @Component({
   selector: 'app-plans',
+  standalone: true,
   imports: [
     CommonModule,
     MatCardModule,
@@ -23,7 +24,7 @@ import { MatSnackBar } from '@angular/material/snack-bar';
   templateUrl: './plans.html',
   styleUrl: './plans.css',
 })
-export class Plans implements OnInit {
+export class PlansComponent implements OnInit {
   plans: Plan[] = [];
   loading = true;
   error: string | null = null;
@@ -31,7 +32,7 @@ export class Plans implements OnInit {
   constructor(
     private superAdminService: SuperAdminService,
     private snackBar: MatSnackBar
-  ) {}
+  ) { }
 
   ngOnInit() {
     this.loadPlans();

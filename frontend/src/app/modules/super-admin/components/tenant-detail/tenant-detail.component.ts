@@ -1,7 +1,7 @@
 import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule, TitleCasePipe, DatePipe } from '@angular/common';
 import { ActivatedRoute, Router } from '@angular/router';
-import { SuperAdminService, Tenant } from '../../../../services/super-admin.service';
+import { SuperAdminService, Tenant } from '../../../../services/super-admin';
 import { MatCardModule } from '@angular/material/card';
 import { MatIconModule } from '@angular/material/icon';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
@@ -22,6 +22,7 @@ export interface ConfirmDialogData {
 
 @Component({
   selector: 'app-tenant-detail',
+  standalone: true,
   imports: [
     CommonModule,
     MatCardModule,
@@ -36,7 +37,7 @@ export interface ConfirmDialogData {
   templateUrl: './tenant-detail.html',
   styleUrl: './tenant-detail.css',
 })
-export class TenantDetail implements OnInit, OnDestroy {
+export class TenantDetailComponent implements OnInit, OnDestroy {
   tenant: Tenant | null = null;
   loading = true;
   error: string | null = null;
@@ -48,7 +49,7 @@ export class TenantDetail implements OnInit, OnDestroy {
     private superAdminService: SuperAdminService,
     private snackBar: MatSnackBar,
     private dialog: MatDialog
-  ) {}
+  ) { }
 
   ngOnInit() {
     this.routeSub = this.route.params.subscribe(params => {
@@ -70,11 +71,11 @@ export class TenantDetail implements OnInit, OnDestroy {
     this.error = null;
 
     this.superAdminService.getTenant(+tenantId).subscribe({
-      next: (tenant) => {
+      next: (tenant: Tenant) => {
         this.tenant = tenant;
         this.loading = false;
       },
-      error: (error) => {
+      error: (error: any) => {
         this.error = 'Failed to load tenant details. Please try again.';
         this.loading = false;
         console.error('Error loading tenant:', error);
@@ -89,13 +90,13 @@ export class TenantDetail implements OnInit, OnDestroy {
 
     if (confirm(confirmMessage)) {
       this.superAdminService.updateTenantStatus(this.tenant.id, status).subscribe({
-        next: (updatedTenant) => {
+        next: (updatedTenant: Tenant) => {
           this.tenant = updatedTenant;
           this.snackBar.open(`Tenant status updated to ${status}`, 'Close', {
             duration: 3000
           });
         },
-        error: (error) => {
+        error: (error: any) => {
           this.snackBar.open('Failed to update tenant status', 'Close', {
             duration: 3000
           });
@@ -112,7 +113,7 @@ export class TenantDetail implements OnInit, OnDestroy {
 
     if (confirm(confirmMessage)) {
       this.superAdminService.impersonateTenant(this.tenant.id).subscribe({
-        next: (response) => {
+        next: (response: { token: string }) => {
           localStorage.setItem('impersonation_token', response.token);
           this.snackBar.open('Impersonating tenant...', 'Close', {
             duration: 2000
@@ -122,7 +123,7 @@ export class TenantDetail implements OnInit, OnDestroy {
             window.location.href = '/dashboard';
           }, 1000);
         },
-        error: (error) => {
+        error: (error: any) => {
           this.snackBar.open('Failed to impersonate tenant', 'Close', {
             duration: 3000
           });

@@ -50,6 +50,20 @@ export class ToastService {
     }
 
     /**
+     * Alias for success method
+     */
+    showSuccess(message: string, title?: string, duration?: number): void {
+        this.success(message, title, duration);
+    }
+
+    /**
+     * Alias for error method
+     */
+    showError(message: string, title?: string, duration?: number): void {
+        this.error(message, title, duration);
+    }
+
+    /**
      * Show a custom toast
      */
     show(options: Partial<Toast> & { type: Toast['type']; message: string }): void {

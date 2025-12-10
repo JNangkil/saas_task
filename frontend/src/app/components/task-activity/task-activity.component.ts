@@ -48,10 +48,10 @@ export class TaskActivityComponent implements OnInit, OnDestroy {
     userFilters: { value: number, label: string }[] = [];
 
     constructor(
-        private activityService: ActivityService,
+        public activityService: ActivityService, // Made public for template access
         private apiService: ApiService,
         private cdr: ChangeDetectorRef
-    ) {}
+    ) { }
 
     ngOnInit(): void {
         if (this.taskId) {
@@ -159,7 +159,7 @@ export class TaskActivityComponent implements OnInit, OnDestroy {
     /**
      * Get avatar URL or default
      */
-    getAvatarUrl(user?: User): string {
+    getAvatarUrl(user?: any): string {
         if (!user) {
             return 'assets/images/default-avatar.png';
         }
@@ -192,6 +192,13 @@ export class TaskActivityComponent implements OnInit, OnDestroy {
      */
     trackByActivityId(index: number, activity: IActivity): number {
         return activity.id;
+    }
+
+    /**
+     * Track change by index for ngFor
+     */
+    trackByChangeIndex(index: number, change: string): number {
+        return index;
     }
 
     /**

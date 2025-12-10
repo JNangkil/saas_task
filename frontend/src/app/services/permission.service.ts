@@ -3,7 +3,17 @@ import { Observable, BehaviorSubject } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { ApiService } from './api.service';
 import { Permission, ROLE_PERMISSIONS } from '../models/user.model';
-import { Tenant, Workspace } from '../models/task.model';
+import { Workspace } from '../models/task.model';
+
+// Define Tenant interface if not exported from task.model
+export interface Tenant {
+    id: number;
+    name: string;
+    domain: string;
+    status: 'active' | 'inactive' | 'suspended';
+    created_at: string;
+    updated_at: string;
+}
 import { User } from '../models/user.model';
 
 /**
@@ -89,6 +99,18 @@ export class PermissionService {
     hasAnyPermission$(permissions: Permission[]): Observable<boolean> {
         return this.userPermissions$.pipe(
             map(userPermissions => permissions.some(permission => userPermissions.includes(permission)))
+        );
+    }
+
+    /**
+     * Observable version of hasAllPermissions
+     *
+     * @param permissions Array of permissions to check
+     * @returns Observable<boolean> Whether user has all of the permissions
+     */
+    hasAllPermissions$(permissions: Permission[]): Observable<boolean> {
+        return this.userPermissions$.pipe(
+            map(userPermissions => permissions.every(permission => userPermissions.includes(permission)))
         );
     }
 

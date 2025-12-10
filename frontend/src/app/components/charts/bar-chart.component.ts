@@ -104,7 +104,7 @@ export class BarChartComponent implements OnChanges {
         },
         beginAtZero: true,
         grid: {
-          borderDash: [5, 5]
+          display: true
         }
       }
     }
@@ -112,7 +112,7 @@ export class BarChartComponent implements OnChanges {
 
   ngOnChanges(changes: SimpleChanges): void {
     if (changes['data'] || changes['datasets'] || changes['labels'] || changes['title'] ||
-        changes['yAxisLabel'] || changes['xAxisLabel'] || changes['horizontal']) {
+      changes['yAxisLabel'] || changes['xAxisLabel'] || changes['horizontal']) {
       this.updateChartData();
       this.updateChartOptions();
     }
@@ -155,7 +155,7 @@ export class BarChartComponent implements OnChanges {
       ...this.chartOptions,
       indexAxis,
       plugins: {
-        ...this.chartOptions.plugins,
+        ...(this.chartOptions?.plugins || {}),
         title: {
           display: !!this.title,
           text: this.title || '',
@@ -193,7 +193,7 @@ export class BarChartComponent implements OnChanges {
           },
           beginAtZero: true,
           grid: {
-            borderDash: [5, 5]
+            display: true
           }
         }
       }
@@ -201,10 +201,19 @@ export class BarChartComponent implements OnChanges {
 
     // Swap labels for horizontal chart
     if (this.horizontal) {
-      this.chartOptions.scales.x.title.display = !!this.yAxisLabel;
-      this.chartOptions.scales.x.title.text = this.yAxisLabel || '';
-      this.chartOptions.scales.y.title.display = !!this.xAxisLabel;
-      this.chartOptions.scales.y.title.text = this.xAxisLabel || '';
+      // FIX: Use bracket notation for index signature access and proper type assertions
+      const xScale = (this.chartOptions.scales as any)?.['x'];
+      const yScale = (this.chartOptions.scales as any)?.['y'];
+
+      if (xScale?.title) {
+        xScale.title.display = !!this.yAxisLabel;
+        xScale.title.text = this.yAxisLabel || '';
+      }
+
+      if (yScale?.title) {
+        yScale.title.display = !!this.xAxisLabel;
+        yScale.title.text = this.xAxisLabel || '';
+      }
     }
   }
 }

@@ -466,48 +466,58 @@ export class TaskDetailsPanelComponent implements OnInit, OnDestroy {
         this.uploading = true;
         this.error = null;
 
-        const tenantId = this.workspaceContextService.context$.value?.tenant?.id;
-        const workspaceId = this.workspaceContextService.context$.value?.workspace?.id;
+        // Use proper Observable pattern
+        this.workspaceContextService.context$.pipe(
+            takeUntil(this.destroy$)
+        ).subscribe(context => {
+            const tenantId = context?.currentTenant?.id;
+            const workspaceId = context?.currentWorkspace?.id;
 
-        if (!tenantId || !workspaceId) {
-            this.error = 'Tenant or workspace not found';
-            this.uploading = false;
-            return;
-        }
+            if (!tenantId || !workspaceId) {
+                this.error = 'Tenant or workspace not found';
+                this.uploading = false;
+                return;
+            }
 
-        // Upload files one by one to track progress
-        files.forEach((file, index) => {
-            this.taskService.uploadAttachment(tenantId, workspaceId, this.task.id, file)
-                .pipe(
-                    catchError(error => {
-                        console.error('Error uploading file:', error);
-                        this.error = `Failed to upload ${file.name}`;
-                        return of(null);
-                    }),
-                    takeUntil(this.destroy$)
+            // Upload files one by one to track progress
+            files.forEach((file, index) => {
+                this.taskService.uploadAttachment(
+                    parseInt(tenantId, 10),
+                    parseInt(workspaceId, 10),
+                    this.task.id,
+                    file
                 )
-                .subscribe(attachment => {
-                    if (attachment) {
-                        this.attachments.unshift(attachment);
+                    .pipe(
+                        catchError(error => {
+                            console.error('Error uploading file:', error);
+                            this.error = `Failed to upload ${file.name}`;
+                            return of(null);
+                        }),
+                        takeUntil(this.destroy$)
+                    )
+                    .subscribe(attachment => {
+                        if (attachment) {
+                            this.attachments.unshift(attachment);
 
-                        // Add to activity log
-                        this.activityLog.unshift({
-                            id: attachment.id,
-                            type: 'attachment',
-                            message: `Attached ${attachment.original_filename}`,
-                            timestamp: attachment.created_at,
-                            user: attachment.user
-                        });
+                            // Add to activity log
+                            this.activityLog.unshift({
+                                id: attachment.id,
+                                type: 'attachment',
+                                message: `Attached ${attachment.original_filename}`,
+                                timestamp: attachment.created_at,
+                                user: attachment.user
+                            });
 
-                        // Re-sort activity log
-                        this.activityLog.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
-                    }
+                            // Re-sort activity log
+                            this.activityLog.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
+                        }
 
-                    // Check if this was the last file
-                    if (index === files.length - 1) {
-                        this.uploading = false;
-                    }
-                });
+                        // Check if this was the last file
+                        if (index === files.length - 1) {
+                            this.uploading = false;
+                        }
+                    });
+            });
         });
     }
 
@@ -519,60 +529,77 @@ export class TaskDetailsPanelComponent implements OnInit, OnDestroy {
             return;
         }
 
-        const tenantId = this.workspaceContextService.context$.value?.tenant?.id;
-        const workspaceId = this.workspaceContextService.context$.value?.workspace?.id;
+        // Use proper Observable pattern
+        this.workspaceContextService.context$.pipe(
+            takeUntil(this.destroy$)
+        ).subscribe(context => {
+            const tenantId = context?.currentTenant?.id;
+            const workspaceId = context?.currentWorkspace?.id;
 
-        if (!tenantId || !workspaceId) {
-            this.error = 'Tenant or workspace not found';
-            return;
-        }
+            if (!tenantId || !workspaceId) {
+                this.error = 'Tenant or workspace not found';
+                return;
+            }
 
-        this.taskService.deleteAttachment(tenantId, workspaceId, attachment.id)
-            .pipe(
-                catchError(error => {
-                    console.error('Error deleting attachment:', error);
-                    this.error = 'Failed to delete attachment';
-                    return of(null);
-                }),
-                takeUntil(this.destroy$)
+            this.taskService.deleteAttachment(
+                parseInt(tenantId, 10),
+                parseInt(workspaceId, 10),
+                attachment.id
             )
-            .subscribe(success => {
-                if (success) {
-                    this.attachments = this.attachments.filter(a => a.id !== attachment.id);
+                .pipe(
+                    catchError(error => {
+                        console.error('Error deleting attachment:', error);
+                        this.error = 'Failed to delete attachment';
+                        return of(null);
+                    }),
+                    takeUntil(this.destroy$)
+                )
+                .subscribe(success => {
+                    if (success) {
+                        this.attachments = this.attachments.filter(a => a.id !== attachment.id);
 
-                    // Add to activity log
-                    this.activityLog.unshift({
-                        id: Date.now(),
-                        type: 'attachment_deleted',
-                        message: `Deleted ${attachment.original_filename}`,
-                        timestamp: new Date().toISOString(),
-                        user: {
-                            id: 0,
-                            name: 'Current User',
-                            email: '',
-                            created_at: '',
-                            updated_at: ''
-                        }
-                    });
+                        // Add to activity log
+                        this.activityLog.unshift({
+                            id: Date.now(),
+                            type: 'attachment_deleted',
+                            message: `Deleted ${attachment.original_filename}`,
+                            timestamp: new Date().toISOString(),
+                            user: {
+                                id: 0,
+                                name: 'Current User',
+                                email: '',
+                                created_at: '',
+                                updated_at: ''
+                            }
+                        });
 
-                    // Re-sort activity log
-                    this.activityLog.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
-                }
-            });
+                        // Re-sort activity log
+                        this.activityLog.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
+                    }
+                });
+        });
     }
 
     /**
      * Get download URL for an attachment
      */
     getAttachmentDownloadUrl(attachment: Attachment): string {
-        const tenantId = this.workspaceContextService.context$.value?.tenant?.id;
-        const workspaceId = this.workspaceContextService.context$.value?.workspace?.id;
+        let downloadUrl = '#';
+
+        // Use proper Observable pattern but need to handle synchronously
+        const context = this.workspaceContextService.context;
+        const tenantId = context?.currentTenant?.id;
+        const workspaceId = context?.currentWorkspace?.id;
 
         if (!tenantId || !workspaceId) {
             return '#';
         }
 
-        return this.taskService.getAttachmentDownloadUrl(tenantId, workspaceId, attachment.id);
+        return this.taskService.getAttachmentDownloadUrl(
+            parseInt(tenantId, 10),
+            parseInt(workspaceId, 10),
+            attachment.id
+        );
     }
 
     /**

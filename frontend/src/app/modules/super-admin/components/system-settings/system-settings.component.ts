@@ -1,6 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule, KeyValuePipe } from '@angular/common';
-import { SuperAdminService, SystemSettings } from '../../../../services/super-admin.service';
+import { SuperAdminService } from '../../../../services/super-admin';
 import { MatCardModule } from '@angular/material/card';
 import { MatIconModule } from '@angular/material/icon';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
@@ -27,6 +27,7 @@ interface SaveStatus {
 
 @Component({
   selector: 'app-system-settings',
+  standalone: true,
   imports: [
     CommonModule,
     MatCardModule,
@@ -43,7 +44,7 @@ interface SaveStatus {
   templateUrl: './system-settings.html',
   styleUrl: './system-settings.css',
 })
-export class SystemSettings implements OnInit {
+export class SystemSettingsComponent implements OnInit {
   settings: SettingItem[] = [];
   loading = true;
   error: string | null = null;
@@ -55,7 +56,7 @@ export class SystemSettings implements OnInit {
   constructor(
     private superAdminService: SuperAdminService,
     private snackBar: MatSnackBar
-  ) {}
+  ) { }
 
   ngOnInit() {
     this.loadSettings();
@@ -106,7 +107,7 @@ export class SystemSettings implements OnInit {
     if (this.typeFilter) params.type = this.typeFilter;
 
     this.superAdminService.getSystemSettings(params).subscribe({
-      next: (settingsData) => {
+      next: (settingsData: any) => {
         this.settings = Object.entries(settingsData).map(([key, value]) => ({
           key,
           value,
@@ -116,7 +117,7 @@ export class SystemSettings implements OnInit {
         }));
         this.loading = false;
       },
-      error: (error) => {
+      error: (error: any) => {
         this.error = 'Failed to load system settings. Please try again.';
         this.loading = false;
         console.error('Error loading system settings:', error);
@@ -150,7 +151,7 @@ export class SystemSettings implements OnInit {
 
         this.showSaveStatus('success', `Setting "${key}" updated successfully`);
       },
-      error: (error) => {
+      error: (error: any) => {
         this.showSaveStatus('error', `Failed to update setting "${key}"`);
         console.error('Error updating setting:', error);
       }

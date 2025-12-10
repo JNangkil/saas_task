@@ -38,7 +38,7 @@ export class UserService {
      * @returns Observable<UserProfile> Updated user data with new avatar URL
      */
     updateAvatar(data: UserAvatarUpdate): Observable<UserProfile> {
-        return this.apiService.upload<UserProfile>('users/me/avatar', data.avatar);
+        return this.apiService.upload<UserProfile>('users/me/avatar', data.avatar!);
     }
 
     /**

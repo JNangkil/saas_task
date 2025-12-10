@@ -1,6 +1,7 @@
 import { Component, OnInit, ViewChild, AfterViewInit } from '@angular/core';
 import { CommonModule, TitleCasePipe, DatePipe } from '@angular/common';
-import { SuperAdminService, Tenant, PaginatedResponse } from '../../../../services/super-admin.service';
+import { RouterModule } from '@angular/router';
+import { SuperAdminService, Tenant, PaginatedResponse } from '../../../../services/super-admin';
 import { MatTableDataSource } from '@angular/material/table';
 import { MatPaginator, PageEvent } from '@angular/material/paginator';
 import { MatFormFieldModule } from '@angular/material/form-field';
@@ -17,8 +18,10 @@ import { Router } from '@angular/router';
 
 @Component({
   selector: 'app-tenants',
+  standalone: true,
   imports: [
     CommonModule,
+    RouterModule,
     MatTableModule,
     MatPaginator,
     MatFormFieldModule,
@@ -35,7 +38,7 @@ import { Router } from '@angular/router';
   templateUrl: './tenants.html',
   styleUrl: './tenants.css',
 })
-export class Tenants implements OnInit, AfterViewInit {
+export class TenantsComponent implements OnInit, AfterViewInit {
   @ViewChild(MatPaginator) paginator!: MatPaginator;
 
   displayedColumns: string[] = [
@@ -64,7 +67,7 @@ export class Tenants implements OnInit, AfterViewInit {
     private superAdminService: SuperAdminService,
     private snackBar: MatSnackBar,
     private router: Router
-  ) {}
+  ) { }
 
   ngOnInit() {
     this.loadTenants();
@@ -91,7 +94,7 @@ export class Tenants implements OnInit, AfterViewInit {
         this.totalTenants = response.total;
         this.loading = false;
       },
-      error: (error) => {
+      error: (error: any) => {
         this.error = 'Failed to load tenants. Please try again.';
         this.loading = false;
         console.error('Error loading tenants:', error);
@@ -124,9 +127,9 @@ export class Tenants implements OnInit, AfterViewInit {
 
   updateTenantStatus(tenantId: number, status: 'active' | 'inactive' | 'suspended') {
     this.superAdminService.updateTenantStatus(tenantId, status).subscribe({
-      next: (updatedTenant) => {
+      next: (updatedTenant: Tenant) => {
         // Update the tenant in the data source
-        const index = this.tenants.data.findIndex(t => t.id === tenantId);
+        const index = this.tenants.data.findIndex((t: Tenant) => t.id === tenantId);
         if (index !== -1) {
           this.tenants.data[index] = updatedTenant;
           this.tenants.data = [...this.tenants.data]; // Trigger change detection
@@ -136,7 +139,7 @@ export class Tenants implements OnInit, AfterViewInit {
           duration: 3000
         });
       },
-      error: (error) => {
+      error: (error: any) => {
         this.snackBar.open('Failed to update tenant status', 'Close', {
           duration: 3000
         });
@@ -147,7 +150,7 @@ export class Tenants implements OnInit, AfterViewInit {
 
   impersonateTenant(tenantId: number) {
     this.superAdminService.impersonateTenant(tenantId).subscribe({
-      next: (response) => {
+      next: (response: any) => {
         // Store the impersonation token and redirect
         localStorage.setItem('impersonation_token', response.token);
         this.snackBar.open('Impersonating tenant...', 'Close', {
@@ -159,7 +162,7 @@ export class Tenants implements OnInit, AfterViewInit {
           window.location.href = '/dashboard';
         }, 1000);
       },
-      error: (error) => {
+      error: (error: any) => {
         this.snackBar.open('Failed to impersonate tenant', 'Close', {
           duration: 3000
         });

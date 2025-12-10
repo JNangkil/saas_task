@@ -102,7 +102,7 @@ export class LineChartComponent implements OnChanges {
         },
         beginAtZero: true,
         grid: {
-          borderDash: [5, 5]
+          display: true
         }
       }
     }
@@ -148,10 +148,11 @@ export class LineChartComponent implements OnChanges {
   }
 
   private updateChartOptions(): void {
+    // FIX: Use proper spread operator with existing options
     this.chartOptions = {
       ...this.chartOptions,
       plugins: {
-        ...this.chartOptions.plugins,
+        ...(this.chartOptions?.plugins || {}),
         title: {
           display: !!this.title,
           text: this.title || '',
@@ -189,7 +190,7 @@ export class LineChartComponent implements OnChanges {
           },
           beginAtZero: true,
           grid: {
-            borderDash: [5, 5]
+            display: true
           }
         }
       }

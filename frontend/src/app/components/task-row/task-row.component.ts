@@ -370,7 +370,7 @@ export class TaskRowComponent implements OnInit, OnDestroy {
     /**
      * Format date for display
      */
-    formatDate(dateString?: string): string {
+    formatDate(dateString?: string | null): string {
         if (!dateString) return '';
 
         const date = new Date(dateString);
@@ -394,7 +394,7 @@ export class TaskRowComponent implements OnInit, OnDestroy {
     /**
      * Check if date is overdue
      */
-    isOverdue(dateString?: string): boolean {
+    isOverdue(dateString?: string | null): boolean {
         if (!dateString) return false;
         return new Date(dateString) < new Date();
     }

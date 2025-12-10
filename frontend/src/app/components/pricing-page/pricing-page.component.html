@@ -56,7 +56,7 @@
             <div class="plans-grid">
                 <!-- Plan Card -->
                 <article *ngFor="let plan of plans" class="plan-card" [class]="getPlanCardClasses(plan)" role="article"
-                    [attr.aria-label]="`${plan.name} plan - ${plan.description || 'Choose this plan'}`">
+                    [attr.aria-label]="plan.name + ' plan - ' + (plan.description || 'Choose this plan')">
 
                     <!-- Popular Badge -->
                     <div class="popular-badge" *ngIf="plan.is_popular">
@@ -237,7 +237,8 @@
             <div class="faq-list">
                 <article *ngFor="let faq of faqItems" class="faq-item" [class.expanded]="expandedFaqItems.has(faq.id)">
                     <button class="faq-question" (click)="toggleFaqItem(faq.id)"
-                        aria-expanded="expandedFaqItems.has(faq.id)" [attr.aria-controls]="'faq-answer-' + faq.id">
+                        [attr.aria-expanded]="expandedFaqItems.has(faq.id)"
+                        [attr.aria-controls]="'faq-answer-' + faq.id">
                         <span class="question-text">{{ faq.question }}</span>
                         <span class="toggle-icon" [class.rotated]="expandedFaqItems.has(faq.id)">
                             ▼

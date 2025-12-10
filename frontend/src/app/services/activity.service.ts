@@ -49,7 +49,7 @@ export interface IActivityFilters {
 export class ActivityService {
     private readonly endpoint = 'activity';
 
-    constructor(private apiService: ApiService) {}
+    constructor(private apiService: ApiService) { }
 
     /**
      * Get recent activity for dashboard
@@ -73,7 +73,7 @@ export class ActivityService {
      * Get tenant activity with filters
      */
     getTenantActivity(filters?: IActivityFilters): Observable<IActivityListResponse> {
-        return this.apiService.get<IActivityListResponse>(`${this.endpoint}/tenant`, filters).pipe(
+        return this.apiService.get<IActivityListResponse>(`${this.endpoint}/tenant`, { params: filters }).pipe(
             catchError(error => {
                 console.error('Error fetching tenant activity:', error);
                 return of({ data: [], meta: { current_page: 1, last_page: 1, per_page: 20, total: 0 } });
@@ -85,7 +85,7 @@ export class ActivityService {
      * Get activity for a specific task
      */
     getTaskActivity(taskId: number, filters?: IActivityFilters): Observable<IActivityListResponse> {
-        return this.apiService.get<IActivityListResponse>(`tasks/${taskId}/activity`, filters).pipe(
+        return this.apiService.get<IActivityListResponse>(`tasks/${taskId}/activity`, { params: filters }).pipe(
             catchError(error => {
                 console.error('Error fetching task activity:', error);
                 return of({ data: [], meta: { current_page: 1, last_page: 1, per_page: 20, total: 0 } });
@@ -97,7 +97,7 @@ export class ActivityService {
      * Get activity for a specific board
      */
     getBoardActivity(boardId: number, filters?: IActivityFilters): Observable<IActivityListResponse> {
-        return this.apiService.get<IActivityListResponse>(`boards/${boardId}/activity`, filters).pipe(
+        return this.apiService.get<IActivityListResponse>(`boards/${boardId}/activity`, { params: filters }).pipe(
             catchError(error => {
                 console.error('Error fetching board activity:', error);
                 return of({ data: [], meta: { current_page: 1, last_page: 1, per_page: 20, total: 0 } });
@@ -109,7 +109,7 @@ export class ActivityService {
      * Get activity for a specific workspace
      */
     getWorkspaceActivity(workspaceId: number, filters?: IActivityFilters): Observable<IActivityListResponse> {
-        return this.apiService.get<IActivityListResponse>(`workspaces/${workspaceId}/activity`, filters).pipe(
+        return this.apiService.get<IActivityListResponse>(`workspaces/${workspaceId}/activity`, { params: filters }).pipe(
             catchError(error => {
                 console.error('Error fetching workspace activity:', error);
                 return of({ data: [], meta: { current_page: 1, last_page: 1, per_page: 20, total: 0 } });

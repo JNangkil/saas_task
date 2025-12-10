@@ -1,6 +1,6 @@
 import { Component, EventEmitter, Input, Output } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { ReactiveFormsModule } from '@angular/forms';
+import { ReactiveFormsModule, FormsModule } from '@angular/forms';
 import { SecurityService } from '../../../../services/security.service';
 import { ToastService } from '../../../../services/toast.service';
 import { MfaStatus } from '../../../../models/security.model';
@@ -8,7 +8,7 @@ import { MfaStatus } from '../../../../models/security.model';
 @Component({
     selector: 'app-mfa-settings',
     standalone: true,
-    imports: [CommonModule, ReactiveFormsModule],
+    imports: [CommonModule, ReactiveFormsModule, FormsModule],
     templateUrl: './mfa-settings.component.html',
     styleUrls: ['./mfa-settings.component.scss']
 })

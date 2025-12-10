@@ -3,19 +3,12 @@ import { CommonModule } from '@angular/common';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { RouterModule } from '@angular/router';
 
-// Import components
-import { ForgotPasswordComponent } from './components/forgot-password/forgot-password.component';
-import { ResetPasswordComponent } from './components/reset-password/reset-password.component';
-import { LoginComponent } from './components/login/login.component';
-
 // Import services
 import { AuthService } from '../core/services/auth.service';
 
 @NgModule({
     declarations: [
-        ForgotPasswordComponent,
-        ResetPasswordComponent,
-        LoginComponent
+        // Standalone components are not declared in NgModules
     ],
     imports: [
         CommonModule,
@@ -27,9 +20,7 @@ import { AuthService } from '../core/services/auth.service';
         AuthService
     ],
     exports: [
-        ForgotPasswordComponent,
-        ResetPasswordComponent,
-        LoginComponent
+        // Standalone components are not exported from NgModules
     ]
 })
 export class AuthModule { }

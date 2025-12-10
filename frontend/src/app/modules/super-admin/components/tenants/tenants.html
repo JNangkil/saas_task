@@ -5,10 +5,7 @@
     <div class="header-actions">
       <mat-form-field appearance="outline">
         <mat-label>Search</mat-label>
-        <input matInput
-               placeholder="Search by name or domain"
-               (keyup)="applySearch($event)"
-               [value]="searchTerm">
+        <input matInput placeholder="Search by name or domain" (keyup)="applySearch($event)" [value]="searchTerm">
         <mat-icon matSuffix>search</mat-icon>
       </mat-form-field>
 
@@ -110,9 +107,7 @@
       <ng-container matColumnDef="actions">
         <mat-header-cell *matHeaderCellDef>Actions</mat-header-cell>
         <mat-cell *matCellDef="let tenant">
-          <button mat-icon-button
-                  [matMenuTriggerFor]="menu"
-                  matTooltip="Actions">
+          <button mat-icon-button [matMenuTriggerFor]="menu" matTooltip="Actions">
             <mat-icon>more_vert</mat-icon>
           </button>
           <mat-menu #menu="matMenu">
@@ -120,30 +115,22 @@
               <mat-icon>visibility</mat-icon>
               <span>View Details</span>
             </a>
-            <button mat-menu-item
-                    [disabled]="tenant.status === 'active'"
-                    (click)="updateTenantStatus(tenant.id, 'active')"
-                    matTooltip="Activate tenant">
+            <button mat-menu-item [disabled]="tenant.status === 'active'"
+              (click)="updateTenantStatus(tenant.id, 'active')" matTooltip="Activate tenant">
               <mat-icon>check_circle</mat-icon>
               <span>Activate</span>
             </button>
-            <button mat-menu-item
-                    [disabled]="tenant.status === 'inactive'"
-                    (click)="updateTenantStatus(tenant.id, 'inactive')"
-                    matTooltip="Deactivate tenant">
+            <button mat-menu-item [disabled]="tenant.status === 'inactive'"
+              (click)="updateTenantStatus(tenant.id, 'inactive')" matTooltip="Deactivate tenant">
               <mat-icon>cancel</mat-icon>
               <span>Deactivate</span>
             </button>
-            <button mat-menu-item
-                    [disabled]="tenant.status === 'suspended'"
-                    (click)="updateTenantStatus(tenant.id, 'suspended')"
-                    matTooltip="Suspend tenant">
+            <button mat-menu-item [disabled]="tenant.status === 'suspended'"
+              (click)="updateTenantStatus(tenant.id, 'suspended')" matTooltip="Suspend tenant">
               <mat-icon>block</mat-icon>
               <span>Suspend</span>
             </button>
-            <button mat-menu-item
-                    (click)="impersonateTenant(tenant.id)"
-                    matTooltip="Login as this tenant">
+            <button mat-menu-item (click)="impersonateTenant(tenant.id)" matTooltip="Login as this tenant">
               <mat-icon>login</mat-icon>
               <span>Impersonate</span>
             </button>
@@ -156,17 +143,13 @@
     </mat-table>
 
     <!-- Pagination -->
-    <mat-paginator
-      [length]="totalTenants"
-      [pageSize]="pageSize"
-      [pageSizeOptions]="[10, 25, 50, 100]"
-      (page)="onPageChange($event)"
-      showFirstLastButtons>
+    <mat-paginator [length]="tenants.data.length" [pageSize]="pageSize" [pageSizeOptions]="[10, 25, 50, 100]"
+      (page)="onPageChange($event)" showFirstLastButtons>
     </mat-paginator>
   </div>
 
   <!-- No Data State -->
-  <div class="no-data-container" *ngIf="!loading && !error && tenants.length === 0">
+  <div class="no-data-container" *ngIf="!loading && !error && tenants.data.length === 0">
     <mat-icon>business</mat-icon>
     <h3>No tenants found</h3>
     <p>Try adjusting your search or filters.</p>

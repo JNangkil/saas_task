@@ -9,7 +9,7 @@
   <div class="error-container" *ngIf="error">
     <mat-icon color="warn">error</mat-icon>
     <p>{{ error }}</p>
-    <button mat-raised-button color="primary" (click)="loadTenant()">Retry</button>
+    <button mat-raised-button color="primary" (click)="loadTenant((tenant?.id || 0).toString())">Retry</button>
   </div>
 
   <!-- Tenant Details -->
@@ -24,17 +24,11 @@
         </span>
       </div>
       <div class="header-actions">
-        <button mat-raised-button
-                color="primary"
-                (click)="editTenant()"
-                matTooltip="Edit tenant details">
+        <button mat-raised-button color="primary" (click)="editTenant()" matTooltip="Edit tenant details">
           <mat-icon>edit</mat-icon>
           Edit
         </button>
-        <button mat-raised-button
-                color="warn"
-                (click)="impersonateTenant()"
-                matTooltip="Login as this tenant">
+        <button mat-raised-button color="warn" (click)="impersonateTenant()" matTooltip="Login as this tenant">
           <mat-icon>login</mat-icon>
           Impersonate
         </button>
@@ -141,54 +135,58 @@
               <div class="subscription-info">
                 <div class="subscription-details">
                   <h3>{{ tenant.subscription.plan.name }}</h3>
-                  <p class="price">${{ tenant.subscription.plan.price }}/{{ tenant.subscription.plan.billing_interval }}</p>
+                  <p class="price">${{ tenant.subscription.plan.price }}/{{ tenant.subscription.plan.billing_interval }}
+                  </p>
                   <span class="subscription-status status-{{ tenant.subscription.status }}">
                     {{ tenant.subscription.status | titlecase }}
                   </span>
                 </div>
 
-                <div class="plan-features" *ngIf="tenant.subscription.plan.features?.length">
+                <div class="plan-features"
+                  *ngIf="tenant.subscription && tenant.subscription.plan && tenant.subscription.plan.features && tenant.subscription.plan.features.length > 0">
                   <h4>Plan Features:</h4>
                   <ul>
                     <li *ngFor="let feature of tenant.subscription.plan.features">{{ feature }}</li>
                   </ul>
                 </div>
 
-                <div class="plan-limits" *ngIf="tenant.subscription.plan.limits">
+                <div class="plan-limits"
+                  *ngIf="tenant.subscription && tenant.subscription.plan && tenant.subscription.plan.limits">
                   <h4>Plan Limits:</h4>
                   <div class="limits-grid">
                     <div class="limit-item">
                       <label>Users:</label>
-                      <span>{{ tenant.subscription.plan.limits.users }} {{ tenant.subscription.plan.limits.users === -1 ? '(Unlimited)' : '' }}</span>
+                      <span>{{ tenant.subscription.plan.limits.users }} {{ tenant.subscription.plan.limits.users === -1
+                        ? '(Unlimited)' : '' }}</span>
                     </div>
                     <div class="limit-item">
                       <label>Workspaces:</label>
-                      <span>{{ tenant.subscription.plan.limits.workspaces }} {{ tenant.subscription.plan.limits.workspaces === -1 ? '(Unlimited)' : '' }}</span>
+                      <span>{{ tenant.subscription.plan.limits.workspaces }} {{
+                        tenant.subscription.plan.limits.workspaces === -1 ? '(Unlimited)' : '' }}</span>
                     </div>
                     <div class="limit-item">
                       <label>Boards per Workspace:</label>
-                      <span>{{ tenant.subscription.plan.limits.boards_per_workspace }} {{ tenant.subscription.plan.limits.boards_per_workspace === -1 ? '(Unlimited)' : '' }}</span>
+                      <span>{{ tenant.subscription.plan.limits.boards_per_workspace }} {{
+                        tenant.subscription.plan.limits.boards_per_workspace === -1 ?
+                        '(Unlimited)' : '' }}</span>
                     </div>
                     <div class="limit-item">
                       <label>Storage:</label>
-                      <span>{{ tenant.subscription.plan.limits.storage_mb }}MB {{ tenant.subscription.plan.limits.storage_mb === -1 ? '(Unlimited)' : '' }}</span>
+                      <span>{{ tenant.subscription.plan.limits.storage_mb }}MB {{
+                        tenant.subscription.plan.limits.storage_mb === -1 ? '(Unlimited)' : ''
+                        }}</span>
                     </div>
                   </div>
                 </div>
 
                 <div class="subscription-actions">
-                  <button mat-raised-button
-                          color="primary"
-                          (click)="changeSubscription()"
-                          matTooltip="Change subscription plan">
+                  <button mat-raised-button color="primary" (click)="changeSubscription()"
+                    matTooltip="Change subscription plan">
                     <mat-icon>swap_horiz</mat-icon>
                     Change Plan
                   </button>
-                  <button mat-raised-button
-                          color="accent"
-                          (click)="cancelSubscription()"
-                          *ngIf="tenant.subscription.status === 'active'"
-                          matTooltip="Cancel subscription">
+                  <button mat-raised-button color="accent" (click)="cancelSubscription()"
+                    *ngIf="tenant.subscription.status === 'active'" matTooltip="Cancel subscription">
                     <mat-icon>cancel</mat-icon>
                     Cancel
                   </button>
@@ -204,9 +202,7 @@
                   <mat-icon>credit_card_off</mat-icon>
                   <h3>No Active Subscription</h3>
                   <p>This tenant doesn't have an active subscription.</p>
-                  <button mat-raised-button
-                          color="primary"
-                          (click)="createSubscription()">
+                  <button mat-raised-button color="primary" (click)="createSubscription()">
                     <mat-icon>add</mat-icon>
                     Create Subscription
                   </button>
@@ -229,27 +225,18 @@
                 <div class="action-section">
                   <h3>Status Management</h3>
                   <div class="action-buttons">
-                    <button mat-raised-button
-                            color="primary"
-                            [disabled]="tenant.status === 'active'"
-                            (click)="updateTenantStatus('active')"
-                            matTooltip="Activate tenant account">
+                    <button mat-raised-button color="primary" [disabled]="tenant.status === 'active'"
+                      (click)="updateTenantStatus('active')" matTooltip="Activate tenant account">
                       <mat-icon>check_circle</mat-icon>
                       Activate
                     </button>
-                    <button mat-raised-button
-                            color="warn"
-                            [disabled]="tenant.status === 'suspended'"
-                            (click)="updateTenantStatus('suspended')"
-                            matTooltip="Suspend tenant account">
+                    <button mat-raised-button color="warn" [disabled]="tenant.status === 'suspended'"
+                      (click)="updateTenantStatus('suspended')" matTooltip="Suspend tenant account">
                       <mat-icon>block</mat-icon>
                       Suspend
                     </button>
-                    <button mat-raised-button
-                            color="accent"
-                            [disabled]="tenant.status === 'inactive'"
-                            (click)="updateTenantStatus('inactive')"
-                            matTooltip="Deactivate tenant account">
+                    <button mat-raised-button color="accent" [disabled]="tenant.status === 'inactive'"
+                      (click)="updateTenantStatus('inactive')" matTooltip="Deactivate tenant account">
                       <mat-icon>cancel</mat-icon>
                       Deactivate
                     </button>
@@ -259,17 +246,13 @@
                 <div class="action-section">
                   <h3>Access Management</h3>
                   <div class="action-buttons">
-                    <button mat-raised-button
-                            color="primary"
-                            (click)="impersonateTenant()"
-                            matTooltip="Login as this tenant">
+                    <button mat-raised-button color="primary" (click)="impersonateTenant()"
+                      matTooltip="Login as this tenant">
                       <mat-icon>login</mat-icon>
                       Impersonate
                     </button>
-                    <button mat-raised-button
-                            color="accent"
-                            (click)="resetPassword()"
-                            matTooltip="Reset tenant owner password">
+                    <button mat-raised-button color="accent" (click)="resetPassword()"
+                      matTooltip="Reset tenant owner password">
                       <mat-icon>password</mat-icon>
                       Reset Password
                     </button>
@@ -279,10 +262,8 @@
                 <div class="action-section">
                   <h3>Danger Zone</h3>
                   <div class="action-buttons">
-                    <button mat-raised-button
-                            color="warn"
-                            (click)="deleteTenant()"
-                            matTooltip="Permanently delete tenant and all data">
+                    <button mat-raised-button color="warn" (click)="deleteTenant()"
+                      matTooltip="Permanently delete tenant and all data">
                       <mat-icon>delete</mat-icon>
                       Delete Tenant
                     </button>
