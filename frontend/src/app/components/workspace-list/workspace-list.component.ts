@@ -63,7 +63,7 @@ import { ConfirmationDialogComponent, ConfirmationDialogData } from '../confirma
       </div>
       
       <!-- Workspace Grid -->
-      <div class="workspace-grid" *ngIf="!isLoading && !error && workspaces.length > 0">
+      <div class="workspace-grid" *ngIf="!isLoading && !error && workspaces && workspaces.length > 0">
         <div
           class="workspace-card"
           *ngFor="let workspace of workspaces; trackBy: trackWorkspace"
@@ -183,7 +183,7 @@ import { ConfirmationDialogComponent, ConfirmationDialogData } from '../confirma
       </div>
       
       <!-- Empty State -->
-      <div class="empty-state" *ngIf="!isLoading && !error && workspaces.length === 0">
+      <div class="empty-state" *ngIf="!isLoading && !error && workspaces && workspaces.length === 0">
         <div class="empty-icon">
           <svg width="80" height="80" viewBox="0 0 80 80" fill="none">
             <rect x="10" y="20" width="60" height="50" rx="4" stroke="currentColor" stroke-width="2" stroke-dasharray="4 4"/>
@@ -1010,17 +1010,32 @@ export class WorkspaceListComponent implements OnInit {
     this.error = null;
 
     this.workspaceService.getCurrentTenantWorkspaces().subscribe({
-      next: (workspaces) => {
-        this.workspaces = workspaces;
+      next: (response) => {
+        // Handle both array and object responses
+        const workspaces = Array.isArray(response) ? response : (response?.data || []);
+        this.workspaces = workspaces || [];
         this.isLoading = false;
 
-        if (!this.workspaceContextService.context.currentWorkspace && workspaces.length > 0) {
-          this.workspaceContextService.setCurrentWorkspace(workspaces[0]);
+        if (!this.workspaceContextService.context.currentWorkspace && this.workspaces.length > 0) {
+          this.workspaceContextService.setCurrentWorkspace(this.workspaces[0]);
         }
         this.currentWorkspace = this.workspaceContextService.context.currentWorkspace;
       },
       error: (error) => {
-        this.error = 'Unable to load workspaces. Please try again.';
+        console.error('Error loading workspaces:', error);
+
+        // Handle authentication errors
+        if (error.status === 401) {
+          this.error = 'Your session has expired. Please log in again.';
+          // Optionally redirect to login after a delay
+          setTimeout(() => {
+            window.location.href = '/login';
+          }, 3000);
+        } else {
+          this.error = error.message || 'Unable to load workspaces. Please try again.';
+        }
+
+        this.workspaces = [];
         this.isLoading = false;
       }
     });

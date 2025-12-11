@@ -18,7 +18,10 @@
       "Bash(composer:*)",
       "Bash(npm install:*)",
       "Bash(ng generate module:*)",
-      "Bash(ng generate guard:*)"
+      "Bash(ng generate guard:*)",
+      "Bash(curl:*)",
+      "Bash(php:*)",
+      "Bash(del backendreset_password.php)"
     ],
     "deny": [],
     "ask": []

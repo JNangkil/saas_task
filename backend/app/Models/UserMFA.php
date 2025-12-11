@@ -11,6 +11,13 @@ use Illuminate\Support\Str;
 class UserMFA extends Model
 {
     /**
+     * The table associated with the model.
+     *
+     * @var string
+     */
+    protected $table = 'user_mfas';
+
+    /**
      * The attributes that are mass assignable.
      *
      * @var array<int, string>

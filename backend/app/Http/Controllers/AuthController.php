@@ -12,7 +12,6 @@ use App\Http\Requests\MfaVerifyRequest;
 use App\Http\Requests\ResetPasswordRequest;
 use App\Models\PasswordResetToken;
 use App\Services\AccountLockoutService;
-use App\Services\JWTService;
 use App\Services\MFAService;
 use App\Services\UserService;
 use Illuminate\Http\JsonResponse;
@@ -27,7 +26,6 @@ use Illuminate\Support\Str;
 class AuthController extends Controller
 {
     public function __construct(
-        private JWTService $jwtService,
         private MFAService $mfaService,
         private AccountLockoutService $accountLockoutService,
         private UserService $userService
@@ -93,6 +91,137 @@ class AuthController extends Controller
         // Reset failed attempts on successful login
         $this->accountLockoutService->resetFailedAttempts($user);
         
+        // Check if user has MFA enabled
+        $userMfa = $user->mfa;
+        if ($userMfa && $userMfa->isEnabled()) {
+            // Generate a temporary MFA token for verification
+            $mfaToken = Str::random(64);
+            
+            // Store MFA token temporarily in cache (expires in 10 minutes)
+            \Cache::put("mfa_temp_token:{$user->id}", [
+                'token' => $mfaToken,
+                'email' => $user->email,
+            ], now()->addMinutes(10));
+            
+            return response()->json([
+                'requires_mfa' => true,
+                'mfa_token' => $mfaToken,
+                'message' => 'MFA verification required',
+            ]);
+        }
+        
+        // Get user's tenants for multi-tenant support
+        $userTenants = $user->tenants()->pluck('tenants.id', 'tenants.name')->toArray();
+
+        // Generate token using Sanctum
+        $token = $user->createToken('auth_token')->plainTextToken;
+
+        // Get the first tenant ID for the user
+        $firstTenant = $user->tenants()->first();
+        $tenantId = $firstTenant ? $firstTenant->id : null;
+
+        return response()->json([
+            'requires_mfa' => false,
+            'access_token' => $token,
+            'refresh_token' => $token,
+            'token_type' => 'bearer',
+            'expires_in' => config('sanctum.expiration', 525600) * 60,
+            'user' => [
+                'id' => $user->id,
+                'name' => $user->name,
+                'email' => $user->email,
+                'is_super_admin' => $user->isSuperAdmin(),
+            ],
+            'tenant' => $tenantId ? [
+                'id' => $tenantId,
+            ] : null,
+            'tenants' => $userTenants,
+        ]);
+    }
+
+    /**
+     * Verify MFA code during login (public endpoint).
+     */
+    public function mfaLoginVerify(Request $request): JsonResponse
+    {
+        $validator = Validator::make($request->all(), [
+            'email' => 'required|email',
+            'mfa_token' => 'required|string',
+            'code' => 'required|string|digits:6',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'error' => 'Validation failed',
+                'message' => 'Please check your input.',
+                'errors' => $validator->errors(),
+            ], 422);
+        }
+
+        $validated = $validator->validated();
+
+        // Find the user
+        $user = \App\Models\User::where('email', $validated['email'])->first();
+        
+        if (!$user) {
+            return response()->json([
+                'error' => 'Invalid request',
+                'message' => 'Invalid verification request.',
+            ], 401);
+        }
+
+        // Check if account is locked
+        if ($this->accountLockoutService->isAccountLocked($user)) {
+            $remainingTime = $this->accountLockoutService->getRemainingLockoutTime($user);
+            return response()->json([
+                'error' => 'Account locked',
+                'message' => 'Your account has been temporarily locked due to multiple failed login attempts.',
+                'locked_until' => $user->accountLockout->locked_until,
+                'retry_after' => $remainingTime,
+            ], 423);
+        }
+
+        // Verify MFA token from cache
+        $cachedData = \Cache::get("mfa_temp_token:{$user->id}");
+        
+        if (!$cachedData || $cachedData['token'] !== $validated['mfa_token'] || $cachedData['email'] !== $validated['email']) {
+            return response()->json([
+                'error' => 'Invalid token',
+                'message' => 'The MFA session has expired or is invalid. Please log in again.',
+            ], 401);
+        }
+
+        // Verify the TOTP code
+        if (!$this->mfaService->verifyCode($user, $validated['code'])) {
+            // Record failed attempt for MFA
+            $lockout = $this->accountLockoutService->recordFailedAttempt($user);
+            
+            // Check if account was just locked
+            if ($lockout->isLocked()) {
+                $remainingTime = $this->accountLockoutService->getRemainingLockoutTime($user);
+                return response()->json([
+                    'error' => 'Account locked',
+                    'message' => 'Your account has been temporarily locked due to multiple failed login attempts.',
+                    'locked_until' => $lockout->locked_until,
+                    'retry_after' => $remainingTime,
+                    'failed_attempts' => $lockout->failed_attempts,
+                ], 423);
+            }
+            
+            return response()->json([
+                'error' => 'Invalid code',
+                'message' => 'The provided verification code is incorrect.',
+                'failed_attempts' => $lockout->failed_attempts,
+                'remaining_attempts' => max(0, 5 - $lockout->failed_attempts),
+            ], 422);
+        }
+
+        // Clear the MFA temp token from cache
+        \Cache::forget("mfa_temp_token:{$user->id}");
+        
+        // Reset failed attempts on successful verification
+        $this->accountLockoutService->resetFailedAttempts($user);
+
         // Get tenant ID from user's current tenant context
         $tenantId = $this->jwtService->getUserTenantId($user);
 
@@ -103,7 +232,8 @@ class AuthController extends Controller
         $userTenants = $this->jwtService->getUserTenants($user);
 
         return response()->json([
-            'token' => $token,
+            'access_token' => $token,
+            'refresh_token' => $token, // You might want to generate a separate refresh token
             'token_type' => 'bearer',
             'expires_in' => config('sanctum.expiration', 525600) * 60,
             'user' => [
@@ -231,7 +361,8 @@ class AuthController extends Controller
         $userTenants = $this->jwtService->getUserTenants($user);
 
         return response()->json([
-            'token' => $token,
+            'access_token' => $token,
+            'refresh_token' => $token,
             'token_type' => 'bearer',
             'expires_in' => config('sanctum.expiration', 525600) * 60,
             'user' => [
@@ -278,7 +409,8 @@ class AuthController extends Controller
         $userTenants = $this->jwtService->getUserTenants($user);
 
         return response()->json([
-            'token' => $newToken,
+            'access_token' => $newToken,
+            'refresh_token' => $newToken,
             'token_type' => 'bearer',
             'expires_in' => config('sanctum.expiration', 525600) * 60,
             'user' => [

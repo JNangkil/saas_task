@@ -39,7 +39,12 @@ export interface LoginResponse {
         name: string;
         email: string;
         avatar?: string;
+        is_super_admin?: boolean;
     };
+    tenant?: {
+        id: number;
+    } | null;
+    tenants?: any[];
 }
 
 export interface ForgotPasswordRequest {
@@ -359,7 +364,7 @@ export class AuthService {
      * Login with email and password (first step of MFA login)
      */
     loginWithMfa(credentials: MfaLoginRequest): Observable<MfaLoginResponse> {
-        return this.apiService.post<MfaLoginResponse>('auth/login/mfa', credentials).pipe(
+        return this.apiService.post<MfaLoginResponse>('auth/login', credentials).pipe(
             tap((response: MfaLoginResponse) => {
                 if (response.requires_mfa && response.mfa_token) {
                     // Store MFA token and email temporarily

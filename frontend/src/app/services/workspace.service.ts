@@ -1,28 +1,21 @@
 import { Injectable } from '@angular/core';
-import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Observable, of, throwError } from 'rxjs';
 import { catchError, map } from 'rxjs/operators';
 import { IWorkspace, IWorkspaceContext, IWorkspaceCreateRequest, IWorkspaceUpdateRequest, IWorkspaceMember } from '../interfaces/workspace.interface';
+import { ApiService } from './api.service';
 
 @Injectable({
     providedIn: 'root'
 })
 export class WorkspaceService {
-    private readonly apiUrl = '/api/workspaces';
-    private readonly httpOptions = {
-        headers: new HttpHeaders({
-            'Content-Type': 'application/json'
-        })
-    };
-
-    constructor(private http: HttpClient) { }
+    constructor(private apiService: ApiService) { }
 
     /**
      * Get all workspaces for a tenant.
      */
     getWorkspaces(tenantId: string, includeArchived = false): Observable<IWorkspace[]> {
-        const url = `/api/tenants/${tenantId}/workspaces${includeArchived ? '?include_archived=true' : ''}`;
-        return this.http.get<any>(url).pipe(
+        const endpoint = `tenants/${tenantId}/workspaces${includeArchived ? '?include_archived=true' : ''}`;
+        return this.apiService.get<any>(endpoint).pipe(
             map(response => response.data || []),
             catchError(error => {
                 console.error('Error fetching workspaces:', error);
@@ -37,7 +30,8 @@ export class WorkspaceService {
     getCurrentTenantWorkspaces(includeArchived = false): Observable<IWorkspace[]> {
         // This would get the current tenant from context service
         // For now, we'll implement this as a placeholder
-        return this.http.get<any>(`/api/workspaces${includeArchived ? '?include_archived=true' : ''}`).pipe(
+        const endpoint = `workspaces${includeArchived ? '?include_archived=true' : ''}`;
+        return this.apiService.get<any>(endpoint).pipe(
             map(response => response.data || []),
             catchError(error => {
                 console.error('Error fetching current tenant workspaces:', error);
@@ -50,7 +44,7 @@ export class WorkspaceService {
      * Get a specific workspace.
      */
     getWorkspace(workspaceId: string): Observable<IWorkspace> {
-        return this.http.get<any>(`/api/workspaces/${workspaceId}`).pipe(
+        return this.apiService.get<any>(`workspaces/${workspaceId}`).pipe(
             map(response => response.data),
             catchError(error => {
                 console.error(`Error fetching workspace ${workspaceId}:`, error);
@@ -63,7 +57,7 @@ export class WorkspaceService {
      * Create a new workspace.
      */
     createWorkspace(tenantId: string, workspaceData: IWorkspaceCreateRequest): Observable<IWorkspace> {
-        return this.http.post<any>(`/api/tenants/${tenantId}/workspaces`, workspaceData, this.httpOptions).pipe(
+        return this.apiService.post<any>(`tenants/${tenantId}/workspaces`, workspaceData).pipe(
             map(response => response.data),
             catchError(error => {
                 console.error('Error creating workspace:', error);
@@ -76,7 +70,7 @@ export class WorkspaceService {
      * Update an existing workspace.
      */
     updateWorkspace(workspaceId: string, workspaceData: IWorkspaceUpdateRequest): Observable<IWorkspace> {
-        return this.http.put<any>(`/api/workspaces/${workspaceId}`, workspaceData, this.httpOptions).pipe(
+        return this.apiService.put<any>(`workspaces/${workspaceId}`, workspaceData).pipe(
             map(response => response.data),
             catchError(error => {
                 console.error(`Error updating workspace ${workspaceId}:`, error);
@@ -89,7 +83,7 @@ export class WorkspaceService {
      * Archive a workspace.
      */
     archiveWorkspace(workspaceId: string): Observable<any> {
-        return this.http.post<any>(`/api/workspaces/${workspaceId}/archive`, {}).pipe(
+        return this.apiService.post<any>(`workspaces/${workspaceId}/archive`, {}).pipe(
             catchError(error => {
                 console.error(`Error archiving workspace ${workspaceId}:`, error);
                 return throwError(() => new Error(`Failed to archive workspace ${workspaceId}`));
@@ -101,7 +95,7 @@ export class WorkspaceService {
      * Restore a workspace.
      */
     restoreWorkspace(workspaceId: string): Observable<any> {
-        return this.http.post<any>(`/api/workspaces/${workspaceId}/restore`, {}).pipe(
+        return this.apiService.post<any>(`workspaces/${workspaceId}/restore`, {}).pipe(
             catchError(error => {
                 console.error(`Error restoring workspace ${workspaceId}:`, error);
                 return throwError(() => new Error(`Failed to restore workspace ${workspaceId}`));
@@ -113,7 +107,7 @@ export class WorkspaceService {
      * Delete a workspace.
      */
     deleteWorkspace(workspaceId: string): Observable<any> {
-        return this.http.delete<any>(`/api/workspaces/${workspaceId}`).pipe(
+        return this.apiService.delete<any>(`workspaces/${workspaceId}`).pipe(
             catchError(error => {
                 console.error(`Error deleting workspace ${workspaceId}:`, error);
                 return throwError(() => new Error(`Failed to delete workspace ${workspaceId}`));
@@ -125,7 +119,7 @@ export class WorkspaceService {
      * Get workspace members.
      */
     getWorkspaceMembers(workspaceId: string): Observable<IWorkspaceMember[]> {
-        return this.http.get<any>(`/api/workspaces/${workspaceId}/members`).pipe(
+        return this.apiService.get<any>(`workspaces/${workspaceId}/members`).pipe(
             map(response => response.data || []),
             catchError(error => {
                 console.error(`Error fetching workspace members for ${workspaceId}:`, error);
@@ -138,7 +132,7 @@ export class WorkspaceService {
      * Add a member to a workspace.
      */
     addWorkspaceMember(workspaceId: string, memberData: { email: string; role: string }): Observable<any> {
-        return this.http.post<any>(`/api/workspaces/${workspaceId}/members`, memberData).pipe(
+        return this.apiService.post<any>(`workspaces/${workspaceId}/members`, memberData).pipe(
             map(response => response.data),
             catchError(error => {
                 console.error(`Error adding member to workspace ${workspaceId}:`, error);
@@ -151,7 +145,7 @@ export class WorkspaceService {
      * Update a member's role in a workspace.
      */
     updateWorkspaceMemberRole(workspaceId: string, userId: string, role: string): Observable<any> {
-        return this.http.put<any>(`/api/workspaces/${workspaceId}/members/${userId}`, { role }).pipe(
+        return this.apiService.put<any>(`workspaces/${workspaceId}/members/${userId}`, { role }).pipe(
             map(response => response.data),
             catchError(error => {
                 console.error(`Error updating member role in workspace ${workspaceId}:`, error);
@@ -164,7 +158,7 @@ export class WorkspaceService {
      * Remove a member from a workspace.
      */
     removeWorkspaceMember(workspaceId: string, userId: string): Observable<any> {
-        return this.http.delete<any>(`/api/workspaces/${workspaceId}/members/${userId}`).pipe(
+        return this.apiService.delete<any>(`workspaces/${workspaceId}/members/${userId}`).pipe(
             catchError(error => {
                 console.error(`Error removing member from workspace ${workspaceId}:`, error);
                 return throwError(() => new Error(`Failed to remove member from workspace ${workspaceId}`));
@@ -176,7 +170,7 @@ export class WorkspaceService {
      * Get workspace settings.
      */
     getWorkspaceSettings(workspaceId: string): Observable<any> {
-        return this.http.get<any>(`/api/workspaces/${workspaceId}/settings`).pipe(
+        return this.apiService.get<any>(`workspaces/${workspaceId}/settings`).pipe(
             map(response => response.data),
             catchError(error => {
                 console.error(`Error fetching workspace settings for ${workspaceId}:`, error);
@@ -189,7 +183,7 @@ export class WorkspaceService {
      * Update workspace settings.
      */
     updateWorkspaceSettings(workspaceId: string, settings: any): Observable<any> {
-        return this.http.put<any>(`/api/workspaces/${workspaceId}/settings`, settings).pipe(
+        return this.apiService.put<any>(`workspaces/${workspaceId}/settings`, settings).pipe(
             map(response => response.data),
             catchError(error => {
                 console.error(`Error updating workspace settings for ${workspaceId}:`, error);

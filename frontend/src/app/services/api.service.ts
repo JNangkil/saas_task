@@ -1,4 +1,4 @@
-import { Injectable } from '@angular/core';
+import { Injectable, Injector } from '@angular/core';
 import { HttpClient, HttpHeaders, HttpErrorResponse, HttpParams } from '@angular/common/http';
 import { Observable, throwError } from 'rxjs';
 import { catchError, map } from 'rxjs/operators';
@@ -15,6 +15,7 @@ import {
     IBillingSummary
 } from '../models/subscription.model';
 import { environment } from '../environments/environment';
+import { AuthService } from '../core/services/auth.service';
 
 /**
  * API service provides a centralized way to make HTTP requests
@@ -30,7 +31,14 @@ export class ApiService {
         'Accept': 'application/json'
     });
 
-    constructor(private http: HttpClient) { }
+    constructor(private http: HttpClient, private injector: Injector) { }
+
+    /**
+     * Get AuthService to avoid circular dependency
+     */
+    private getAuthService(): AuthService {
+        return this.injector.get(AuthService);
+    }
 
     /**
      * Make a GET request to the specified endpoint.
@@ -207,8 +215,16 @@ export class ApiService {
      * Merge default headers with provided headers.
      */
     private mergeHeaders(customHeaders?: HttpHeaders): HttpHeaders {
+        const authHeader = this.getAuthService().getAuthHeader();
+
         if (!customHeaders) {
-            return this.defaultHeaders;
+            return new HttpHeaders({
+                ...this.defaultHeaders.keys().reduce((acc, key) => {
+                    acc[key] = this.defaultHeaders.get(key) || '';
+                    return acc;
+                }, {} as Record<string, string>),
+                ...authHeader
+            });
         }
 
         return new HttpHeaders({
@@ -216,6 +232,7 @@ export class ApiService {
                 acc[key] = this.defaultHeaders.get(key) || '';
                 return acc;
             }, {} as Record<string, string>),
+            ...authHeader,
             ...customHeaders.keys().reduce((acc, key) => {
                 acc[key] = customHeaders.get(key) || '';
                 return acc;

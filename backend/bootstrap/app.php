@@ -20,6 +20,11 @@ return Application::configure(basePath: dirname(__DIR__))
             \App\Http\Middleware\TenantResolution::class,
         ]);
 
+        // Add global middleware
+        $middleware->api(prepend: [
+            \Illuminate\Http\Middleware\HandleCors::class,
+        ]);
+
         // Register route middleware aliases
         $middleware->alias([
             'workspace.permission' => \App\Http\Middleware\WorkspacePermission::class,

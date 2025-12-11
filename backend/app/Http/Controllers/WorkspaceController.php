@@ -16,7 +16,7 @@ class WorkspaceController extends Controller
     /**
      * Display a listing of workspaces for a tenant.
      */
-    public function index(Request $request, $tenantId): JsonResponse
+    public function index(Request $request, $tenantId)
     {
         $user = Auth::user();
         
@@ -83,11 +83,10 @@ class WorkspaceController extends Controller
         $perPage = (int) $request->get('per_page', 15);
         $perPage = max(1, min($perPage, 100)); // Ensure between 1 and 100
         $page = $request->get('page', 1);
-        
+
         $result = $workspaces->paginate($perPage, ['*'], 'page', $page);
 
-        // Add filtering metadata
-        $result->additional([
+        return WorkspaceResource::collection($result)->additional([
             'meta' => [
                 'filters' => [
                     'search' => $request->get('search'),
@@ -113,14 +112,67 @@ class WorkspaceController extends Controller
                 ],
             ],
         ]);
+    }
 
-        return WorkspaceResource::collection($result);
+    /**
+     * Display a listing of workspaces for the current tenant.
+     */
+    public function currentTenantWorkspaces(Request $request)
+    {
+        $user = Auth::user();
+
+        // Get current tenant from context
+        $tenantId = $request->header('X-Tenant-ID');
+        if (!$tenantId) {
+            // If no tenant context, try to get user's first tenant
+            $tenant = $user->tenants()->first();
+            if (!$tenant) {
+                // Return empty array if user has no tenants
+                return response()->json([
+                    'data' => [],
+                    'meta' => [
+                        'filters' => [
+                            'search' => null,
+                            'status' => 'active',
+                            'is_default' => null,
+                            'member_count_min' => null,
+                            'member_count_max' => null,
+                            'created_after' => null,
+                            'created_before' => null,
+                            'include_archived' => false,
+                        ],
+                        'sort' => [
+                            'sort_by' => 'is_default',
+                            'sort_direction' => 'asc',
+                        ],
+                        'pagination' => [
+                            'per_page' => 15,
+                            'current_page' => 1,
+                            'last_page' => 1,
+                            'total' => 0,
+                            'from' => null,
+                            'to' => null,
+                        ],
+                    ],
+                ]);
+            }
+            $tenantId = $tenant->id;
+        } else {
+            // Verify user belongs to tenant
+            $tenant = $user->tenants()->find($tenantId);
+            if (!$tenant) {
+                return response()->json(['error' => 'Tenant not found'], 404);
+            }
+        }
+
+        // Reuse the existing index logic with the determined tenant ID
+        return $this->index($request, $tenantId);
     }
 
     /**
      * Store a newly created workspace in storage.
      */
-    public function store(WorkspaceRequest $request, $tenantId): JsonResponse
+    public function store(WorkspaceRequest $request, $tenantId)
     {
         $user = Auth::user();
         
