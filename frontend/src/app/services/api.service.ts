@@ -17,6 +17,12 @@ import {
 import { environment } from '../environments/environment';
 import { AuthService } from '../core/services/auth.service';
 
+type ApiRequestError = Error & Pick<HttpErrorResponse, 'error' | 'headers' | 'message' | 'name' | 'ok' | 'status' | 'statusText' | 'url'> & {
+    userMessage: string;
+    originalError: HttpErrorResponse;
+    originalMessage: string;
+};
+
 /**
  * API service provides a centralized way to make HTTP requests
  * with consistent error handling, headers, and response formatting.
@@ -262,7 +268,9 @@ export class ApiService {
 
         let errorMessage = 'An unexpected error occurred';
 
-        if (error.error instanceof ErrorEvent) {
+        if (error.status === 0) {
+            errorMessage = 'Unable to reach the server. Check that the API is running and reachable.';
+        } else if (error.error instanceof ErrorEvent) {
             // Client-side or network error
             errorMessage = `Network error: ${error.error.message}`;
         } else {
@@ -301,7 +309,19 @@ export class ApiService {
             }
         }
 
-        return throwError(() => new Error(errorMessage));
+        return throwError(() => this.createApiError(error, errorMessage));
+    }
+
+    /**
+     * Preserve the original HTTP metadata while surfacing a friendlier message.
+     */
+    private createApiError(error: HttpErrorResponse, message: string): ApiRequestError {
+        return Object.assign(new Error(message), error, {
+            name: 'ApiRequestError',
+            userMessage: message,
+            originalError: error,
+            originalMessage: error.message
+        });
     }
 
     /**

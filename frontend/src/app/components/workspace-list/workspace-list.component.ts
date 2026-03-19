@@ -1011,8 +1011,7 @@ export class WorkspaceListComponent implements OnInit {
 
     this.workspaceService.getCurrentTenantWorkspaces().subscribe({
       next: (response) => {
-        // Handle both array and object responses
-        const workspaces = Array.isArray(response) ? response : (response?.data || []);
+        const workspaces = response || [];
         this.workspaces = workspaces || [];
         this.isLoading = false;
 
