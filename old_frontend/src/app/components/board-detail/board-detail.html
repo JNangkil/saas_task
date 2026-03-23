@@ -1,0 +1,64 @@
+<div class="board-surface" *ngIf="board as currentBoard; else missingBoard">
+    <header class="board-surface-header">
+        <div class="board-surface-copy">
+            <div class="board-identity">
+                <span class="board-identity-icon" [style.background]="(currentBoard.color || '#2563eb') + '22'"
+                    [style.color]="currentBoard.color || '#2563eb'">
+                    <span class="material-icons">{{ currentBoard.icon || 'dashboard' }}</span>
+                </span>
+                <div>
+                    <p class="board-kicker">Board Work Surface</p>
+                    <h1>{{ currentBoard.name }}</h1>
+                </div>
+            </div>
+            <p class="board-description">
+                {{ currentBoard.description || 'Views, filters, task creation, and record editing now stay anchored to this board.' }}
+            </p>
+        </div>
+
+        <div class="board-surface-actions">
+            <button class="board-action" (click)="openSettings()">
+                <span class="material-icons">settings</span>
+                Board Settings
+            </button>
+            <app-view-switcher [currentView]="currentView" (viewChange)="onViewChange($event)"></app-view-switcher>
+        </div>
+    </header>
+
+    <section class="quick-task-bar">
+        <div class="quick-task-input">
+            <span class="material-icons">playlist_add</span>
+            <input [(ngModel)]="quickTaskTitle" (keydown.enter)="createTask()"
+                placeholder="Create a task without leaving the board" />
+        </div>
+        <button class="quick-task-submit" (click)="createTask()" [disabled]="!quickTaskTitle.trim() || creatingTask">
+            {{ creatingTask ? 'Adding…' : 'Add Task' }}
+        </button>
+    </section>
+
+    <div class="board-surface-body" [class.with-panel]="!!selectedTask">
+        <section class="board-surface-main">
+            <ng-container [ngSwitch]="currentView">
+                <app-dynamic-task-table *ngSwitchCase="'table'" [boardId]="boardId || undefined">
+                </app-dynamic-task-table>
+
+                <app-kanban-view *ngSwitchCase="'kanban'" [boardId]="boardId || undefined"></app-kanban-view>
+
+                <app-calendar-view *ngSwitchCase="'calendar'" [boardId]="boardId || undefined"></app-calendar-view>
+            </ng-container>
+        </section>
+
+        <aside class="board-record-panel" *ngIf="selectedTask">
+            <app-task-details-panel [task]="selectedTask" [visible]="true" [docked]="true" (close)="onCloseDetails()"
+                (taskUpdate)="onTaskUpdated($event)">
+            </app-task-details-panel>
+        </aside>
+    </div>
+</div>
+
+<ng-template #missingBoard>
+    <section class="board-missing-state">
+        <h1>Board unavailable</h1>
+        <p>The requested board could not be restored inside the shell.</p>
+    </section>
+</ng-template>

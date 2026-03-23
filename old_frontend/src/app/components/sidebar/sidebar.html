@@ -1,0 +1,121 @@
+<div class="shell-sidebar-panel" *ngIf="context$ | async as context">
+    <div class="shell-brand">
+        <div class="brand-mark">TF</div>
+        <div>
+            <p class="brand-kicker">TaskFlow Workspace</p>
+            <h1>{{ context.currentWorkspace?.name || 'Workspace Shell' }}</h1>
+        </div>
+    </div>
+
+    <div class="workspace-switcher" *ngIf="context.userWorkspaces.length > 0">
+        <button type="button" class="workspace-trigger" (click)="isWorkspaceMenuOpen = !isWorkspaceMenuOpen">
+            <div class="workspace-trigger-copy">
+                <span class="workspace-trigger-label">Workspace</span>
+                <strong>{{ context.currentWorkspace?.name || 'Choose workspace' }}</strong>
+            </div>
+            <span class="material-icons">{{ isWorkspaceMenuOpen ? 'expand_less' : 'expand_more' }}</span>
+        </button>
+
+        <div class="workspace-menu" *ngIf="isWorkspaceMenuOpen">
+            <button *ngFor="let workspace of context.userWorkspaces; trackBy: trackWorkspace" type="button"
+                class="workspace-option"
+                [class.active]="workspace.id === context.currentWorkspace?.id" (click)="openWorkspace(workspace.id)">
+                <div class="workspace-option-icon" [style.background]="workspace.color || '#2563eb'"></div>
+                <div>
+                    <strong>{{ workspace.name }}</strong>
+                    <span>{{ workspace.description || 'Open workspace home' }}</span>
+                </div>
+            </button>
+        </div>
+    </div>
+
+    <nav class="shell-nav" *ngIf="context.currentWorkspace as currentWorkspace">
+        <a class="shell-link" routerLinkActive="active" [routerLink]="['/app', currentWorkspace.id, 'home']">
+            <span class="material-icons">home</span>
+            Workspace Home
+        </a>
+
+        <button type="button" class="shell-link shell-link-button" (click)="openCreateBoard()">
+            <span class="material-icons">add_circle</span>
+            Create Board
+        </button>
+
+        <a class="shell-link" routerLink="/notifications" routerLinkActive="active">
+            <span class="material-icons">notifications</span>
+            Notifications
+        </a>
+
+        <a class="shell-link" routerLink="/profile" routerLinkActive="active">
+            <span class="material-icons">account_circle</span>
+            Profile
+        </a>
+    </nav>
+
+    <section class="shell-section" *ngIf="(favoriteBoards$ | async) as favoriteBoards">
+        <div class="shell-section-header">
+            <h2>Favorites</h2>
+        </div>
+        <div class="shell-list" *ngIf="favoriteBoards.length; else emptyFavorites">
+            <a *ngFor="let board of favoriteBoards; trackBy: trackBoard" class="board-link"
+                [class.active]="(activeBoard$ | async)?.id === board.id" [routerLink]="['/app', board.workspace_id, 'boards', board.id]"
+                (click)="openBoard(board)">
+                <span class="board-swatch" [style.background]="board.color || '#60a5fa'"></span>
+                <span class="board-copy">{{ board.name }}</span>
+                <button type="button" class="board-settings" (click)="openBoardSettings(board, $event)"
+                    title="Board settings">
+                    <span class="material-icons">tune</span>
+                </button>
+            </a>
+        </div>
+        <ng-template #emptyFavorites>
+            <p class="shell-empty">Favorite boards stay pinned here.</p>
+        </ng-template>
+    </section>
+
+    <section class="shell-section" *ngIf="(recentBoards$ | async) as recentBoards">
+        <div class="shell-section-header">
+            <h2>Recent</h2>
+        </div>
+        <div class="shell-list" *ngIf="recentBoards.length; else emptyRecent">
+            <a *ngFor="let board of recentBoards; trackBy: trackBoard" class="board-link"
+                [class.active]="(activeBoard$ | async)?.id === board.id" [routerLink]="['/app', board.workspace_id, 'boards', board.id]"
+                (click)="openBoard(board)">
+                <span class="board-swatch muted" [style.background]="board.color || '#475569'"></span>
+                <span class="board-copy">{{ board.name }}</span>
+            </a>
+        </div>
+        <ng-template #emptyRecent>
+            <p class="shell-empty">Your recently opened boards will appear here.</p>
+        </ng-template>
+    </section>
+
+    <section class="shell-section">
+        <div class="shell-section-header">
+            <h2>All Boards</h2>
+        </div>
+        <div class="shell-list" *ngIf="(boards$ | async) as boards">
+            <a *ngFor="let board of boards; trackBy: trackBoard" class="board-link"
+                [class.active]="(activeBoard$ | async)?.id === board.id" [routerLink]="['/app', board.workspace_id, 'boards', board.id]"
+                (click)="openBoard(board)">
+                <span class="material-icons board-icon">{{ board.icon || 'dashboard' }}</span>
+                <span class="board-copy">{{ board.name }}</span>
+                <button type="button" class="board-settings" (click)="openBoardSettings(board, $event)"
+                    title="Board settings">
+                    <span class="material-icons">settings</span>
+                </button>
+            </a>
+        </div>
+    </section>
+
+    <footer class="shell-footer">
+        <div class="shell-user-avatar">{{ getUserInitials() }}</div>
+        <div class="shell-user-copy">
+            <strong>{{ getUserName() }}</strong>
+            <span>Inside the workspace shell</span>
+        </div>
+    </footer>
+
+    <app-create-board-modal [isOpen]="isCreateModalOpen" [tenantId]="workspaceShellService.currentTenantId || ''"
+        [workspaceId]="workspaceShellService.currentWorkspace?.id || ''" (close)="closeCreateBoard()"
+        (created)="onBoardCreated($event)"></app-create-board-modal>
+</div>

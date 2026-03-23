@@ -1,0 +1,19 @@
+<div class="shell-root">
+    <aside class="shell-sidebar">
+        <app-sidebar></app-sidebar>
+    </aside>
+
+    <main class="shell-content">
+        <div class="shell-loading" *ngIf="loading$ | async">
+            <div class="shell-loading-spinner"></div>
+            <p>Restoring your workspace…</p>
+        </div>
+
+        <div class="shell-error" *ngIf="(error$ | async) as error">
+            <h2>Workspace shell unavailable</h2>
+            <p>{{ error }}</p>
+        </div>
+
+        <router-outlet></router-outlet>
+    </main>
+</div>

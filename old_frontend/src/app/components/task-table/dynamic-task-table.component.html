@@ -1,0 +1,271 @@
+<div class="task-table-container" [class.loading]="loading$ | async">
+    <!-- Header Section -->
+    <div class="table-header" *ngIf="tableConfig.showFilters || tableConfig.showColumnToggles">
+        <div class="header-left">
+            <h2 class="table-title">Tasks</h2>
+            <div class="task-count" *ngIf="pagination$ | async as pagination">
+                {{ pagination.total }} task{{ pagination.total !== 1 ? 's' : '' }}
+            </div>
+        </div>
+
+        <div class="header-right">
+            <!-- Presence Indicators -->
+            <div class="presence-indicators" *ngIf="usersPresent$ | async as users">
+                <div class="user-avatar" *ngFor="let user of users.slice(0, 3)" [title]="user.name">
+                    <!-- Placeholder avatar if no image -->
+                    <div class="avatar-circle" [style.background-color]="'#3b82f6'">
+                        {{ user.name.charAt(0).toUpperCase() }}
+                    </div>
+                </div>
+                <div class="more-users" *ngIf="users.length > 3">
+                    +{{ users.length - 3 }}
+                </div>
+            </div>
+
+            <!-- Column Toggles -->
+            <div class="column-toggles" *ngIf="tableConfig.showColumnToggles">
+                <button class="toggle-btn" (click)="toggleColumnMenu()" [class.active]="showColumnMenu">
+                    <span class="icon">⚙️</span>
+                    Columns
+                </button>
+
+                <div class="column-menu" [class.show]="showColumnMenu" *ngIf="showColumnMenu">
+                    <div class="column-menu-header">
+                        <h4>Show Columns</h4>
+                        <button class="close-btn" (click)="showColumnMenu = false">×</button>
+                    </div>
+                    <div class="column-options">
+                        <ng-container *ngIf="columns$ | async as columns">
+                            <label class="column-option" *ngFor="let column of columns">
+                                <input type="checkbox" [checked]="getColumnVisibility(column.id)"
+                                    (change)="onColumnVisibilityToggle(column.id)" class="column-checkbox">
+                                <span class="column-label">{{ column.name }}</span>
+                            </label>
+                        </ng-container>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filters Section -->
+    <div class="filters-section" *ngIf="tableConfig.showFilters">
+        <div class="filter-row">
+            <!-- Search -->
+            <div class="filter-group search-group">
+                <input type="text" placeholder="Search tasks..." [ngModel]="search$ | async"
+                    (ngModelChange)="onSearchChange($event)" class="search-input">
+            </div>
+
+            <!-- Status Filter -->
+            <div class="filter-group">
+                <select [ngModel]="statusFilter$ | async" (ngModelChange)="onStatusFilterChange($event)" multiple
+                    class="filter-select status-filter">
+                    <option value="todo">To Do</option>
+                    <option value="in_progress">In Progress</option>
+                    <option value="review">Review</option>
+                    <option value="done">Done</option>
+                    <option value="archived">Archived</option>
+                </select>
+            </div>
+
+            <!-- Priority Filter -->
+            <div class="filter-group">
+                <select [ngModel]="priorityFilter$ | async" (ngModelChange)="onPriorityFilterChange($event)" multiple
+                    class="filter-select priority-filter">
+                    <option value="low">Low</option>
+                    <option value="medium">Medium</option>
+                    <option value="high">High</option>
+                    <option value="urgent">Urgent</option>
+                </select>
+            </div>
+
+            <!-- Refresh Button -->
+            <button class="refresh-btn" (click)="refreshTasks()" title="Refresh tasks">
+                <span class="icon">🔄</span>
+            </button>
+        </div>
+    </div>
+
+    <!-- Loading State -->
+    <div class="loading-state" *ngIf="loading$ | async">
+        <div class="loading-spinner"></div>
+        <p>Loading tasks...</p>
+    </div>
+
+    <!-- Error State -->
+    <div class="error-state" *ngIf="error$ | async as error">
+        <div class="error-message">
+            <span class="icon">⚠️</span>
+            {{ error }}
+        </div>
+        <button class="retry-btn" (click)="refreshTasks()">Try Again</button>
+    </div>
+
+    <!-- Table Container -->
+    <div class="table-container" *ngIf="!(loading$ | async) && !(error$ | async)">
+        <!-- Empty State -->
+        <div class="empty-state" *ngIf="(tasks$ | async)?.length === 0">
+            <div class="empty-icon">📋</div>
+            <h3>No Tasks Found</h3>
+            <p>There are no tasks to display. Try adjusting your filters or create a new task.</p>
+        </div>
+
+        <!-- Tasks Table -->
+        <ng-container *ngIf="tasks$ | async as tasks">
+            <ng-container *ngIf="columns$ | async as columns">
+                <ng-container *ngIf="sort$ | async as sort">
+                    <ng-container *ngIf="selectedTasks$ | async as selectedTasks">
+                        <div class="tasks-table-wrapper" *ngIf="tasks.length > 0">
+                            <table class="tasks-table">
+                                <thead>
+                                    <tr>
+                                        <!-- Select All Checkbox -->
+                                        <th class="select-column" *ngIf="tableConfig.allowRowSelection">
+                                            <input type="checkbox" [checked]="areAllTasksSelected()"
+                                                (change)="onSelectAllTasks($any($event).target.checked || false)"
+                                                class="select-checkbox">
+                                        </th>
+
+                                        <!-- Dynamic Column Headers -->
+                                        <th *ngFor="let column of columns"
+                                            [style.width]="column.width ? column.width + 'px' : 'auto'"
+                                            [class.sortable]="column.type ? isSortable(column.type) : false"
+                                            (click)="column.type ? onSortChange('column_' + column.id) : null">
+                                            <div class="column-header">
+                                                <span class="column-title">{{ column.name }}</span>
+                                                <span class="sort-indicator"
+                                                    *ngIf="sort?.sort_by === 'column_' + column.id">
+                                                    <span class="sort-asc" *ngIf="sort?.sort_order === 'asc'">↑</span>
+                                                    <span class="sort-desc" *ngIf="sort?.sort_order === 'desc'">↓</span>
+                                                </span>
+                                            </div>
+                                        </th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <!-- Dynamic Task Rows -->
+                                    <tr *ngFor="let task of tasks; trackBy: trackByTaskId" class="task-row"
+                                        (click)="openTask(task)" (dblclick)="onTaskDoubleClick(task)">
+                                        <!-- Select Checkbox -->
+                                        <td class="select-column" *ngIf="tableConfig.allowRowSelection">
+                                            <input type="checkbox" [checked]="selectedTasks?.has(task.id) || false"
+                                                (click)="$event.stopPropagation()"
+                                                (change)="onTaskSelect(task, $any($event).target.checked || false)"
+                                                class="select-checkbox">
+                                        </td>
+
+                                        <!-- Dynamic Column Cells -->
+                                        <td *ngFor="let column of columns"
+                                            [style.width]="column.width ? column.width + 'px' : 'auto'"
+                                            class="table-cell">
+                                            <!-- Dynamic Cell Renderer Component -->
+                                            <ng-container [ngSwitch]="column.type">
+                                                <!-- Text Cell Renderer -->
+                                                <ng-container *ngSwitchCase="'text'">
+                                                    <div class="table-cell" [title]="column.name">
+                                                        {{ getFieldValue(task, column.id) || '—' }}
+                                                    </div>
+                                                </ng-container>
+
+                                                <ng-container *ngSwitchCase="'long_text'">
+                                                    <div class="table-cell" [title]="column.name">
+                                                        {{ getFieldValue(task, column.id) || '—' }}
+                                                    </div>
+                                                </ng-container>
+
+                                                <!-- Status Cell Renderer -->
+                                                <ng-container *ngSwitchCase="'status'">
+                                                    <div class="table-cell" [title]="column.name">
+                                                        {{ getFieldValue(task, column.id) || '—' }}
+                                                    </div>
+                                                </ng-container>
+
+                                                <ng-container *ngSwitchCase="'priority'">
+                                                    <div class="table-cell" [title]="column.name">
+                                                        {{ getFieldValue(task, column.id) || '—' }}
+                                                    </div>
+                                                </ng-container>
+
+                                                <!-- Date Cell Renderer -->
+                                                <ng-container *ngSwitchCase="'date'">
+                                                    <div class="table-cell" [title]="column.name">
+                                                        {{ getFieldValue(task, column.id) || '—' }}
+                                                    </div>
+                                                </ng-container>
+
+                                                <ng-container *ngSwitchCase="'datetime'">
+                                                    <div class="table-cell" [title]="column.name">
+                                                        {{ getFieldValue(task, column.id) || '—' }}
+                                                    </div>
+                                                </ng-container>
+
+                                                <!-- Checkbox Cell Renderer -->
+                                                <ng-container *ngSwitchCase="'checkbox'">
+                                                    <div class="table-cell" [title]="column.name">
+                                                        {{ getFieldValue(task, column.id) || '—' }}
+                                                    </div>
+                                                </ng-container>
+
+                                                <!-- Default Text Cell Renderer for other types -->
+                                                <ng-container *ngSwitchDefault>
+                                                    <div class="table-cell" [title]="column.name">
+                                                        {{ getFieldValue(task, column.id) || '—' }}
+                                                    </div>
+                                                </ng-container>
+                                            </ng-container>
+
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </ng-container>
+                </ng-container>
+            </ng-container>
+        </ng-container>
+    </div>
+</div>
+
+<!-- Pagination -->
+<div class="pagination-container"
+    *ngIf="tableConfig.showPagination && !(loading$ | async) && !(error$ | async) && ((tasks$ | async)?.length ?? 0) > 0">
+    <div class="pagination-info" *ngIf="pagination$ | async as pagination">
+        Showing {{ (((pagination.currentPage || 1) - 1) * tableConfig.pageSize + 1) }}-{{
+        Math.min((pagination.currentPage || 1) * tableConfig.pageSize, pagination.total || 0)
+        }} of {{ pagination.total || 0 }} tasks
+    </div>
+
+    <div class="pagination-controls" *ngIf="pagination$ | async as pagination">
+        <button class="pagination-btn" (click)="onPageChange(1)" [disabled]="pagination.currentPage === 1">
+            First
+        </button>
+        <button class="pagination-btn" (click)="onPageChange(pagination.currentPage - 1)"
+            [disabled]="!pagination.hasPrev">
+            Previous
+        </button>
+
+        <div class="page-numbers">
+            <button class="pagination-btn page-number"
+                *ngFor="let page of getPageNumbers(pagination.currentPage, pagination.totalPages)"
+                [class.active]="page === pagination.currentPage" [disabled]="page === '...'"
+                (click)="onPageClick(page)">
+                {{ page }}
+            </button>
+        </div>
+
+        <button class="pagination-btn" (click)="onPageChange(pagination.currentPage + 1)"
+            [disabled]="!pagination.hasNext">
+            Next
+        </button>
+        <button class="pagination-btn" (click)="onPageChange(pagination.totalPages)"
+            [disabled]="pagination.currentPage === pagination.totalPages">
+            Last
+        </button>
+    </div>
+</div>
+
+<!-- Bulk Action Toolbar -->
+<app-bulk-action-toolbar [selectedTasks]="getSelectedTasks()" [visible]="showBulkActionToolbar"
+    (tasksUpdated)="onBulkActionToolbarTasksUpdate($event)" (selectionCleared)="onBulkActionToolbarSelectionClear()">
+</app-bulk-action-toolbar>

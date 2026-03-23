@@ -1,0 +1,141 @@
+<div class="workspace-home" *ngIf="context$ | async as context">
+    <header class="workspace-home-header" *ngIf="context.currentWorkspace as workspace; else noWorkspace">
+        <div class="workspace-home-copy">
+            <p class="workspace-home-kicker">Workspace Home</p>
+            <h1>{{ workspace.name }}</h1>
+            <p>{{ workspace.description || 'Pick up where you left off, create a board, or jump into active work.' }}</p>
+        </div>
+
+        <div class="workspace-home-actions">
+            <label class="workspace-search">
+                <span class="material-icons">search</span>
+                <input type="search" [(ngModel)]="searchText" placeholder="Search boards in this workspace" />
+            </label>
+
+            <button class="workspace-primary" (click)="openCreateModal()">
+                <span class="material-icons">add</span>
+                New Board
+            </button>
+        </div>
+    </header>
+
+    <ng-template #noWorkspace>
+        <section class="workspace-empty">
+            <h1>No workspace selected</h1>
+            <p>Create or select a workspace to start organizing boards in the new shell.</p>
+        </section>
+    </ng-template>
+
+    <section class="workspace-section" *ngIf="favoriteBoards.length > 0">
+        <div class="workspace-section-header">
+            <div>
+                <p class="workspace-section-kicker">Pinned for fast access</p>
+                <h2>Favorite Boards</h2>
+            </div>
+        </div>
+
+        <div class="board-grid">
+            <article *ngFor="let board of favoriteBoards; trackBy: trackBoard" class="board-card favorite"
+                (click)="openBoard(board)">
+                <div class="board-card-head">
+                    <div class="board-icon" [style.background]="(board.color || '#2563eb') + '22'"
+                        [style.color]="board.color || '#2563eb'">
+                        <span class="material-icons">{{ board.icon || 'dashboard' }}</span>
+                    </div>
+
+                    <button type="button" class="board-star" (click)="toggleFavorite(board, $event)"
+                        title="Remove favorite">
+                        <span class="material-icons">star</span>
+                    </button>
+                </div>
+
+                <h3>{{ board.name }}</h3>
+                <p>{{ board.description || 'This board is ready to collect tasks, views, and updates.' }}</p>
+
+                <div class="board-card-actions">
+                    <button type="button" (click)="openBoard(board)">Open</button>
+                    <button type="button" (click)="openBoardSettings(board, $event)">Settings</button>
+                    <button type="button" class="danger" (click)="archiveBoard(board, $event)">Archive</button>
+                </div>
+            </article>
+        </div>
+    </section>
+
+    <section class="workspace-section" *ngIf="recentBoards.length > 0">
+        <div class="workspace-section-header">
+            <div>
+                <p class="workspace-section-kicker">Resume active work</p>
+                <h2>Recent Boards</h2>
+            </div>
+        </div>
+
+        <div class="recent-list">
+            <button *ngFor="let board of recentBoards; trackBy: trackBoard" type="button" class="recent-row"
+                (click)="openBoard(board)">
+                <span class="board-swatch" [style.background]="board.color || '#2563eb'"></span>
+                <span class="recent-copy">
+                    <strong>{{ board.name }}</strong>
+                    <span>{{ board.description || 'Open the board work surface' }}</span>
+                </span>
+                <span class="material-icons">chevron_right</span>
+            </button>
+        </div>
+    </section>
+
+    <section class="workspace-section">
+        <div class="workspace-section-header">
+            <div>
+                <p class="workspace-section-kicker">Everything in this workspace</p>
+                <h2>All Boards</h2>
+            </div>
+        </div>
+
+        <div *ngIf="allBoards.length === 0" class="workspace-empty boards-empty">
+            <h3>No boards match this workspace yet</h3>
+            <p>Create a blank board or start from a template without leaving the shell.</p>
+            <button class="workspace-primary" (click)="openCreateModal()">
+                <span class="material-icons">add</span>
+                Create Board
+            </button>
+        </div>
+
+        <div class="board-grid" *ngIf="allBoards.length > 0">
+            <article class="board-card add-card" (click)="openCreateModal()">
+                <div class="board-icon add-icon">
+                    <span class="material-icons">add</span>
+                </div>
+                <h3>Create Board</h3>
+                <p>Blank boards and templates stay inside the Monday-style shell.</p>
+            </article>
+
+            <article *ngFor="let board of allBoards; trackBy: trackBoard" class="board-card" (click)="openBoard(board)">
+                <div class="board-card-head">
+                    <div class="board-icon" [style.background]="(board.color || '#2563eb') + '22'"
+                        [style.color]="board.color || '#2563eb'">
+                        <span class="material-icons">{{ board.icon || 'dashboard' }}</span>
+                    </div>
+
+                    <button type="button" class="board-star" (click)="toggleFavorite(board, $event)"
+                        [title]="board.is_favorite ? 'Remove favorite' : 'Add favorite'">
+                        <span class="material-icons">{{ board.is_favorite ? 'star' : 'star_border' }}</span>
+                    </button>
+                </div>
+
+                <h3>{{ board.name }}</h3>
+                <p>{{ board.description || 'Open the board and work across table, kanban, or calendar views.' }}</p>
+
+                <div class="board-card-actions">
+                    <button type="button" (click)="openBoard(board)">Open</button>
+                    <button type="button" (click)="openBoardSettings(board, $event)">Settings</button>
+                    <button type="button" class="danger" (click)="archiveBoard(board, $event)">
+                        {{ archiveInFlightId === board.id ? 'Archiving…' : 'Archive' }}
+                    </button>
+                </div>
+            </article>
+        </div>
+    </section>
+
+    <app-create-board-modal [isOpen]="isCreateModalOpen" [tenantId]="workspaceShellService.currentTenantId || ''"
+        [workspaceId]="workspaceShellService.currentWorkspace?.id || ''" (close)="closeCreateModal()"
+        (created)="onBoardCreated($event)"></app-create-board-modal>
+</div>

@@ -1,0 +1,10 @@
+{
+  "extends": "./tsconfig.spec.json",
+  "include": [],
+  "files": [
+    "src/app/guards/legacy-shell-redirect.guard.spec.ts",
+    "src/app/services/workspace-shell.service.spec.ts",
+    "src/app/components/board-list/board-list.spec.ts",
+    "src/app/components/board-detail/board-detail.spec.ts"
+  ]
+}
