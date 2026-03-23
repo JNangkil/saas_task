@@ -120,9 +120,9 @@ export function SidebarMenu() {
         <Link 
           to={`/app/${activeWorkspace?.id}/boards/create`} 
           className="p3-board-item" 
-          style={{ color: 'var(--tw-color-muted-foreground)', fontSize: '11px', opacity: 0.7 }}
+          style={{ opacity: 0.8 }}
         >
-          <Plus className="!w-[12px] !h-[12px]" />
+          <Plus className="w-3.5 h-3.5" />
           <span data-slot="accordion-menu-title">Add board</span>
         </Link>
       </div>
@@ -130,18 +130,18 @@ export function SidebarMenu() {
       {/* Footer Area */}
       <div className="mt-auto p-4 flex flex-col gap-1 border-t border-muted/20">
         <Link to={`/app/${activeWorkspace?.id}/settings`} className={cn("p3-nav-item", pathname.includes('/settings') && "active")}>
-          <Settings className="w-4 h-4 opacity-70" />
+          <Settings className="w-4 h-4" />
           <span data-slot="accordion-menu-title">Settings</span>
         </Link>
         
         <Link to="/app/account" className={cn("p3-nav-item", pathname === "/app/account" && "active")}>
-          <User className="w-4 h-4 opacity-70" />
+          <User className="w-4 h-4" />
           <span data-slot="accordion-menu-title">My Account</span>
         </Link>
 
         {/* Logout */}
         <div 
-          className="p3-nav-item text-destructive hover:text-destructive hover:bg-destructive/10 cursor-pointer mt-2"
+          className="p3-nav-item destructive mt-2"
           onClick={() => logout()}
         >
           <LogOut className="w-4 h-4" />

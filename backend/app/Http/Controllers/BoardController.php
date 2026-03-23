@@ -8,6 +8,7 @@ use App\Models\BoardColumn;
 use App\Models\TaskComment;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Validation\Rule;
 
 class BoardController extends Controller
 {
@@ -50,7 +51,15 @@ class BoardController extends Controller
     public function store(Request $request, string $tenant, string $workspace): JsonResponse
     {
         $validated = $request->validate([
-            'name' => 'required|string|max:255',
+            'name' => [
+                'required',
+                'string',
+                'max:255',
+                Rule::unique('boards')->where(function ($query) use ($tenant, $workspace) {
+                    return $query->where('tenant_id', $tenant)
+                                 ->where('workspace_id', $workspace);
+                })
+            ],
             'description' => 'nullable|string',
             'color' => 'nullable|string|max:7',
             'icon' => 'nullable|string|max:50',
