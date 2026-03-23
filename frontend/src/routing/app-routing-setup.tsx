@@ -5,7 +5,11 @@ import { RequireSuperAdmin } from '@/auth/guards/require-super-admin';
 import { Demo1Layout } from '@/layouts/demo1/layout';
 import { BoardListPage } from '@/pages/workspace/board-list-page';
 import { BoardDetailPage } from '@/pages/workspace/board-detail-page';
+import { BoardSettingsPage } from '@/pages/workspace/board-settings-page';
+import { BoardTeamPage } from '@/pages/workspace/board-team-page';
+import { BoardAnalyticsPage } from '@/pages/workspace/board-analytics-page';
 import { WorkspaceManagementPage } from '@/pages/workspace/workspace-management-page';
+import { AdminDashboardPage } from '@/pages/admin/admin-dashboard-page';
 import { Navigate, Route, Routes } from 'react-router';
 
 export function AppRoutingSetup() {
@@ -28,9 +32,11 @@ export function AppRoutingSetup() {
           <Route path=":workspaceId/home" element={<BoardListPage />} />
           <Route path=":workspaceId/boards" element={<BoardListPage />} />
           
-          {/* Board Detail */}
+          {/* Board Detail & Settings */}
           <Route path=":workspaceId/boards/:boardId" element={<BoardDetailPage />} />
-          <Route path=":workspaceId/boards/:boardId/settings" element={<BoardDetailPage />} />
+          <Route path=":workspaceId/boards/:boardId/settings" element={<BoardSettingsPage />} />
+          <Route path=":workspaceId/boards/:boardId/team" element={<BoardTeamPage />} />
+          <Route path=":workspaceId/boards/:boardId/analytics" element={<BoardAnalyticsPage />} />
         </Route>
 
         {/* Management Routes (Admin Only) */}
@@ -44,7 +50,7 @@ export function AppRoutingSetup() {
         <Route element={<RequireSuperAdmin />}>
           <Route path="/admin" element={<Demo1Layout />}>
             {/* Add super admin specific pages here */}
-            <Route index element={<div>Super Admin Dashboard</div>} />
+            <Route index element={<AdminDashboardPage />} />
           </Route>
         </Route>
       </Route>

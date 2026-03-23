@@ -14,7 +14,7 @@ export function ShareProfileSettings() {
           <div className="flex flex-center text-secondary-foreground font-medium text-xs">
             Anyone at
             <Link to="#" className="text-xs font-medium link mx-1">
-              KeenThemes
+              Your Workspace
             </Link>
             can view
           </div>

@@ -175,14 +175,12 @@ class WorkspaceController extends Controller
     public function store(WorkspaceRequest $request, $tenantId)
     {
         $user = Auth::user();
-        
+
         // Verify user belongs to tenant and can create workspaces
         $tenant = $user->tenants()->find($tenantId);
         if (!$tenant) {
             return response()->json(['error' => 'Tenant not found'], 404);
         }
-
-        $this->authorize('createInTenant', $tenantId);
 
         return DB::transaction(function () use ($request, $user, $tenant) {
             $workspace = Workspace::create(array_merge($request->validated(), [

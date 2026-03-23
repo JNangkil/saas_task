@@ -14,6 +14,7 @@ interface AccordionMenuContextValue {
   nestedStates: Record<string, string | string[]>;
   setNestedStates: React.Dispatch<React.SetStateAction<Record<string, string | string[]>>>;
   onItemClick?: (value: string, event: React.MouseEvent) => void;
+  currentParentValue?: string;
 }
 
 interface AccordionMenuClassNames {
@@ -220,7 +221,28 @@ function AccordionMenuItem({
   VariantProps<typeof itemVariants> & {
     onClick?: React.MouseEventHandler<HTMLElement>;
   }) {
-  const { classNames, selectedValue, matchPath, onItemClick } = React.useContext(AccordionMenuContext);
+  const { classNames, selectedValue, matchPath, onItemClick, currentParentValue, setNestedStates } = React.useContext(AccordionMenuContext);
+  
+  const handleClick = (e: React.MouseEvent<HTMLElement>) => {
+    if (onItemClick) {
+      onItemClick(props.value, e);
+    }
+
+    if (onClick) {
+      onClick(e);
+    }
+    
+    // Ensure parent accordions stay open when clicking a leaf item
+    if (currentParentValue) {
+      setNestedStates(prev => ({
+        ...prev,
+        root: currentParentValue
+      }));
+    }
+    
+    e.preventDefault();
+  };
+
   return (
     <AccordionPrimitive.Item className="flex" {...props}>
       <AccordionPrimitive.Header className="flex w-full">
@@ -228,16 +250,7 @@ function AccordionMenuItem({
           asChild={asChild}
           data-slot="accordion-menu-item"
           className={cn(itemVariants({ variant }), classNames?.item, className)}
-          onClick={(e) => {
-            if (onItemClick) {
-              onItemClick(props.value, e);
-            }
-
-            if (onClick) {
-              onClick(e);
-            }
-            e.preventDefault();
-          }}
+          onClick={handleClick}
           onKeyDown={(e) => {
             if (e.key === 'Enter') {
               e.preventDefault();
@@ -273,8 +286,22 @@ function AccordionMenuSub({
 function AccordionMenuSubTrigger({
   className,
   children,
-}: React.ComponentPropsWithoutRef<typeof AccordionPrimitive.Trigger>) {
+  onClick,
+}: React.ComponentPropsWithoutRef<typeof AccordionPrimitive.Trigger> & {
+  onClick?: React.MouseEventHandler<HTMLButtonElement>;
+}) {
   const { classNames } = React.useContext(AccordionMenuContext);
+  
+  const handleContentClick = (e: React.MouseEvent<HTMLDivElement>) => {
+    if (onClick) {
+      onClick(e as any);
+    }
+  };
+
+  const handleChevronClick = (e: React.MouseEvent<SVGSVGElement>) => {
+    e.stopPropagation();
+  };
+
   return (
     <AccordionPrimitive.Header className="flex">
       <AccordionPrimitive.Trigger
@@ -284,16 +311,19 @@ function AccordionMenuSubTrigger({
           classNames?.subTrigger,
           className,
         )}
+        onClick={onClick}
       >
-        <>
+        <div className="flex items-center gap-2 flex-1" onClick={handleContentClick}>
           {children}
-          <ChevronDown
-            data-slot="accordion-menu-sub-indicator"
-            className={cn(
-              'ms-auto size-3.5! shrink-0 text-muted-foreground transition-transform duration-200 [[data-state=open]>&]:-rotate-180',
-            )}
-          />
-        </>
+        </div>
+        <ChevronDown
+          data-slot="accordion-menu-sub-indicator"
+          className={cn(
+            'ms-auto size-3.5! shrink-0 text-muted-foreground transition-transform duration-200 [[data-state=open]>&]:-rotate-180 pointer-events-auto',
+          )}
+          onClick={handleChevronClick}
+          onMouseDown={(e) => e.stopPropagation()}
+        />
       </AccordionPrimitive.Trigger>
     </AccordionPrimitive.Header>
   );
@@ -351,33 +381,43 @@ function AccordionMenuSubContent({
       )}
       {...props}
     >
-      {type === 'multiple' ? (
-        <AccordionPrimitive.Root
-          className={cn('w-full py-0.5', classNames?.subWrapper)}
-          type="multiple"
-          value={currentValue as string[]}
-          role="menu"
-          data-slot="accordion-menu-sub-wrapper"
-          onValueChange={(value: string | string[]) => {
-            const newValue = Array.isArray(value) ? value : [value];
-            setNestedStates((prev) => ({ ...prev, [parentValue]: newValue }));
-          }}
-        >
-          {children}
-        </AccordionPrimitive.Root>
-      ) : (
-        <AccordionPrimitive.Root
-          className={cn('w-full py-0.5', classNames?.subWrapper)}
-          type="single"
-          collapsible={collapsible}
-          value={currentValue as string}
-          role="menu"
-          data-slot="accordion-menu-sub-wrapper"
-          onValueChange={(value: string | string[]) => setNestedStates((prev) => ({ ...prev, [parentValue]: value }))}
-        >
-          {children}
-        </AccordionPrimitive.Root>
-      )}
+      <AccordionMenuContext.Provider value={{...React.useContext(AccordionMenuContext), currentParentValue: parentValue}}>
+        {type === 'multiple' ? (
+          <AccordionPrimitive.Root
+            className={cn('w-full py-0.5', classNames?.subWrapper)}
+            type="multiple"
+            value={currentValue as string[]}
+            role="menu"
+            data-slot="accordion-menu-sub-wrapper"
+            onValueChange={(value: string | string[]) => {
+              const newValue = Array.isArray(value) ? value : [value];
+              setNestedStates((prev) => ({ 
+                ...prev, 
+                [parentValue]: newValue,
+                root: parentValue
+              }));
+            }}
+          >
+            {children}
+          </AccordionPrimitive.Root>
+        ) : (
+          <AccordionPrimitive.Root
+            className={cn('w-full py-0.5', classNames?.subWrapper)}
+            type="single"
+            collapsible={collapsible}
+            value={currentValue as string}
+            role="menu"
+            data-slot="accordion-menu-sub-wrapper"
+            onValueChange={(value: string | string[]) => setNestedStates((prev) => ({ 
+              ...prev, 
+              [parentValue]: value,
+              root: parentValue
+            }))}
+          >
+            {children}
+          </AccordionPrimitive.Root>
+        )}
+      </AccordionMenuContext.Provider>
     </AccordionPrimitive.Content>
   );
 }

@@ -13,21 +13,21 @@ class WorkspaceRequest extends FormRequest
     public function authorize(): bool
     {
         $user = auth()->user();
-        
+
         // For create requests, check if user can create workspaces in tenant
         if ($this->isMethod('POST')) {
             $tenantId = $this->route('tenant');
             if (!$tenantId) {
                 return false;
             }
-            
+
             // Check if user belongs to the tenant
             $tenant = $user->tenants()->find($tenantId);
             if (!$tenant) {
                 return false;
             }
-            
-            return $user->can('createInTenant', $tenantId);
+
+            return $tenant->canUserCreateWorkspaces($user);
         }
 
         // For update/delete requests, check if user can manage the workspace
@@ -61,7 +61,7 @@ class WorkspaceRequest extends FormRequest
             ],
             'description' => 'nullable|string|max:1000',
             'color' => 'nullable|string|regex:/^#[0-9A-Fa-f]{6}$/',
-            'icon' => 'nullable|string|max:50|emoji',
+            'icon' => 'nullable|string|max:50',
             'is_default' => 'sometimes|boolean',
             'is_archived' => 'sometimes|boolean',
             'settings' => 'sometimes|array',
@@ -95,7 +95,6 @@ class WorkspaceRequest extends FormRequest
             'description.max' => 'Description may not be greater than 1000 characters',
             'color.regex' => 'Color must be a valid hex color code (e.g., #3B82F6)',
             'icon.max' => 'Icon may not be greater than 50 characters',
-            'icon.emoji' => 'Icon must be a valid emoji character',
             'is_default.boolean' => 'Is default must be a boolean value',
             'is_archived.boolean' => 'Is archived must be a boolean value',
             'settings.theme.in' => 'Theme must be either light or dark',

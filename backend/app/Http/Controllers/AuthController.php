@@ -116,9 +116,17 @@ class AuthController extends Controller
         // Generate token using Sanctum
         $token = $user->createToken('auth_token')->plainTextToken;
 
-        // Get the first tenant ID for the user
+        // Get the first tenant for the user
         $firstTenant = $user->tenants()->first();
-        $tenantId = $firstTenant ? $firstTenant->id : null;
+        $tenantData = null;
+        if ($firstTenant) {
+            $tenantData = [
+                'id' => $firstTenant->id,
+                'name' => $firstTenant->name,
+                'slug' => $firstTenant->slug,
+                'role' => $firstTenant->getUserRole($user),
+            ];
+        }
 
         return response()->json([
             'requires_mfa' => false,
@@ -132,9 +140,7 @@ class AuthController extends Controller
                 'email' => $user->email,
                 'is_super_admin' => $user->isSuperAdmin(),
             ],
-            'tenant' => $tenantId ? [
-                'id' => $tenantId,
-            ] : null,
+            'tenant' => $tenantData,
             'tenants' => $userTenants,
         ]);
     }
@@ -218,22 +224,31 @@ class AuthController extends Controller
 
         // Clear the MFA temp token from cache
         \Cache::forget("mfa_temp_token:{$user->id}");
-        
+
         // Reset failed attempts on successful verification
         $this->accountLockoutService->resetFailedAttempts($user);
 
-        // Get tenant ID from user's current tenant context
-        $tenantId = $this->jwtService->getUserTenantId($user);
+        // Get the first tenant for the user
+        $firstTenant = $user->tenants()->first();
+        $tenantData = null;
+        if ($firstTenant) {
+            $tenantData = [
+                'id' => $firstTenant->id,
+                'name' => $firstTenant->name,
+                'slug' => $firstTenant->slug,
+                'role' => $firstTenant->getUserRole($user),
+            ];
+        }
 
-        // Generate JWT token with tenant context
-        $token = $this->jwtService->generateToken($user, $tenantId);
+        // Generate token using Sanctum
+        $token = $user->createToken('auth_token')->plainTextToken;
 
         // Get user's tenants for multi-tenant support
-        $userTenants = $this->jwtService->getUserTenants($user);
+        $userTenants = $user->tenants()->pluck('tenants.id', 'tenants.name')->toArray();
 
         return response()->json([
             'access_token' => $token,
-            'refresh_token' => $token, // You might want to generate a separate refresh token
+            'refresh_token' => $token,
             'token_type' => 'bearer',
             'expires_in' => config('sanctum.expiration', 525600) * 60,
             'user' => [
@@ -242,9 +257,7 @@ class AuthController extends Controller
                 'email' => $user->email,
                 'is_super_admin' => $user->isSuperAdmin(),
             ],
-            'tenant' => $tenantId ? [
-                'id' => $tenantId,
-            ] : null,
+            'tenant' => $tenantData,
             'tenants' => $userTenants,
         ]);
     }
@@ -318,15 +331,13 @@ class AuthController extends Controller
         $currentTenant = tenant();
         
         // Get user's tenants for multi-tenant support
-        $userTenants = $this->jwtService->getUserTenants($user);
+        $userTenants = $user->tenants()->pluck('tenants.id', 'tenants.name')->toArray();
         
         return response()->json([
-            'user' => [
-                'id' => $user->id,
-                'name' => $user->name,
-                'email' => $user->email,
-                'is_super_admin' => $user->isSuperAdmin(),
-            ],
+            'id' => $user->id,
+            'name' => $user->name,
+            'email' => $user->email,
+            'is_super_admin' => $user->isSuperAdmin(),
             'tenant' => $currentTenant ? [
                 'id' => $currentTenant->id,
                 'name' => $currentTenant->name,
@@ -354,23 +365,11 @@ class AuthController extends Controller
             ], 403);
         }
 
-        // Generate new token with updated tenant context
-        $token = $this->jwtService->generateTokenForTenant($user, $tenant);
-        
-        // Get updated user tenants list
-        $userTenants = $this->jwtService->getUserTenants($user);
+        // For Sanctum, we don't need to generate a new token
+        // Just return the tenant info - the frontend should store the current tenant
+        $userTenants = $user->tenants()->pluck('tenants.id', 'tenants.name')->toArray();
 
         return response()->json([
-            'access_token' => $token,
-            'refresh_token' => $token,
-            'token_type' => 'bearer',
-            'expires_in' => config('sanctum.expiration', 525600) * 60,
-            'user' => [
-                'id' => $user->id,
-                'name' => $user->name,
-                'email' => $user->email,
-                'is_super_admin' => $user->isSuperAdmin(),
-            ],
             'tenant' => [
                 'id' => $tenant->id,
                 'name' => $tenant->name,
@@ -382,43 +381,31 @@ class AuthController extends Controller
     }
 
     /**
-     * Refresh the current JWT token.
+     * Refresh the current Sanctum token.
      */
     public function refresh(Request $request): JsonResponse
     {
-        $token = $request->bearerToken();
+        $user = $request->user();
         
-        if (!$token) {
-            return response()->json([
-                'error' => 'Token required',
-                'message' => 'Bearer token is required',
-            ], 401);
-        }
-
-        $newToken = $this->jwtService->refreshToken($token);
-        
-        if (!$newToken) {
+        if (!$user) {
             return response()->json([
                 'error' => 'Invalid token',
                 'message' => 'The provided token is invalid or expired',
             ], 401);
         }
 
-        $user = $request->user();
         $currentTenant = tenant();
-        $userTenants = $this->jwtService->getUserTenants($user);
+        $userTenants = $user->tenants()->pluck('tenants.id', 'tenants.name')->toArray();
 
         return response()->json([
-            'access_token' => $newToken,
-            'refresh_token' => $newToken,
+            'access_token' => $user->currentAccessToken()->token,
+            'refresh_token' => $user->currentAccessToken()->token,
             'token_type' => 'bearer',
             'expires_in' => config('sanctum.expiration', 525600) * 60,
-            'user' => [
-                'id' => $user->id,
-                'name' => $user->name,
-                'email' => $user->email,
-                'is_super_admin' => $user->isSuperAdmin(),
-            ],
+            'id' => $user->id,
+            'name' => $user->name,
+            'email' => $user->email,
+            'is_super_admin' => $user->isSuperAdmin(),
             'tenant' => $currentTenant ? [
                 'id' => $currentTenant->id,
                 'name' => $currentTenant->name,

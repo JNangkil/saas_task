@@ -145,6 +145,14 @@ class Tenant extends Model
     }
 
     /**
+     * Check if a user can create workspaces in the tenant.
+     */
+    public function canUserCreateWorkspaces(User $user): bool
+    {
+        return $this->hasTenantPermission($user, $this, 'create-workspaces');
+    }
+
+    /**
      * Check if a user can perform a specific action in the tenant
      */
     public function canUserPerformAction(User $user, string $action): bool

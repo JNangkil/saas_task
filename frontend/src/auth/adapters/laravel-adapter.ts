@@ -46,18 +46,37 @@ export class LaravelAdapter {
       }
 
       // Standard login flow
-      const authData = response.data as AuthModel;
-      const { access_token, refresh_token } = authData;
+      const responseData = response.data as any;
+      const { access_token, refresh_token, user: userData, tenant, tenants } = responseData;
 
       // Store tokens in localStorage for the API client
       localStorage.setItem('auth_token', access_token);
       localStorage.setItem('refresh_token', refresh_token);
 
-      // Get user data
-      const user = await this.getCurrentUser();
-      if (user) {
-        localStorage.setItem('auth_user', JSON.stringify(user));
+      // Store tenant ID for X-Tenant-ID header
+      if (tenant?.id) {
+        localStorage.setItem('current_tenant_id', String(tenant.id));
       }
+
+      // Build user object from login response
+      const user: UserModel = {
+        id: userData.id,
+        email: userData.email,
+        name: userData.name,
+        username: userData.email?.split('@')[0],
+        is_super_admin: userData.is_super_admin,
+        tenant: tenant ? {
+          id: tenant.id,
+          name: tenant.name || '',
+          slug: tenant.slug || '',
+          role: tenant.role || '',
+        } : undefined,
+        current_tenant_id: tenant?.id,
+        tenants: tenants,
+      };
+
+      // Store user data
+      localStorage.setItem('auth_user', JSON.stringify(user));
 
       return {
         access_token,
@@ -100,15 +119,41 @@ export class LaravelAdapter {
     localStorage.removeItem(this.MFA_EMAIL_KEY);
     localStorage.removeItem(this.LOCKOUT_STATE_KEY);
 
-    // Store user data
-    const user = response.data.user;
-    if (user) {
-      localStorage.setItem('auth_user', JSON.stringify(user));
+    // Extract data from response
+    const { access_token, refresh_token, user: userData, tenant, tenants } = response.data as any;
+
+    // Store tokens
+    localStorage.setItem('auth_token', access_token);
+    localStorage.setItem('refresh_token', refresh_token);
+
+    // Store tenant ID for X-Tenant-ID header
+    if (tenant?.id) {
+      localStorage.setItem('current_tenant_id', String(tenant.id));
     }
 
+    // Build user object
+    const user: UserModel = {
+      id: userData.id,
+      email: userData.email,
+      name: userData.name,
+      username: userData.email?.split('@')[0],
+      is_super_admin: userData.is_super_admin,
+      tenant: tenant ? {
+        id: tenant.id,
+        name: tenant.name || '',
+        slug: tenant.slug || '',
+        role: tenant.role || '',
+      } : undefined,
+      current_tenant_id: tenant?.id,
+      tenants: tenants,
+    };
+
+    // Store user data
+    localStorage.setItem('auth_user', JSON.stringify(user));
+
     return {
-      access_token: response.data.access_token,
-      refresh_token: response.data.refresh_token,
+      access_token,
+      refresh_token,
     };
   }
 
@@ -212,8 +257,30 @@ export class LaravelAdapter {
    */
   static async getCurrentUser(): Promise<UserModel | null> {
     try {
-      const response = await apiClient.get<UserModel>('/me');
-      return response.data;
+      const response = await apiClient.get<any>('/me');
+      const userData = response.data;
+
+      // Transform backend response to match UserModel interface
+      const user: UserModel = {
+        id: userData.id,
+        email: userData.email,
+        name: userData.name,
+        username: userData.email?.split('@')[0],
+        is_super_admin: userData.is_super_admin,
+        tenant: userData.tenant ? {
+          id: userData.tenant.id,
+          name: userData.tenant.name,
+          slug: userData.tenant.slug,
+          role: userData.tenant.role,
+        } : undefined,
+        current_tenant_id: userData.tenant?.id,
+        tenants: userData.tenants,
+      };
+
+      // Store user data
+      localStorage.setItem('auth_user', JSON.stringify(user));
+
+      return user;
     } catch (error) {
       return null;
     }

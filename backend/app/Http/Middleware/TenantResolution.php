@@ -27,7 +27,17 @@ class TenantResolution
             }
         }
 
-        // Priority 2: Resolve from X-Tenant-ID header
+        // Priority 2: Resolve from route parameters
+        if (!$tenant && $tenantId = $request->route('tenant')) {
+            // Check if it's already a model (implicit binding) or an ID
+            if ($tenantId instanceof Tenant) {
+                $tenant = $tenantId;
+            } else {
+                $tenant = Tenant::find($tenantId);
+            }
+        }
+
+        // Priority 3: Resolve from X-Tenant-ID header
         if (!$tenant && $request->hasHeader('X-Tenant-ID')) {
             $tenantId = $request->header('X-Tenant-ID');
             $tenant = Tenant::find($tenantId);

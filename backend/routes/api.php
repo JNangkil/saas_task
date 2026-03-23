@@ -134,6 +134,38 @@ Route::middleware(['auth:sanctum'])->group(function () {
         Route::post('/', [WorkspaceController::class, 'store'])->name('workspaces.store');
     });
 
+    // Board routes under tenant/workspace
+    Route::prefix('tenants/{tenant}/workspaces/{workspace}')->group(function () {
+        // Task routes
+        Route::prefix('tasks')->group(function () {
+            Route::get('/', [TaskController::class, 'index'])->name('tasks.index');
+            Route::post('/', [TaskController::class, 'store'])->name('tasks.store');
+        });
+
+        // Board routes
+        Route::prefix('boards')->group(function () {
+            Route::get('/', [BoardController::class, 'index'])->name('boards.index');
+            Route::post('/', [BoardController::class, 'store'])->name('boards.store');
+        });
+    });
+
+    Route::prefix('tenants/{tenant}/workspaces/{workspace}/boards/{board}')->group(function () {
+        Route::get('/', [BoardController::class, 'show'])->name('boards.show');
+        Route::put('/', [BoardController::class, 'update'])->name('boards.update');
+        Route::delete('/', [BoardController::class, 'destroy'])->name('boards.destroy');
+        Route::post('/archive', [BoardController::class, 'archive'])->name('boards.archive');
+        Route::post('/restore', [BoardController::class, 'restore'])->name('boards.restore');
+        Route::post('/favorite', [BoardController::class, 'favorite'])->name('boards.favorite');
+        Route::delete('/favorite', [BoardController::class, 'unfavorite'])->name('boards.unfavorite');
+
+        // Board activity
+        Route::get('/activity', [ActivityController::class, 'boardActivity'])->name('boards.activity');
+
+        // Board analytics
+        Route::get('/analytics/summary', [AnalyticsController::class, 'getBoardSummary'])->name('analytics.board.summary');
+        Route::delete('/analytics/cache', [AnalyticsController::class, 'clearBoardCache'])->name('analytics.board.cache.clear');
+    });
+
     // Current tenant workspace routes
     Route::prefix('workspaces')->group(function () {
         Route::get('/', [WorkspaceController::class, 'currentTenantWorkspaces'])->name('workspaces.current.index');
@@ -174,35 +206,6 @@ Route::middleware(['auth:sanctum'])->group(function () {
             Route::get('/export/csv', [AnalyticsController::class, 'exportWorkspaceCsv'])->name('analytics.workspace.export.csv');
             Route::get('/export/pdf', [AnalyticsController::class, 'exportWorkspacePdf'])->name('analytics.workspace.export.pdf');
             Route::delete('/cache', [AnalyticsController::class, 'clearWorkspaceCache'])->name('analytics.workspace.cache.clear');
-        });
-
-        // Task routes
-        Route::prefix('tenants/{tenant}/workspaces/{workspace}/tasks')->group(function () {
-            Route::get('/', [TaskController::class, 'index'])->name('tasks.index');
-            Route::post('/', [TaskController::class, 'store'])->name('tasks.store');
-        });
-        
-        // Board routes
-        Route::prefix('tenants/{tenant}/workspaces/{workspace}/boards')->group(function () {
-            Route::get('/', [BoardController::class, 'index'])->name('boards.index');
-            Route::post('/', [BoardController::class, 'store'])->name('boards.store');
-        });
-
-        Route::prefix('tenants/{tenant}/workspaces/{workspace}/boards/{board}')->group(function () {
-            Route::get('/', [BoardController::class, 'show'])->name('boards.show');
-            Route::put('/', [BoardController::class, 'update'])->name('boards.update');
-            Route::delete('/', [BoardController::class, 'destroy'])->name('boards.destroy');
-            Route::post('/archive', [BoardController::class, 'archive'])->name('boards.archive');
-            Route::post('/restore', [BoardController::class, 'restore'])->name('boards.restore');
-            Route::post('/favorite', [BoardController::class, 'favorite'])->name('boards.favorite');
-            Route::delete('/favorite', [BoardController::class, 'unfavorite'])->name('boards.unfavorite');
-
-            // Board activity
-            Route::get('/activity', [ActivityController::class, 'boardActivity'])->name('boards.activity');
-
-            // Board analytics
-            Route::get('/analytics/summary', [AnalyticsController::class, 'getBoardSummary'])->name('analytics.board.summary');
-            Route::delete('/analytics/cache', [AnalyticsController::class, 'clearBoardCache'])->name('analytics.board.cache.clear');
         });
 
         Route::prefix('tenants/{tenant}/workspaces/{workspace}/boards/{board}/tasks')->group(function () {

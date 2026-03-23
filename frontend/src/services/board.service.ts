@@ -30,25 +30,31 @@ export interface UpdateBoardRequest extends Partial<CreateBoardRequest> {}
 
 const BOARDS_QUERY_KEY = 'boards';
 
-export function useBoards(workspaceId: number | string) {
+export function useBoards(workspaceId: number | string, tenantId?: number | string) {
   return useQuery({
     queryKey: [BOARDS_QUERY_KEY, 'workspace', workspaceId],
     queryFn: async () => {
-      const response = await apiClient.get<Board[]>(`/tenants/:tenantId/workspaces/${workspaceId}/boards`);
+      if (!tenantId) {
+        throw new Error('Tenant ID is required');
+      }
+      const response = await apiClient.get<Board[]>(`/tenants/${tenantId}/workspaces/${workspaceId}/boards`);
       return response.data;
     },
-    enabled: !!workspaceId,
+    enabled: !!workspaceId && !!tenantId,
   });
 }
 
-export function useBoard(workspaceId: number | string, boardId: number | string) {
+export function useBoard(workspaceId: number | string, boardId: number | string, tenantId?: number | string) {
   return useQuery({
     queryKey: [BOARDS_QUERY_KEY, workspaceId, boardId],
     queryFn: async () => {
-      const response = await apiClient.get<Board>(`/tenants/:tenantId/workspaces/${workspaceId}/boards/${boardId}`);
+      if (!tenantId) {
+        throw new Error('Tenant ID is required');
+      }
+      const response = await apiClient.get<Board>(`/tenants/${tenantId}/workspaces/${workspaceId}/boards/${boardId}`);
       return response.data;
     },
-    enabled: !!workspaceId && !!boardId,
+    enabled: !!workspaceId && !!boardId && !!tenantId,
   });
 }
 
@@ -56,8 +62,8 @@ export function useCreateBoard() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async ({ workspaceId, data }: { workspaceId: number; data: CreateBoardRequest }) => {
-      const response = await apiClient.post<Board>(`/tenants/:tenantId/workspaces/${workspaceId}/boards`, data);
+    mutationFn: async ({ tenantId, workspaceId, data }: { tenantId: number; workspaceId: number; data: CreateBoardRequest }) => {
+      const response = await apiClient.post<Board>(`/tenants/${tenantId}/workspaces/${workspaceId}/boards`, data);
       return response.data;
     },
     onSuccess: (_data, variables) => {
@@ -70,8 +76,8 @@ export function useUpdateBoard() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async ({ workspaceId, boardId, data }: { workspaceId: number; boardId: number; data: UpdateBoardRequest }) => {
-      const response = await apiClient.put<Board>(`/tenants/:tenantId/workspaces/${workspaceId}/boards/${boardId}`, data);
+    mutationFn: async ({ tenantId, workspaceId, boardId, data }: { tenantId: number; workspaceId: number; boardId: number; data: UpdateBoardRequest }) => {
+      const response = await apiClient.put<Board>(`/tenants/${tenantId}/workspaces/${workspaceId}/boards/${boardId}`, data);
       return response.data;
     },
     onSuccess: (_data, variables) => {
@@ -85,8 +91,8 @@ export function useDeleteBoard() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async ({ workspaceId, boardId }: { workspaceId: number; boardId: number }) => {
-      await apiClient.delete(`/tenants/:tenantId/workspaces/${workspaceId}/boards/${boardId}`);
+    mutationFn: async ({ tenantId, workspaceId, boardId }: { tenantId: number; workspaceId: number; boardId: number }) => {
+      await apiClient.delete(`/tenants/${tenantId}/workspaces/${workspaceId}/boards/${boardId}`);
     },
     onSuccess: (_data, variables) => {
       queryClient.invalidateQueries({ queryKey: [BOARDS_QUERY_KEY, 'workspace', variables.workspaceId] });
@@ -98,8 +104,8 @@ export function useFavoriteBoard() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async ({ workspaceId, boardId }: { workspaceId: number; boardId: number }) => {
-      await apiClient.post(`/tenants/:tenantId/workspaces/${workspaceId}/boards/${boardId}/favorite`);
+    mutationFn: async ({ tenantId, workspaceId, boardId }: { tenantId: number; workspaceId: number; boardId: number }) => {
+      await apiClient.post(`/tenants/${tenantId}/workspaces/${workspaceId}/boards/${boardId}/favorite`);
     },
     onSuccess: (_data, variables) => {
       queryClient.invalidateQueries({ queryKey: [BOARDS_QUERY_KEY, 'workspace', variables.workspaceId] });
@@ -111,8 +117,8 @@ export function useUnfavoriteBoard() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async ({ workspaceId, boardId }: { workspaceId: number; boardId: number }) => {
-      await apiClient.delete(`/tenants/:tenantId/workspaces/${workspaceId}/boards/${boardId}/favorite`);
+    mutationFn: async ({ tenantId, workspaceId, boardId }: { tenantId: number; workspaceId: number; boardId: number }) => {
+      await apiClient.delete(`/tenants/${tenantId}/workspaces/${workspaceId}/boards/${boardId}/favorite`);
     },
     onSuccess: (_data, variables) => {
       queryClient.invalidateQueries({ queryKey: [BOARDS_QUERY_KEY, 'workspace', variables.workspaceId] });
@@ -124,8 +130,8 @@ export function useArchiveBoard() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async ({ workspaceId, boardId }: { workspaceId: number; boardId: number }) => {
-      const response = await apiClient.post<Board>(`/tenants/:tenantId/workspaces/${workspaceId}/boards/${boardId}/archive`);
+    mutationFn: async ({ tenantId, workspaceId, boardId }: { tenantId: number; workspaceId: number; boardId: number }) => {
+      const response = await apiClient.post<Board>(`/tenants/${tenantId}/workspaces/${workspaceId}/boards/${boardId}/archive`);
       return response.data;
     },
     onSuccess: (_data, variables) => {
@@ -138,8 +144,8 @@ export function useRestoreBoard() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async ({ workspaceId, boardId }: { workspaceId: number; boardId: number }) => {
-      const response = await apiClient.post<Board>(`/tenants/:tenantId/workspaces/${workspaceId}/boards/${boardId}/restore`);
+    mutationFn: async ({ tenantId, workspaceId, boardId }: { tenantId: number; workspaceId: number; boardId: number }) => {
+      const response = await apiClient.post<Board>(`/tenants/${tenantId}/workspaces/${workspaceId}/boards/${boardId}/restore`);
       return response.data;
     },
     onSuccess: (_data, variables) => {

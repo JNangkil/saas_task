@@ -175,7 +175,7 @@ class Workspace extends Model
      */
     public function isArchived(): bool
     {
-        return $this->is_archived;
+        return (bool) $this->is_archived;
     }
 
     /**
@@ -183,7 +183,7 @@ class Workspace extends Model
      */
     public function isActive(): bool
     {
-        return !$this->is_archived;
+        return !$this->isArchived();
     }
 
     /**
@@ -191,7 +191,7 @@ class Workspace extends Model
      */
     public function isDefault(): bool
     {
-        return $this->is_default;
+        return (bool) $this->is_default;
     }
 
     /**

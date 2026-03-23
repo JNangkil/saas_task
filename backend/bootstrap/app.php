@@ -32,7 +32,22 @@ return Application::configure(basePath: dirname(__DIR__))
             'permission' => \App\Http\Middleware\CheckPermission::class,
             'super.admin' => \App\Http\Middleware\SuperAdminMiddleware::class,
         ]);
+
+        // Use custom authentication middleware
+        $middleware->redirectGuestsTo(function (\Illuminate\Http\Request $request) {
+            if ($request->is('api/*')) {
+                return null; // Don't redirect for API routes
+            }
+            return route('login');
+        });
     })
     ->withExceptions(function (Exceptions $exceptions): void {
-        //
+        $exceptions->render(function (\Illuminate\Auth\AuthenticationException $e, \Illuminate\Http\Request $request) {
+            if ($request->is('api/*')) {
+                return response()->json([
+                    'message' => 'Unauthenticated',
+                    'error' => 'Authentication required'
+                ], 401);
+            }
+        });
     })->create();

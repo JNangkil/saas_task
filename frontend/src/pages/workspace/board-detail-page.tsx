@@ -19,10 +19,12 @@ import { Textarea } from '@/components/ui/textarea';
 import { useState } from 'react';
 import { ArrowLeft, Plus, Settings } from 'lucide-react';
 import { Kanban } from '@/components/ui/kanban';
+import { useAuth } from '@/auth/context/auth-context';
 
 export function BoardDetailPage() {
   const { workspaceId, boardId } = useParams<{ workspaceId: string; boardId: string }>();
-  const { data: board, isLoading: boardLoading } = useBoard(workspaceId || '', boardId || '');
+  const { user } = useAuth();
+  const { data: board, isLoading: boardLoading } = useBoard(workspaceId || '', boardId || '', user?.current_tenant_id);
   const { data: tasksData, isLoading: tasksLoading } = useTaskService(
     workspaceId || '',
     parseInt(boardId || '0')

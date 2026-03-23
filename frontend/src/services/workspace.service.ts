@@ -27,8 +27,8 @@ export function useWorkspaces() {
   return useQuery({
     queryKey: WORKSPACES_QUERY_KEY,
     queryFn: async () => {
-      const response = await apiClient.get<Workspace[]>('/workspaces');
-      return response.data;
+      const response = await apiClient.get<{ data: Workspace[] }>('/workspaces');
+      return response.data.data;
     },
   });
 }
@@ -48,8 +48,8 @@ export function useCreateWorkspace() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async (data: CreateWorkspaceRequest) => {
-      const response = await apiClient.post<Workspace>('/workspaces', data);
+    mutationFn: async ({ tenantId, data }: { tenantId: number; data: CreateWorkspaceRequest }) => {
+      const response = await apiClient.post<Workspace>(`/tenants/${tenantId}/workspaces`, data);
       return response.data;
     },
     onSuccess: () => {

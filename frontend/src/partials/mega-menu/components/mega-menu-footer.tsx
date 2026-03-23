@@ -10,12 +10,12 @@ const MegaMenuFooter = () => {
           Read to Get Started ?
         </div>
         <div className="text-sm fomt-medium text-secondary-foreground">
-          Take your docs to the next level of Metronic
+          Take your workspace to the next level
         </div>
       </div>
       <NavigationMenuLink>
         <Button variant="mono" asChild>
-          <Link to="https://keenthemes.com/metronic" target="_blank">
+          <Link to="/docs" target="_blank">
             Read Documentation
           </Link>
         </Button>

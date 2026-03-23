@@ -27,10 +27,10 @@ class WorkspacePolicy
             return true;
         }
 
-        // Check if user is an active member
-        return $workspace->members()
-            ->where('user_id', $user->id)
-            ->where('status', 'active')
+        // Check if user is an active member (use users relationship, not members helper)
+        return $workspace->users()
+            ->where('users.id', $user->id)
+            ->wherePivotIn('role', ['admin', 'member', 'viewer'])
             ->exists();
     }
 
@@ -52,8 +52,8 @@ class WorkspacePolicy
         if (!$tenant) {
             return false;
         }
-        
-        return $tenant->canUserManage($user);
+
+        return $tenant->canUserCreateWorkspaces($user);
     }
 
     /**

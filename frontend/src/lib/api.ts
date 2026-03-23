@@ -17,10 +17,40 @@ class ApiClient {
     // Request interceptor to add auth token
     this.client.interceptors.request.use(
       (config) => {
-        const token = localStorage.getItem('auth_token');
-        if (token) {
-          config.headers.Authorization = `Bearer ${token}`;
+        // Don't add auth token to login endpoint
+        const isAuthEndpoint = config.url?.includes('/auth/login') ||
+                              config.url?.includes('/auth/register') ||
+                              config.url?.includes('/auth/password');
+
+        if (!isAuthEndpoint) {
+          const token = localStorage.getItem('auth_token');
+          if (token) {
+            config.headers.Authorization = `Bearer ${token}`;
+          }
+
+          // Add tenant ID header if available
+          // First try to get from user object
+          const userStr = localStorage.getItem('auth_user');
+          if (userStr) {
+            try {
+              const user = JSON.parse(userStr);
+              if (user.current_tenant_id) {
+                config.headers['X-Tenant-ID'] = user.current_tenant_id;
+              }
+            } catch (e) {
+              // Ignore parse errors
+            }
+          }
+
+          // If not found in user object, try direct storage
+          if (!config.headers['X-Tenant-ID']) {
+            const tenantId = localStorage.getItem('current_tenant_id');
+            if (tenantId) {
+              config.headers['X-Tenant-ID'] = tenantId;
+            }
+          }
         }
+
         return config;
       },
       (error) => {

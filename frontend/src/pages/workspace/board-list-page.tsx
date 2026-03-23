@@ -16,10 +16,12 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { useState } from 'react';
 import { Star, Archive, RotateCcw } from 'lucide-react';
+import { useAuth } from '@/auth/context/auth-context';
 
 export function BoardListPage() {
   const { workspaceId } = useParams<{ workspaceId: string }>();
-  const { data: boards, isLoading, error } = useBoards(workspaceId || '');
+  const { user } = useAuth();
+  const { data: boards, isLoading, error } = useBoards(workspaceId || '', user?.current_tenant_id);
   const createBoard = useCreateBoard();
   const archiveBoard = useArchiveBoard();
   const restoreBoard = useRestoreBoard();
@@ -41,10 +43,14 @@ export function BoardListPage() {
   }
 
   const handleCreateBoard = async () => {
-    if (!workspaceId) return;
-    
+    if (!workspaceId || !user?.current_tenant_id) {
+      console.error('Missing workspace ID or tenant ID');
+      return;
+    }
+
     try {
       await createBoard.mutateAsync({
+        tenantId: user.current_tenant_id,
         workspaceId: parseInt(workspaceId),
         data: newBoard,
       });
@@ -56,13 +62,21 @@ export function BoardListPage() {
   };
 
   const handleToggleArchive = async (boardId: number, isArchived: boolean) => {
-    if (!workspaceId) return;
+    if (!workspaceId || !user?.current_tenant_id) return;
 
     try {
       if (isArchived) {
-        await restoreBoard.mutateAsync({ workspaceId: parseInt(workspaceId), boardId });
+        await restoreBoard.mutateAsync({
+          tenantId: user.current_tenant_id,
+          workspaceId: parseInt(workspaceId),
+          boardId
+        });
       } else {
-        await archiveBoard.mutateAsync({ workspaceId: parseInt(workspaceId), boardId });
+        await archiveBoard.mutateAsync({
+          tenantId: user.current_tenant_id,
+          workspaceId: parseInt(workspaceId),
+          boardId
+        });
       }
     } catch (error) {
       console.error('Failed to toggle archive:', error);
@@ -70,13 +84,21 @@ export function BoardListPage() {
   };
 
   const handleToggleFavorite = async (boardId: number, isFavorite: boolean) => {
-    if (!workspaceId) return;
+    if (!workspaceId || !user?.current_tenant_id) return;
 
     try {
       if (isFavorite) {
-        await unfavoriteBoard.mutateAsync({ workspaceId: parseInt(workspaceId), boardId });
+        await unfavoriteBoard.mutateAsync({
+          tenantId: user.current_tenant_id,
+          workspaceId: parseInt(workspaceId),
+          boardId
+        });
       } else {
-        await favoriteBoard.mutateAsync({ workspaceId: parseInt(workspaceId), boardId });
+        await favoriteBoard.mutateAsync({
+          tenantId: user.current_tenant_id,
+          workspaceId: parseInt(workspaceId),
+          boardId
+        });
       }
     } catch (error) {
       console.error('Failed to toggle favorite:', error);

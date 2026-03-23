@@ -10,13 +10,23 @@ export interface AuthModel {
   refresh_token?: string;
 }
 
+// Tenant model
+export interface TenantModel {
+  id: number;
+  name: string;
+  slug: string;
+  role?: string;
+}
+
 // User model representing the user profile
 export interface UserModel {
-  username: string;
+  id?: number;
+  username?: string;
   password?: string; // Optional as we don't always retrieve passwords
   email: string;
-  first_name: string;
-  last_name: string;
+  name?: string; // Backend returns 'name' instead of first_name/last_name
+  first_name?: string;
+  last_name?: string;
   fullname?: string; // May be stored directly in metadata
   email_verified?: boolean;
   occupation?: string;
@@ -26,4 +36,8 @@ export interface UserModel {
   pic?: string;
   language?: LanguageCode; // Maintain existing type
   is_admin?: boolean; // Added admin flag
+  is_super_admin?: boolean; // Super admin flag
+  current_tenant_id?: number; // Current active tenant ID
+  tenant?: TenantModel; // Current tenant details
+  tenants?: Record<string, number>; // All tenants user belongs to {name: id}
 }

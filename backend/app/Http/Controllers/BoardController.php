@@ -14,10 +14,10 @@ class BoardController extends Controller
     /**
      * List boards for a workspace.
      */
-    public function index(Request $request, string $workspaceId): JsonResponse
+    public function index(Request $request, string $tenant, string $workspace): JsonResponse
     {
         $query = Board::query()
-            ->where('workspace_id', $workspaceId)
+            ->where('workspace_id', $workspace)
             ->active(); // Default to active? Or filter?
 
         if ($request->has('archived') && $request->boolean('archived')) {
@@ -47,7 +47,7 @@ class BoardController extends Controller
     /**
      * Create a new board.
      */
-    public function store(Request $request, string $workspaceId): JsonResponse
+    public function store(Request $request, string $tenant, string $workspace): JsonResponse
     {
         $validated = $request->validate([
             'name' => 'required|string|max:255',
@@ -59,8 +59,8 @@ class BoardController extends Controller
         ]);
 
         $board = Board::create([
-            'tenant_id' => \App\Models\Workspace::findOrFail($workspaceId)->tenant_id,
-            'workspace_id' => $workspaceId,
+            'tenant_id' => $tenant,
+            'workspace_id' => $workspace,
             'name' => $validated['name'],
             'description' => $validated['description'] ?? null,
             'color' => $validated['color'] ?? null,
@@ -80,13 +80,13 @@ class BoardController extends Controller
     /**
      * Show a board.
      */
-    public function show(string $boardId): JsonResponse
+    public function show(string $tenant, string $workspace, string $board): JsonResponse
     {
         $board = Board::with(['columns', 'creator'])
             ->withCount(['favoritedBy as is_favorite' => function ($query) {
                 $query->where('user_id', auth()->id());
             }])
-            ->findOrFail($boardId);
+            ->findOrFail($board);
             
         $board->is_favorite = (bool) $board->is_favorite;
 
@@ -96,9 +96,9 @@ class BoardController extends Controller
     /**
      * Update a board.
      */
-    public function update(Request $request, string $boardId): JsonResponse
+    public function update(Request $request, string $tenant, string $workspace, string $board): JsonResponse
     {
-        $board = Board::findOrFail($boardId);
+        $board = Board::findOrFail($board);
 
         $validated = $request->validate([
             'name' => 'sometimes|string|max:255',
@@ -116,9 +116,9 @@ class BoardController extends Controller
     /**
      * Delete a board.
      */
-    public function destroy(string $boardId): JsonResponse
+    public function destroy(string $tenant, string $workspace, string $board): JsonResponse
     {
-        $board = Board::findOrFail($boardId);
+        $board = Board::findOrFail($board);
         $board->delete(); // Soft delete
 
         return response()->json(['message' => 'Board deleted successfully']);
@@ -127,9 +127,9 @@ class BoardController extends Controller
     /**
      * Archive a board.
      */
-    public function archive(string $boardId): JsonResponse
+    public function archive(string $tenant, string $workspace, string $board): JsonResponse
     {
-        $board = Board::findOrFail($boardId);
+        $board = Board::findOrFail($board);
         $board->archive();
 
         return response()->json(new \App\Http\Resources\BoardResource($board));
@@ -138,9 +138,9 @@ class BoardController extends Controller
     /**
      * Restore a board.
      */
-    public function restore(string $boardId): JsonResponse
+    public function restore(string $tenant, string $workspace, string $board): JsonResponse
     {
-        $board = Board::withTrashed()->findOrFail($boardId);
+        $board = Board::withTrashed()->findOrFail($board);
         $board->restore();
 
         return response()->json(new \App\Http\Resources\BoardResource($board));
@@ -149,9 +149,9 @@ class BoardController extends Controller
     /**
      * Favorite a board.
      */
-    public function favorite(string $boardId): JsonResponse
+    public function favorite(string $tenant, string $workspace, string $board): JsonResponse
     {
-        $board = Board::findOrFail($boardId);
+        $board = Board::findOrFail($board);
         $board->favoritedBy()->syncWithoutDetaching([auth()->id()]);
 
         return response()->json(['message' => 'Board added to favorites']);
@@ -160,9 +160,9 @@ class BoardController extends Controller
     /**
      * Unfavorite a board.
      */
-    public function unfavorite(string $boardId): JsonResponse
+    public function unfavorite(string $tenant, string $workspace, string $board): JsonResponse
     {
-        $board = Board::findOrFail($boardId);
+        $board = Board::findOrFail($board);
         $board->favoritedBy()->detach(auth()->id());
 
         return response()->json(['message' => 'Board removed from favorites']);
@@ -176,13 +176,9 @@ class BoardController extends Controller
      * @param string $boardId
      * @return JsonResponse
      */
-    public function updates(Request $request, string $boardId): JsonResponse
+    public function updates(Request $request, string $tenant, string $workspace, string $board): JsonResponse
     {
-        // Support old signature or new?
-        // Old: updates(Request $request, string $tenantId, string $workspaceId, Board $board)
-        // Adjust based on routes. Assuming route is /api/boards/{board}/updates
-        
-        $board = Board::findOrFail($boardId); // Or injected if route model binding works with ID only
+        $board = Board::findOrFail($board); // Or injected if route model binding works with ID only
 
         $request->validate([
             'since' => 'required|date',
