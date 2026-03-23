@@ -25,6 +25,7 @@
 
 /* Demos */
 @import './demos/demo1.css';
+@import './p3-sidebar.css';
 
 /** Dark/Light Theme Variant **/
 @custom-variant dark (&:is(.dark *));
